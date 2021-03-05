@@ -15,7 +15,7 @@ const bot = new DiscordBot({
   token: 'A valid Discord bot token',
   groups: [ 'Miscellaneous', 'Information' ],
   clientOptions: {
-	  presence: { status: 'idle' }
+    presence: { status: 'idle' }
   }
 });
 
@@ -23,16 +23,16 @@ bot.addCommand({
   name: 'hi',
   description: 'Say hi!',
   parameters: [
-	{
-		name: 'name',
-		description: 'Your name',
-		wordCount: 'unlimited',
-		required: true
-	}
+    {
+      name: 'name',
+      description: 'Your name',
+      wordCount: 'unlimited',
+      required: true
+    }
   ],
   group: 'Miscellaneous',
   callback: function (message, client, args) {
-	message.reply(`Hey, ${args['name']}!`);
+    message.reply(`Hey, ${args['name']}!`);
   }
 });
 
@@ -43,16 +43,17 @@ bot.addCommand({
     'MANAGE_MESSAGES'
   ],
   parameters: [
-	{
-	  name: 'amount',
-	  description: 'The number of messages you want to delete',
-	  wordCount: 1,
-	  type: 'number',
-	  required: true
-	}
+    {
+      name: 'amount',
+      description: 'The number of messages you want to delete',
+      wordCount: 1,
+      type: 'number',
+      required: true
+    }
   ],
   callback: function(message, client, args) {
-	message.channel.bulkDelete(args['amount']).catch(error => message.reply('I could not delete any messages!'));
+    message.channel.bulkDelete(args['amount']).catch(error => message.reply('I could not delete any messages!'));
   }
 });
-```"# discord-bot-framework" 
+```
+"# discord-bot-framework" 
