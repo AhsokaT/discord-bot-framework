@@ -5,7 +5,7 @@ const discord_js_1 = require("discord.js");
 class Base {
     constructor(options) {
         if (!options?.token)
-            throw new Error('No argument for parameter \'BaseOptions.token\' was provided');
+            throw new Error('No argument for \'BaseOptions.token\' was provided');
         this.#token = options.token;
         this.#client = new discord_js_1.Client(options.clientOptions);
         this.login();
@@ -17,7 +17,7 @@ class Base {
         if (res)
             return this.#client;
     }
-    logOut() {
+    logout() {
         this.#client.destroy();
     }
     get client() {

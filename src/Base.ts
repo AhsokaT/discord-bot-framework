@@ -16,7 +16,7 @@ export class Base {
     #client: Client;
 
     constructor(options: BaseOptions) {
-        if (!options?.token) throw new Error('No argument for parameter \'BaseOptions.token\' was provided');
+        if (!options?.token) throw new Error('No argument for \'BaseOptions.token\' was provided');
 
         this.#token = options.token;
         this.#client = new Client(options.clientOptions);
@@ -24,13 +24,13 @@ export class Base {
         this.login();
     }
 
-    async login(): Promise<Client | void> {
+    public async login(): Promise<Client | undefined> {
         const res = await this.#client.login(this.#token).catch(console.error);
 
         if (res) return this.#client;
     }
 
-    logOut(): void {
+    public logout(): void {
         this.#client.destroy();
     }
 

@@ -38,16 +38,29 @@ export interface CommandOptions {
      */
     permissions?: PermissionString | PermissionString[];
 }
-export interface EditCommand extends Omit<CommandOptions, 'name' | 'callback'> {
+export interface EditOptions extends Omit<CommandOptions, 'name' | 'callback'> {
     name?: string;
-    callback?: string;
+    callback?: CommandCallback;
 }
 export declare class Command {
     #private;
     constructor(options: CommandOptions);
-    edit(options?: EditCommand): void;
+    /**
+     * Edit the properties of this command
+     */
+    edit(options: EditOptions): Command;
     get name(): string;
+    set name(name: string);
+    get aliases(): string[];
+    set aliases(aliases: string[]);
+    get category(): string;
+    set category(category: string);
+    set callback(callback: CommandCallback);
+    get callback(): CommandCallback;
+    get permissions(): PermissionString[];
     get description(): string;
     set description(description: string);
+    get parameters(): ParameterType[];
+    set parameters(parameters: ParameterType[]);
 }
 export {};

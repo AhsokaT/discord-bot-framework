@@ -12,7 +12,7 @@ export interface BaseOptions {
 export declare class Base {
     #private;
     constructor(options: BaseOptions);
-    login(): Promise<Client | void>;
-    logOut(): void;
+    login(): Promise<Client | undefined>;
+    logout(): void;
     get client(): Client;
 }

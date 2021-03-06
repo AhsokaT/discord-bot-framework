@@ -42,38 +42,42 @@ export interface CommandOptions {
     permissions?: PermissionString | PermissionString[];
 }
 
-export interface EditCommand extends Omit<CommandOptions, 'name' | 'callback'> {
+export interface EditOptions extends Omit<CommandOptions, 'name' | 'callback'> {
     name?: string;
-    callback?: string;
-}
-
-function isCommandOptions(object: any): object is CommandOptions {
-    return 'name' in object && 'callback' in object;
+    callback?: CommandCallback;
 }
 
 export class Command {
     #name: string;
+    #aliases: string[];
     #description: string;
     #parameters: ParameterType[];
     #callback: CommandCallback;
     #category: string;
-    #permissions: PermissionString | PermissionString[];
+    #permissions: PermissionString[];
 
     constructor(options: CommandOptions) {
-        if (!isCommandOptions(options)) throw new Error('Argument for \'options\' did not conform to interface \'CommandOptions\'');
+        if (!('name' in options || 'callback' in options)) throw new Error('Argument for \'options\' did not conform to interface \'CommandOptions\'');
 
         this.#name = options.name;
+        this.#aliases = options.aliases ?? [];
         this.#callback = options.callback;
         this.#description = options.description ?? '';
         this.#parameters = options.parameters?.sort((a, b) => a.required && b.required === false ? -1 : 0) ?? [];
         this.#category = options.category ?? '';
-        this.#permissions = options.permissions ?? [];
+        this.#permissions = typeof options.permissions === 'string' ? [options.permissions] : [];
     }
 
-    public edit(options?: EditCommand) {
+    /**
+     * Edit the properties of this command
+     */
+    public edit(options: EditOptions): Command {
         for (const param in options) {
-            if (param in this) this[param] = options[param];
+            if (param in this && !param.startsWith('#')) {
+                this[param] = options[param];
+            }
         }
+        return this;
     }
 
     get name() {
@@ -81,8 +85,35 @@ export class Command {
     }
 
     set name(name) {
-        if (typeof name !== 'string') return;
-        this.#name = name;
+        if (typeof name === 'string') this.#name = name;
+    }
+
+    get aliases() {
+        return this.#aliases;
+    }
+
+    set aliases(aliases) {
+        if (Array.isArray(aliases)) this.#aliases = aliases;
+    }
+
+    get category() {
+        return this.#category;
+    }
+
+    set category(category) {
+        this.#category = category;
+    }
+
+    set callback(callback) {
+        this.#callback = callback;
+    }
+
+    get callback() {
+        return this.#callback;
+    }
+
+    get permissions() {
+        return this.#permissions;
     }
 
     get description() {
@@ -90,7 +121,18 @@ export class Command {
     }
 
     set description(description) {
-        if (typeof description !== 'string') return;
-        this.#description = description;
+        if (typeof description === 'string') this.#description = description;
+    }
+
+    get parameters() {
+        return this.#parameters;
+    }
+
+    set parameters(parameters) {
+        if (!Array.isArray(parameters)) return;
+
+        parameters.filter(i => !('name' in i));
+
+        this.#parameters = parameters;
     }
 }
