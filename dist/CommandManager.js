@@ -40,7 +40,7 @@ class CommandManager {
      * Returns a single command
      */
     get(command) {
-        const existingCommand = this.#commands.find(i => i.name === command || i === command || i.category === command);
+        const existingCommand = this.#commands.find(i => i.name === command || i === command || i.aliases.includes(command.toString()));
         if (existingCommand)
             return existingCommand;
     }

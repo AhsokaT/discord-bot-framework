@@ -11,7 +11,7 @@ class Command {
         this.#description = options.description ?? '';
         this.#parameters = options.parameters?.sort((a, b) => a.required && b.required === false ? -1 : 0) ?? [];
         this.#category = options.category ?? '';
-        this.#permissions = typeof options.permissions === 'string' ? [options.permissions] : [];
+        this.#permissions = typeof options.permissions === 'string' ? [options.permissions] : options.permissions ?? [];
     }
     #name;
     #aliases;

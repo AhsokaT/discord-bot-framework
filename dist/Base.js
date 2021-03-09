@@ -8,7 +8,7 @@ class Base {
             throw new Error('No argument for \'BaseOptions.token\' was provided');
         this.#token = options.token;
         this.#client = new discord_js_1.Client(options.clientOptions);
-        this.login();
+        this.login().then(client => console.log(`${client?.user?.username} is online!`), console.error);
     }
     #token;
     #client;

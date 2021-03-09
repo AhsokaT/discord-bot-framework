@@ -21,7 +21,7 @@ export class Base {
         this.#token = options.token;
         this.#client = new Client(options.clientOptions);
 
-        this.login();
+        this.login().then(client => console.log(`${client?.user?.username} is online!`), console.error);
     }
 
     public async login(): Promise<Client | undefined> {

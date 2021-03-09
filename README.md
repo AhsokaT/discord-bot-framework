@@ -1,13 +1,21 @@
 ## Description
 
 discord-bot-framework is a basic command manager designed with [discord.js](https://www.npmjs.com/package/discord.js)
-
-You can report any issues on the [GitHub repo](https://github.com/AhsokaT/discord-bot-framework)
 * Object oriented
 * Includes type declarations
 * Simple and easy-to-use
 ## Installation
 This package requires [Node.js](https://nodejs.org/en/download/) 14.0.0 or later.
+## Methods
+```typescript
+Command#edit(options: EditOptions): Command;
+DiscordBot#commands#add(command: Command | CommandOptions): Command;
+DiscordBot#commands#get(command: string | Command): Command;
+DiscordBot#commands#remove(command: string | Command): Command;
+DiscordBot#commands#all(): Command[];
+DiscordBot#login(): Client | undefined;
+DiscordBot#logout(): void;
+```
 ## Example usage
 ```javascript
 const { DiscordBot, Command } = require('@pat.npm.js/discord-bot-framework');
