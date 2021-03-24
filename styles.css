@@ -1,0 +1,138 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    color: var(--text_colour);
+    background-color: var(--background_colour);
+
+    --text_colour: black;
+    --header_text_colour: white;
+    --background_colour: white;
+    --header_colour: rgb(236, 44, 82);
+}
+
+.dark-mode {
+    --text_colour: whitesmoke;
+    --background_colour: #333;
+    --header_colour: teal;
+}
+
+header {
+    color: var(--header_text_colour);
+    background-color: var(--header_colour);
+    padding-inline: 50px;
+    padding-top: 56px;
+    padding-bottom: 10px;
+}
+
+.nav-bar {
+    z-index: 1;
+    transition: none;
+    position: fixed;
+    width: 100%;
+    max-height: 46px;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+.nav-button, .nav-selected {
+    transition: none;
+    float: left;
+    color: var(--header_text_colour);
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    width: 80px;
+    padding: 14px;
+}
+
+.nav-selected {
+    background-color: #111;
+}
+
+.nav-button:hover {
+    background-color: #111;
+}
+
+.switch-container {
+    padding: 10px;
+}
+
+.switch {
+    float: right;
+}
+
+.switch input {
+    position: relative;
+    box-shadow: 0 2px 5px;
+    width: 40px;
+    height: 20px;
+    appearance: none;
+    outline: none;
+    border-radius: 10px;
+    background-color: white;
+    transition: 0.25s;
+}
+
+.switch input:checked {
+    background-color: dodgerblue;
+}
+
+.switch input::before {
+    content: '';
+    background-color: white;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    transition: 0.25s;
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px;
+}
+
+.switch input:checked::before {
+    left: 20px;
+}
+
+.content {
+    margin-inline: 15%;
+    margin-top: 100px;
+}
+
+.side-bar h2 {
+    margin: 0;
+    padding-top: 10px;
+    font-weight: normal;
+}
+
+.side-bar {
+    overflow: hidden;
+    position: absolute;
+    border-radius: 8px;
+    float: left;
+    width: 175px;
+    max-height: 100%;
+    height: 100%;
+}
+
+.side-bar a {
+    display: block;
+    padding: 6px 8px 6px 16px;
+    color: var(--text_colour);
+    text-decoration: none;
+}
+
+.side-bar a:hover {
+    transition: 0.25s;
+    color: dodgerblue;
+    background-color: rgb(31, 143, 255, 0.1);
+    border-radius: 8px;
+}
+
+.dark-mode .side-bar a:hover {
+    background-color: rgb(31, 143, 255, 0.2);
+}

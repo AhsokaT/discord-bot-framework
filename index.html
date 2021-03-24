@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Foo bar baz</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div class="main-page">
+            <ul class="nav-bar">
+                <li><a class="nav-selected" href="./index.html">Home</a></li>
+                <li><a class="nav-button" href="./bar.html">Foo</a></li>
+                <li><a class="nav-button" href="./bar.html">Bar</a></li>
+                <li><a class="nav-button" href="./bar.html">Baz</a></li>
+                <li class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" onclick="toggleTheme()" id="switch">
+                        <span class="slider"></span>
+                    </label>
+                </li>
+            </ul>
+            <header>
+                <h1>Hello, world!</h1>
+            </header>
+            <div class="content">
+                <div class="side-bar">
+                    <h2>Class</h2>
+                    <a href="#Base">︱ Base</a>
+                    <a href="#Client">︱ Client</a>
+                    <a href="#Slash">︱ Slash</a>
+                    <h2>Interface</h2>
+                    <a href="#BaseOptions">︱ BaseOptions</a>
+                    <a href="#ClientOptions">︱ ClientOptions</a>
+                    <a href="#SlashOptions">︱ SlashOptions</a>
+                </div>
+            </div>
+        </div>
+        <script>
+            function toggleTheme() {
+                document.body.classList.toggle("dark-mode");
+                document.body.classList.toggle("test");
+            }
+        </script>
+    </body>
+</html>
