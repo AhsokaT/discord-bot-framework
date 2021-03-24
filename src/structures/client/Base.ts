@@ -20,8 +20,6 @@ export class Base {
 
         this.#token = options.token;
         this.#client = new Client(options.clientOptions);
-
-        this.login().then(client => console.log(`${client?.user?.username} is online!`), console.error);
     }
 
     public async login(): Promise<Client | undefined> {
@@ -36,5 +34,9 @@ export class Base {
 
     get client() {
         return this.#client;
+    }
+
+    get token() {
+        return this.#token;
     }
 }

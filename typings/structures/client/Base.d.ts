@@ -15,4 +15,5 @@ export declare class Base {
     login(): Promise<Client | undefined>;
     logout(): void;
     get client(): Client;
+    get token(): string;
 }

@@ -1,7 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Command = exports.DiscordBot = void 0;
-var Bot_js_1 = require("./Bot.js");
-Object.defineProperty(exports, "DiscordBot", { enumerable: true, get: function () { return Bot_js_1.DiscordBot; } });
-var Command_js_1 = require("./Command.js");
+exports.ApplicationCommandOptionType = exports.SlashCommand = exports.Command = exports.Client = void 0;
+var Client_js_1 = require("./structures/client/Client.js");
+Object.defineProperty(exports, "Client", { enumerable: true, get: function () { return Client_js_1.Client; } });
+var Command_js_1 = require("./structures/commands/Command.js");
 Object.defineProperty(exports, "Command", { enumerable: true, get: function () { return Command_js_1.Command; } });
+var Slash_js_1 = require("./structures/slash/Slash.js");
+Object.defineProperty(exports, "SlashCommand", { enumerable: true, get: function () { return Slash_js_1.SlashCommand; } });
+var SlashTypes_js_1 = require("./structures/slash/SlashTypes.js");
+Object.defineProperty(exports, "ApplicationCommandOptionType", { enumerable: true, get: function () { return SlashTypes_js_1.ApplicationCommandOptionType; } });

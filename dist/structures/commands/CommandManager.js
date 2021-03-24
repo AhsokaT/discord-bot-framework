@@ -1,31 +1,33 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DiscordBot = void 0;
-const Base_js_1 = require("./Base.js");
-const CommandManager_js_1 = require("./CommandManager.js");
+exports.CommandManager = void 0;
+const Command_js_1 = require("./Command.js");
 const discord_js_1 = require("discord.js");
-class DiscordBot extends Base_js_1.Base {
-    constructor(options) {
-        super({ ...options });
-        this.#prefix = options.prefix ?? '';
-        this.#allowBots = options.allowBots ?? false;
-        this.#permissions = options.permissions ?? [];
-        this.#commands = new CommandManager_js_1.CommandManager({ ...options });
+class CommandManager {
+    constructor(client, options) {
+        this.#commands = [];
+        this.#categories = [];
+        if (options?.categories && Array.isArray(options.categories))
+            this.#categories = options.categories;
+        this.#prefix = options?.prefix ?? '';
+        this.#allowBots = options?.allowBots ?? false;
+        this.#permissions = options?.permissions ?? [];
+        this.#client = client;
         function toList(i, trailingConnective = 'and') {
             return `${i.length > 1 ? `${i.slice(0, i.length - 1).join(', ')} ${trailingConnective} ${i[i.length - 1]}` : i}`;
         }
         async function helpCommand(message, client, args) {
             const input = args['command'];
-            const group = this.#commands.categories.find(i => i.toLowerCase() === input?.toLowerCase());
-            const command = input ? this.#commands.get(input.toLowerCase()) : null;
+            const group = this.categories.find(i => i.toLowerCase() === input?.toLowerCase());
+            const command = input ? this.get(input.toLowerCase()) : null;
             if (group) {
-                const commands = this.#commands.all().filter(command => command.category === group).map(command => {
+                const commands = this.all().filter(command => command.category === group).map(command => {
                     const field = { name: `${this.#prefix}${command.name} ${command.parameters.length > 0 ? command.parameters.map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
                     return field;
                 });
                 const embed = new discord_js_1.MessageEmbed({
                     color: '#2F3136',
-                    author: { name: this.client.user?.username, iconURL: this.client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
+                    author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
                     title: group,
                     description: commands.length === 0 ? 'There are currently no commands set for this category' : '',
                     fields: commands
@@ -36,7 +38,7 @@ class DiscordBot extends Base_js_1.Base {
             if (command) {
                 let embed = new discord_js_1.MessageEmbed({
                     color: '#2F3136',
-                    author: { name: this.client.user?.username, iconURL: this.client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
+                    author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
                     title: `${this.#prefix}${command.name}`
                 });
                 if (command.description) {
@@ -54,24 +56,24 @@ class DiscordBot extends Base_js_1.Base {
                 message.channel.send(embed).catch(console.error);
                 return;
             }
-            const ungrouped = this.#commands.all().filter(i => !i.category).map(command => {
+            const ungrouped = this.all().filter(i => !i.category).map(command => {
                 const field = { name: `${this.#prefix}${command.name} ${command.parameters.length > 0 ? command.parameters.map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
                 return field;
             });
-            const groups = this.#commands.categories.map(group => {
+            const groups = this.categories.map(group => {
                 const field = { name: group, value: `\` ${this.#prefix}help ${group.toLowerCase()} \``, inline: true };
                 return field;
             });
-            const invite = await this.client.generateInvite({ permissions: this.#permissions });
+            const invite = await this.#client.generateInvite({ permissions: this.#permissions });
             const embed = new discord_js_1.MessageEmbed({
                 color: '#2F3136',
-                author: { name: this.client.user?.username, iconURL: this.client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                description: `🔗 **[Invite ${this.client.user?.username ?? ''}](${invite})**`,
+                author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
+                description: `🔗 **[Invite ${this.#client.user?.username ?? ''}](${invite})**`,
                 fields: [...ungrouped, ...groups]
             });
             message.channel.send(embed).catch(console.error);
         }
-        this.#commands.add({
+        this.add({
             name: 'help',
             description: 'Display information about my commands',
             parameters: [
@@ -83,7 +85,7 @@ class DiscordBot extends Base_js_1.Base {
             ],
             callback: helpCommand.bind(this)
         });
-        this.client.on('message', message => {
+        this.#client.on('message', message => {
             if (message.channel.type === 'dm')
                 return;
             if (message.author.bot && !this.#allowBots)
@@ -94,7 +96,7 @@ class DiscordBot extends Base_js_1.Base {
             const name = messageComponents.shift()?.slice(this.#prefix.length).toLowerCase();
             if (!name)
                 return;
-            const command = this.#commands.get(name);
+            const command = this.get(name);
             if (!command)
                 return;
             if (!message.member?.permissions.has(command.permissions))
@@ -118,30 +120,73 @@ class DiscordBot extends Base_js_1.Base {
                 }
                 args[param.name.replaceAll(' ', '_')] = param.type === 'number' ? parseInt(input, 10) : input;
             }
-            command.callback(message, this.client, args);
+            command.callback(message, this.#client, args);
         });
     }
+    #commands;
+    #categories;
     #allowBots;
     #permissions;
     #prefix;
-    #commands;
-    get commands() {
-        return this.#commands;
+    #client;
+    get allowBots() {
+        return this.#allowBots;
     }
-    // Deprecated
-    /**
-     * @deprecated since version 1.2.0, use .commands.add();
-     */
-    addCommand(command) {
-        console.log('WARNING! \'.addCommand()\' is deprecated and will be removed, use \'.commands.add()\'');
-        this.#commands.add(command);
+    set allowBots(allowBots) {
+        if (typeof allowBots === 'boolean')
+            this.#allowBots = allowBots;
+    }
+    get categories() {
+        return this.#categories;
     }
     /**
-     * @deprecated since version 1.2.0, use .commands.remove();
+     * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
      */
-    removeCommand(command) {
-        console.log('WARNING! \'.removeCommand()\' is deprecated and will be removed, use \'.commands.remove()\'');
-        this.#commands.remove(command);
+    add(command) {
+        if (!command?.name || !command?.callback)
+            throw new Error('Argument for \'command\' did not conform to either \'Command\' or \'CommandOptions\'');
+        if (command.aliases) {
+            for (const cmd of this.#commands) {
+                for (const alias of cmd.aliases) {
+                    if (command.aliases.includes(alias)) {
+                        throw new Error(`Alias '${alias}' already exists on command '${cmd.name}'`);
+                    }
+                }
+            }
+        }
+        if (command.category && !this.#categories.includes(command.category))
+            throw new Error(`There is no existing command category named '${command.category}'`);
+        const existingCommand = this.#commands.find(cmd => cmd.name === command.name);
+        if (existingCommand)
+            return existingCommand.edit({ ...command });
+        const newCommand = command instanceof Command_js_1.Command ? command : new Command_js_1.Command({ ...command });
+        this.#commands.push(newCommand);
+        return newCommand;
+    }
+    /**
+     * Removes an existing command and returns it
+     */
+    remove(command) {
+        const existingCommand = this.#commands.find(i => i.name === command || i === command);
+        if (!existingCommand)
+            return;
+        this.#commands.splice(this.#commands.indexOf(existingCommand), 1);
+        return existingCommand;
+    }
+    /**
+     * Returns a single command
+     */
+    get(command) {
+        const existingCommand = this.#commands.find(i => i.name === command || i === command || i.aliases.includes(command.toString()));
+        if (existingCommand)
+            return existingCommand;
+    }
+    /**
+     * Returns an array of all commands
+     */
+    all() {
+        const commands = this.#commands;
+        return commands;
     }
 }
-exports.DiscordBot = DiscordBot;
+exports.CommandManager = CommandManager;

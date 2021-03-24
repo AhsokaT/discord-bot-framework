@@ -1,5 +1,7 @@
 {
-    "include": ["src/**/*"],
+    "include": [
+        "src/**/*"
+    ],
     "exclude": [
         "./typings/**/*"
     ],
@@ -14,6 +16,6 @@
         "declaration": true,
         "emitDeclarationOnly": false,
         "outDir": "./dist",
-        "declarationDir": "./typings/",
+        "declarationDir": "./typings/"
     }
 }
