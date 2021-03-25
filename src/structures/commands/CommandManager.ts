@@ -195,7 +195,7 @@ export class CommandManager {
 
         if (command.aliases) {
             for (const cmd of this.#commands) {
-                for (const alias of cmd.aliases) {
+                for (const alias of cmd.aliases ?? []) {
                     if (command.aliases.includes(alias)) {
                         throw new Error(`Alias '${alias}' already exists on command '${cmd.name}'`);
                     }

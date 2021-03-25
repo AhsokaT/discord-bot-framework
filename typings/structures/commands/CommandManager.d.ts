@@ -30,10 +30,12 @@ export declare class CommandManager {
     add(command: Command | CommandOptions): Command;
     /**
      * Removes an existing command and returns it
+     * @param command The name or alias of a command or an instance of the Command class
      */
     remove(command: string | Command): Command | undefined;
     /**
      * Returns a single command
+     * @param command The name or alias of a command or an instance of the Command class
      */
     get(command: string | Command): Command | undefined;
     /**

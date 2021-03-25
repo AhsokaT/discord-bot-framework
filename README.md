@@ -9,18 +9,18 @@ This package requires [Node.js](https://nodejs.org/en/download/) 14.0.0 or later
 ## Methods
 ```typescript
 Command#edit(options: EditOptions): Command;
-DiscordBot#commands#add(command: Command | CommandOptions): Command;
-DiscordBot#commands#get(command: string | Command): Command;
-DiscordBot#commands#remove(command: string | Command): Command;
-DiscordBot#commands#all(): Command[];
-DiscordBot#login(): Client | undefined;
-DiscordBot#logout(): void;
+Client#commands#add(command: Command | CommandOptions): Command;
+Client#commands#get(command: string | Command): Command;
+Client#commands#remove(command: string | Command): Command;
+Client#commands#all(): Command[];
+Client#login(): string;
+Client#logout(): void;
 ```
 ## Example usage
 ```javascript
-const { DiscordBot, Command } = require('@pat.npm.js/discord-bot-framework');
+const { Client, Command } = require('@pat.npm.js/discord-bot-framework');
 
-const bot = new DiscordBot({
+const client = new Client({
     prefix: '$', // The bot will use this to discriminate messages
     token: 'A valid Discord bot token',
     categories: [ 'Miscellaneous', 'Information' ], // Categories that individual commands can belong to
@@ -30,7 +30,7 @@ const bot = new DiscordBot({
 });
 
 // .commands.add(); also accepts an instance of the Command class, incase you declare your commands elsewhere
-bot.commands.add({
+client.commands.add({
     name: 'hi',
     description: 'Say hi!', // Short description of your command; will be displayed on the inbuilt help command
     parameters: [
@@ -47,7 +47,7 @@ bot.commands.add({
     }
 });
 
-bot.commands.add({
+client.commands.add({
     name: 'purge',
     description: 'Delete messages from a channel',
     permissions: [

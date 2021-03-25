@@ -3,9 +3,8 @@ import { Client as DJSClient } from 'discord.js';
 import { ClientOptions as DJSClientOptions } from 'discord.js';
 import { CommandManager, CommandManagerOptions } from '../commands/CommandManager';
 
-interface ClientOptions extends CommandManagerOptions {
+interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
     token: string;
-    clientOptions?: DJSClientOptions;
 }
 
 export class Client extends DJSClient {
@@ -13,7 +12,7 @@ export class Client extends DJSClient {
     #commands: CommandManager;
 
     constructor(options: ClientOptions) {
-        super(options.clientOptions);
+        super({ ...options });
 
         if (!options) throw new Error('No argument was provided for \'ClientOptions\'');
         if (!options.token) throw new Error('Argument for \'ClientOptions\' had no property \'token\'');

@@ -6,7 +6,7 @@ const discord_js_1 = require("discord.js");
 const CommandManager_1 = require("../commands/CommandManager");
 class Client extends discord_js_1.Client {
     constructor(options) {
-        super(options.clientOptions);
+        super({ ...options });
         if (!options)
             throw new Error('No argument was provided for \'ClientOptions\'');
         if (!options.token)

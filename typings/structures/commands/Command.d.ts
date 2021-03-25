@@ -12,11 +12,11 @@ export interface CommandOptions {
     /**
      * - Name of the command
      */
-    name: string;
+    name?: string;
     /**
      * - The function to be executed when the command is called
      */
-    callback: CommandCallback;
+    callback?: CommandCallback;
     /**
      * - Description of the command
      */
@@ -44,7 +44,7 @@ export interface EditOptions extends Omit<CommandOptions, 'name' | 'callback'> {
 }
 export declare class Command {
     #private;
-    constructor(options: CommandOptions);
+    constructor(options?: CommandOptions);
     /**
      * Edit the properties of this command
      */
@@ -53,11 +53,12 @@ export declare class Command {
     set name(name: string);
     get aliases(): string[];
     set aliases(aliases: string[]);
-    get category(): string;
-    set category(category: string);
+    get category(): string | undefined;
+    set category(category: string | undefined);
     set callback(callback: CommandCallback);
     get callback(): CommandCallback;
     get permissions(): PermissionString[];
+    set permissions(permissions: PermissionString[]);
     get description(): string;
     set description(description: string);
     get parameters(): ParameterType[];

@@ -147,7 +147,7 @@ class CommandManager {
             throw new Error('Argument for \'command\' did not conform to either \'Command\' or \'CommandOptions\'');
         if (command.aliases) {
             for (const cmd of this.#commands) {
-                for (const alias of cmd.aliases) {
+                for (const alias of cmd.aliases ?? []) {
                     if (command.aliases.includes(alias)) {
                         throw new Error(`Alias '${alias}' already exists on command '${cmd.name}'`);
                     }
@@ -165,9 +165,10 @@ class CommandManager {
     }
     /**
      * Removes an existing command and returns it
+     * @param command The name or alias of a command or an instance of the Command class
      */
     remove(command) {
-        const existingCommand = this.#commands.find(i => i.name === command || i === command);
+        const existingCommand = this.#commands.find(i => i.name === command || i === command || i.aliases.includes(command.toString()));
         if (!existingCommand)
             return;
         this.#commands.splice(this.#commands.indexOf(existingCommand), 1);
@@ -175,11 +176,10 @@ class CommandManager {
     }
     /**
      * Returns a single command
+     * @param command The name or alias of a command or an instance of the Command class
      */
     get(command) {
-        const existingCommand = this.#commands.find(i => i.name === command || i === command || i.aliases.includes(command.toString()));
-        if (existingCommand)
-            return existingCommand;
+        return this.#commands.find(i => i.name === command || i === command || i.aliases.includes(command.toString()));
     }
     /**
      * Returns an array of all commands

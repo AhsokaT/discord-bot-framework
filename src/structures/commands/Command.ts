@@ -15,11 +15,11 @@ export interface CommandOptions {
     /**
      * - Name of the command
      */
-    name: string;
+    name?: string;
     /**
      * - The function to be executed when the command is called
      */
-    callback: CommandCallback;
+    callback?: CommandCallback;
     /**
      * - Description of the command
      */
@@ -49,23 +49,29 @@ export interface EditOptions extends Omit<CommandOptions, 'name' | 'callback'> {
 
 export class Command {
     #name: string;
-    #aliases: string[];
-    #description: string;
-    #parameters: ParameterType[];
+    #description: string = '';
     #callback: CommandCallback;
-    #category: string;
-    #permissions: PermissionString[];
+    #category?: string;
+    #aliases: string[] = [];
+    #parameters: ParameterType[] = [];
+    #permissions: PermissionString[] = [];
 
-    constructor(options: CommandOptions) {
-        if (!('name' in options || 'callback' in options)) throw new Error('Argument for \'options\' did not conform to interface \'CommandOptions\'');
+    constructor(options?: CommandOptions) {
+        if (!options) return;
 
-        this.#name = options.name;
-        this.#aliases = options.aliases ?? [];
-        this.#callback = options.callback;
-        this.#description = options.description ?? '';
-        this.#parameters = options.parameters?.sort((a, b) => a.required && b.required === false ? -1 : 0) ?? [];
-        this.#category = options.category ?? '';
-        this.#permissions = typeof options.permissions === 'string' ? [options.permissions] : options.permissions ?? [];
+        const { name, description, category, permissions, parameters, aliases, callback } = options;
+
+        if (callback) this.callback = callback;
+        if (typeof name === 'string') this.name = name;
+        if (typeof category === 'string') this.category = category;
+        if (typeof description === 'string') this.description = description;
+        if (Array.isArray(aliases)) this.aliases = aliases;
+        if (Array.isArray(permissions)) this.#permissions = permissions;
+        if (Array.isArray(parameters)) this.parameters = parameters.map(i => {
+            if (typeof i.required !== 'boolean') i.required = true;
+
+            return i;
+        }).sort((a, b) => a.required && b.required === false ? -1 : 0);
     }
 
     /**
@@ -73,12 +79,15 @@ export class Command {
      */
     public edit(options: EditOptions): Command {
         for (const param in options) {
-            if (param in this && !param.startsWith('#')) {
-                this[param] = options[param];
-            }
+            if (param in this && !param.startsWith('#')) this[param] = options[param];
         }
+
         return this;
     }
+
+    // public isComplete(): this is Required<Command> {
+    //     return true;
+    // }
 
     get name() {
         return this.#name;
@@ -114,6 +123,10 @@ export class Command {
 
     get permissions() {
         return this.#permissions;
+    }
+
+    set permissions(permissions) {
+        if (Array.isArray(permissions)) this.#permissions = permissions;
     }
 
     get description() {
