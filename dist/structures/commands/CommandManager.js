@@ -17,7 +17,7 @@ class CommandManager {
             return `${i.length > 1 ? `${i.slice(0, i.length - 1).join(', ')} ${trailingConnective} ${i[i.length - 1]}` : i}`;
         }
         async function helpCommand(message, client, args) {
-            const input = args['command'];
+            const input = args.find(arg => arg.name === 'command')?.value;
             const group = this.categories.find(i => i.toLowerCase() === input?.toLowerCase());
             const command = input ? this.get(input.toLowerCase()) : null;
             if (group) {
@@ -61,7 +61,7 @@ class CommandManager {
                 return field;
             });
             const groups = this.categories.map(group => {
-                const field = { name: group, value: `\` ${this.#prefix}help ${group.toLowerCase()} \``, inline: true };
+                const field = { name: group, value: `${this.#prefix}help ${group.toLowerCase()}`, inline: true };
                 return field;
             });
             const invite = await this.#client.generateInvite({ permissions: this.#permissions });
@@ -79,7 +79,7 @@ class CommandManager {
             parameters: [
                 {
                     name: 'command',
-                    description: 'Name of a command',
+                    description: 'Name of a command or category',
                     required: false
                 }
             ],
@@ -99,11 +99,13 @@ class CommandManager {
             const command = this.get(name);
             if (!command)
                 return;
+            if (!message.channel.nsfw && command.nsfw)
+                return message.channel.send('❌ This command must be run in an **NSFW** channel');
             if (!message.member?.permissions.has(command.permissions))
                 return message.channel.send(`❌ You require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${toList(command.permissions.map(i => `\`${i.toLowerCase().replaceAll('_', ' ')}\``))} to run this command!`).catch(console.error);
             if (!message.guild?.me?.permissions.has(command.permissions))
                 return message.channel.send(`❌ I require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${toList(command.permissions.map(i => `\`${i.toLowerCase().replaceAll('_', ' ')}\``))} to run this command!`).catch(console.error);
-            let args = {};
+            let args = [];
             for (const param of command.parameters) {
                 let input = messageComponents.splice(0, param.wordCount === 'unlimited' ? messageComponents.length : param.wordCount ?? 1).join(' ');
                 if (!input && param.required) {
@@ -118,9 +120,10 @@ class CommandManager {
                 if (param.type === 'number' && !parseInt(input, 10)) {
                     return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
                 }
-                args[param.name.replaceAll(' ', '_')] = param.type === 'number' ? parseInt(input, 10) : input;
+                args.push({ name: param.name, value: input });
             }
-            command.callback(message, this.#client, args);
+            if (command.callback)
+                command.callback(message, this.#client, args);
         });
     }
     #commands;
@@ -143,25 +146,24 @@ class CommandManager {
      * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
      */
     add(command) {
-        if (!command?.name || !command?.callback)
-            throw new Error('Argument for \'command\' did not conform to either \'Command\' or \'CommandOptions\'');
-        if (command.aliases) {
-            for (const cmd of this.#commands) {
-                for (const alias of cmd.aliases ?? []) {
-                    if (command.aliases.includes(alias)) {
-                        throw new Error(`Alias '${alias}' already exists on command '${cmd.name}'`);
-                    }
-                }
-            }
-        }
+        if (!(command instanceof Command_js_1.Command))
+            return this.add(new Command_js_1.Command(command));
+        if (!command.name)
+            throw new Error('Commands must have a name set.');
+        if (!command.callback)
+            throw new Error('Commands must have a callback set.');
+        if (this.get(command.name))
+            this.remove(command.name);
+        command.aliases.forEach(alias => {
+            this.all().forEach(existing => {
+                if (existing.aliases.includes(alias))
+                    throw new Error(`Alias \'${alias}\' already exists on command \'${existing.name}\'`);
+            });
+        });
         if (command.category && !this.#categories.includes(command.category))
-            throw new Error(`There is no existing command category named '${command.category}'`);
-        const existingCommand = this.#commands.find(cmd => cmd.name === command.name);
-        if (existingCommand)
-            return existingCommand.edit({ ...command });
-        const newCommand = command instanceof Command_js_1.Command ? command : new Command_js_1.Command({ ...command });
-        this.#commands.push(newCommand);
-        return newCommand;
+            this.#categories.push(command.category);
+        this.#commands.push(command);
+        return command;
     }
     /**
      * Removes an existing command and returns it

@@ -11,8 +11,8 @@ export class Client extends DJSClient {
     #slash: SlashBase;
     #commands: CommandManager;
 
-    constructor(options: ClientOptions) {
-        super({ ...options });
+    constructor(options?: ClientOptions) {
+        super(options);
 
         if (!options) throw new Error('No argument was provided for \'ClientOptions\'');
         if (!options.token) throw new Error('Argument for \'ClientOptions\' had no property \'token\'');

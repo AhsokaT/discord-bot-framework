@@ -1,8 +1,8 @@
 import { Message, Client, PermissionString } from 'discord.js';
 
-declare type CommandCallback = (message: Message, client: Client, arguments: object) => void;
+declare type CommandCallback = (message: Message, client: Client, arguments: Argument[]) => void;
 
-declare interface ParameterType {
+declare interface Parameter {
     name: string;
     description?: string;
     type?: 'string' | 'number';
@@ -11,9 +11,14 @@ declare interface ParameterType {
     choices?: string[];
 }
 
-export interface CommandOptions {
+export interface Argument {
+    name: string;
+    value: string;
+}
+
+export interface CommandInfo {
     /**
-     * - Name of the command
+     * - The name of your command
      */
     name?: string;
     /**
@@ -21,19 +26,23 @@ export interface CommandOptions {
      */
     callback?: CommandCallback;
     /**
-     * - Description of the command
+     * - A short description of your command
      */
     description?: string;
     /**
+     * Whether the command should only be usable in NSFW channels; false by default
+     */
+    nsfw?: boolean;
+    /**
      * - Any inputs from the user your function requires to run. Params that are not required will be automatically sorted to the back of the array
      */
-    parameters?: ParameterType[];
+    parameters?: Parameter[];
     /**
      * - Alternate names the command can be called by
      */
     aliases?: string[];
     /**
-     * - The category of commands this belongs to
+     * - The category of commands your command belongs to
      */
     category?: string;
     /**
@@ -42,110 +51,185 @@ export interface CommandOptions {
     permissions?: PermissionString | PermissionString[];
 }
 
-export interface EditOptions extends Omit<CommandOptions, 'name' | 'callback'> {
-    name?: string;
-    callback?: CommandCallback;
-}
-
 export class Command {
-    #name: string;
-    #description: string = '';
-    #callback: CommandCallback;
+    #name?: string;
+    #description?: string;
     #category?: string;
+    #nsfw: boolean = false;
     #aliases: string[] = [];
-    #parameters: ParameterType[] = [];
+    #parameters: Parameter[] = [];
     #permissions: PermissionString[] = [];
+    #callback?: CommandCallback;
 
-    constructor(options?: CommandOptions) {
-        if (!options) return;
-
-        const { name, description, category, permissions, parameters, aliases, callback } = options;
-
-        if (callback) this.callback = callback;
-        if (typeof name === 'string') this.name = name;
-        if (typeof category === 'string') this.category = category;
-        if (typeof description === 'string') this.description = description;
-        if (Array.isArray(aliases)) this.aliases = aliases;
-        if (Array.isArray(permissions)) this.#permissions = permissions;
-        if (Array.isArray(parameters)) this.parameters = parameters.map(i => {
-            if (typeof i.required !== 'boolean') i.required = true;
-
-            return i;
-        }).sort((a, b) => a.required && b.required === false ? -1 : 0);
-    }
-
-    /**
-     * Edit the properties of this command
-     */
-    public edit(options: EditOptions): Command {
-        for (const param in options) {
-            if (param in this && !param.startsWith('#')) this[param] = options[param];
+    public toObject() {
+        return {
+            name: this.name,
+            description: this.description,
+            nsfw: this.nsfw,
+            category: this.category,
+            aliases: this.aliases,
+            parameters: this.parameters,
+            permissions: this.permissions,
+            callback: this.callback,
         }
-
-        return this;
     }
 
-    // public isComplete(): this is Required<Command> {
-    //     return true;
-    // }
+    constructor(info?: CommandInfo) {
+        if (info) this.edit(info);
+    }
 
     get name() {
         return this.#name;
-    }
-
-    set name(name) {
-        if (typeof name === 'string') this.#name = name;
-    }
-
-    get aliases() {
-        return this.#aliases;
-    }
-
-    set aliases(aliases) {
-        if (Array.isArray(aliases)) this.#aliases = aliases;
-    }
-
-    get category() {
-        return this.#category;
-    }
-
-    set category(category) {
-        this.#category = category;
-    }
-
-    set callback(callback) {
-        this.#callback = callback;
-    }
-
-    get callback() {
-        return this.#callback;
-    }
-
-    get permissions() {
-        return this.#permissions;
-    }
-
-    set permissions(permissions) {
-        if (Array.isArray(permissions)) this.#permissions = permissions;
     }
 
     get description() {
         return this.#description;
     }
 
-    set description(description) {
-        if (typeof description === 'string') this.#description = description;
-    }
-
     get parameters() {
         return this.#parameters;
     }
 
-    set parameters(parameters) {
-        if (!Array.isArray(parameters)) return;
+    get nsfw() {
+        return this.#nsfw;
+    }
 
-        parameters.filter(i => !('name' in i));
+    get category() {
+        return this.#category;
+    }
 
-        this.#parameters = parameters;
+    get permissions() {
+        return this.#permissions;
+    }
+
+    get aliases() {
+        return this.#aliases;
+    }
+
+    get callback() {
+        return this.#callback;
+    }
+
+    /**
+     * @param name The name of your command
+     */
+    public setName(name: string): this {
+        if (name && typeof name === 'string') this.#name = name;
+        return this;
+    }
+
+    /**
+     * @param description A short description of your command
+     */
+    public setDescription(description: string): this {
+        if (description && typeof description === 'string') this.#description = description;
+        return this;
+    }
+
+    /**
+     * @param nsfw Whether the command should only be usable in NSFW channels; false by default
+     */
+    public setNSFW(nsfw: boolean): this {
+        this.#nsfw = Boolean(nsfw);
+        return this;
+    }
+
+    /**
+     * @param category The category of commands this command belongs to
+     */
+    public setCategory(category: string): this {
+        if (category && typeof category === 'string') this.#category = category;
+        return this;
+    }
+
+    public setCallback(callback: CommandCallback): this {
+        if (typeof callback === 'function') this.#callback = callback;        
+
+        return this;
+    }
+
+    /**
+     * @param parameter Parameter(s) this command accepts
+     */
+    public addParameter(parameter: Parameter | Parameter[]): this {
+        if (!parameter) return this;
+
+        if (Array.isArray(parameter)) {
+            parameter.forEach(param => this.addParameter(param));
+
+            return this;
+        }
+
+        if (typeof parameter !== 'object') throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
+
+        const { name, description, choices, wordCount, type, required } = parameter;
+
+        if (typeof name !== 'string') throw new TypeError('Property \'name\' of \'parameter\' must be a string.');
+        if (description && typeof description !== 'string') throw new TypeError('Property \'description\' of \'parameter\' must be a string.');
+        if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited') throw new TypeError('Property \'wordCount\' of \'parameter\' must be a number or \'unlimited\'.');
+        if (type && type !== 'number' && type !== 'string') throw new TypeError('Property \'type\' of \'parameter\' must either be \'number\' or \'string\'.');
+        if (choices && !Array.isArray(choices)) throw new TypeError('Property \'choices\' of \'parameter\' must be an array.');
+
+        parameter.choices?.filter(choice => typeof choice === 'string');
+        parameter.required = typeof required === 'boolean' ? required : true;
+
+        this.#parameters.push(parameter);
+        this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+
+        return this;
+    }
+
+    /**
+     * @param permission Permission(s) this command requires to run
+     */
+    public addPermission(permission: PermissionString | PermissionString[]): this {
+        if (Array.isArray(permission)) {
+            permission.forEach(perm => this.addPermission(perm));
+
+            return this;
+        }
+
+        if (typeof permission !== 'string') return this;
+
+        this.#permissions.push(permission);
+
+        return this;
+    }
+
+    /**
+     * @param alias Alternative name(s) this command can be called by
+     */
+    public addAlias(alias: string | string[]): this {
+        if (Array.isArray(alias)) {
+            alias.forEach(i => this.addAlias(i));
+
+            return this;
+        }
+
+        if (typeof alias !== 'string') return this;
+
+        this.#aliases.push(alias);
+
+        return this;
+    }
+
+    /**
+     * Edit the properties of this command
+     */
+    public edit(info: CommandInfo): this {
+        if (typeof info !== 'object') throw new TypeError('Parameter for \'info\' must be of type \'CommandInfo\'.');
+
+        const { name, description, category, callback, permissions, parameters, nsfw, aliases } = info;
+
+        if (name) this.setName(name);
+        if (description) this.setDescription(description);
+        if (category) this.setCategory(category);
+        if (callback) this.setCallback(callback);
+        if (typeof nsfw === 'boolean') this.setNSFW(nsfw);
+        if (Array.isArray(permissions)) this.addPermission(permissions);
+        if (Array.isArray(parameters)) this.addParameter(parameters);
+        if (Array.isArray(aliases)) this.addAlias(aliases);
+
+        return this;
     }
 }

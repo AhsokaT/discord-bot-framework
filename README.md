@@ -8,13 +8,19 @@ discord-bot-framework is a basic command manager designed with [discord.js](http
 This package requires [Node.js](https://nodejs.org/en/download/) 14.0.0 or later.
 ## Methods
 ```typescript
-Command#edit(options: EditOptions): Command;
-Client#commands#add(command: Command | CommandOptions): Command;
+Command#edit(options: CommandInfo): Command;
+Command#setName(name: string): Command;
+Command#setDescription(description: string): Command;
+Command#setCategory(category: string): Command;
+Command#setNSFW(nsfw: boolean): Command;
+Command#setCallback(callback: (message: Message, client: Client, args: object) => void): Command;
+Command#addParameter(parameter: ParameterType | ParameterType[]): Command;
+Command#addPermission(permission: PermissionString | PermissionString[]): Command;
+Command#addAlias(alias: string): Command;
+Client#commands#add(command: Command | CommandInfo): Command;
 Client#commands#get(command: string | Command): Command;
 Client#commands#remove(command: string | Command): Command;
 Client#commands#all(): Command[];
-Client#login(): string;
-Client#logout(): void;
 ```
 ## Example usage
 ```javascript
@@ -62,9 +68,10 @@ client.commands.add({
         }
     ],
     callback: function(message, client, args) {
-        // args is an object containing user inputs for your parameters
-        // You can read user inputs with args['param_name'] or args.param_name
-        message.channel.bulkDelete(args['amount']).catch(error => message.reply('I could not delete any messages!'));
+        // args is an Array of Argument objects
+        const amount = args.find(arg => arg.name === 'amount').value;
+
+        message.channel.bulkDelete(amount).catch(error => message.reply('I could not delete any messages!'));
     }
 });
 ```

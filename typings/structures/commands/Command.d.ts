@@ -1,6 +1,6 @@
 import { Message, Client, PermissionString } from 'discord.js';
-declare type CommandCallback = (message: Message, client: Client, arguments: object) => void;
-declare interface ParameterType {
+declare type CommandCallback = (message: Message, client: Client, arguments: Argument[]) => void;
+declare interface Parameter {
     name: string;
     description?: string;
     type?: 'string' | 'number';
@@ -8,9 +8,13 @@ declare interface ParameterType {
     required?: boolean;
     choices?: string[];
 }
-export interface CommandOptions {
+export interface Argument {
+    name: string;
+    value: string;
+}
+export interface CommandInfo {
     /**
-     * - Name of the command
+     * - The name of your command
      */
     name?: string;
     /**
@@ -18,19 +22,23 @@ export interface CommandOptions {
      */
     callback?: CommandCallback;
     /**
-     * - Description of the command
+     * - A short description of your command
      */
     description?: string;
     /**
+     * Whether the command should only be usable in NSFW channels; false by default
+     */
+    nsfw?: boolean;
+    /**
      * - Any inputs from the user your function requires to run. Params that are not required will be automatically sorted to the back of the array
      */
-    parameters?: ParameterType[];
+    parameters?: Parameter[];
     /**
      * - Alternate names the command can be called by
      */
     aliases?: string[];
     /**
-     * - The category of commands this belongs to
+     * - The category of commands your command belongs to
      */
     category?: string;
     /**
@@ -38,30 +46,59 @@ export interface CommandOptions {
      */
     permissions?: PermissionString | PermissionString[];
 }
-export interface EditOptions extends Omit<CommandOptions, 'name' | 'callback'> {
-    name?: string;
-    callback?: CommandCallback;
-}
 export declare class Command {
     #private;
-    constructor(options?: CommandOptions);
+    toObject(): {
+        name: string | undefined;
+        description: string | undefined;
+        nsfw: boolean;
+        category: string | undefined;
+        aliases: string[];
+        parameters: Parameter[];
+        permissions: PermissionString[];
+        callback: CommandCallback | undefined;
+    };
+    constructor(info?: CommandInfo);
+    get name(): string | undefined;
+    get description(): string | undefined;
+    get parameters(): Parameter[];
+    get nsfw(): boolean;
+    get category(): string | undefined;
+    get permissions(): PermissionString[];
+    get aliases(): string[];
+    get callback(): CommandCallback | undefined;
+    /**
+     * @param name The name of your command
+     */
+    setName(name: string): this;
+    /**
+     * @param description A short description of your command
+     */
+    setDescription(description: string): this;
+    /**
+     * @param nsfw Whether the command should only be usable in NSFW channels; false by default
+     */
+    setNSFW(nsfw: boolean): this;
+    /**
+     * @param category The category of commands this command belongs to
+     */
+    setCategory(category: string): this;
+    setCallback(callback: CommandCallback): this;
+    /**
+     * @param parameter Parameter(s) this command accepts
+     */
+    addParameter(parameter: Parameter | Parameter[]): this;
+    /**
+     * @param permission Permission(s) this command requires to run
+     */
+    addPermission(permission: PermissionString | PermissionString[]): this;
+    /**
+     * @param alias Alternative name(s) this command can be called by
+     */
+    addAlias(alias: string | string[]): this;
     /**
      * Edit the properties of this command
      */
-    edit(options: EditOptions): Command;
-    get name(): string;
-    set name(name: string);
-    get aliases(): string[];
-    set aliases(aliases: string[]);
-    get category(): string | undefined;
-    set category(category: string | undefined);
-    set callback(callback: CommandCallback);
-    get callback(): CommandCallback;
-    get permissions(): PermissionString[];
-    set permissions(permissions: PermissionString[]);
-    get description(): string;
-    set description(description: string);
-    get parameters(): ParameterType[];
-    set parameters(parameters: ParameterType[]);
+    edit(info: CommandInfo): this;
 }
 export {};

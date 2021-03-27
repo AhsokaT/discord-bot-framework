@@ -7,7 +7,7 @@ interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
 }
 export declare class Client extends DJSClient {
     #private;
-    constructor(options: ClientOptions);
+    constructor(options?: ClientOptions);
     logout(): void;
     get commands(): CommandManager;
     get slash(): SlashBase;

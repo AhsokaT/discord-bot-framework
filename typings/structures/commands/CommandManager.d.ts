@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from './Command.js';
+import { Command, CommandInfo } from './Command.js';
 import { PermissionString, Client } from 'discord.js';
 export interface CommandManagerOptions {
     /**
@@ -27,7 +27,7 @@ export declare class CommandManager {
     /**
      * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
      */
-    add(command: Command | CommandOptions): Command;
+    add(command: Command | CommandInfo): Command;
     /**
      * Removes an existing command and returns it
      * @param command The name or alias of a command or an instance of the Command class
