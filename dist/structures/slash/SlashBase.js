@@ -1,12 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SlashBase = void 0;
+exports.InteractionResponse = exports.SlashBase = void 0;
 const Slash_js_1 = require("./Slash.js");
 const superagent_1 = require("superagent");
+const SlashTypes_js_1 = require("./SlashTypes.js");
+const discord_js_1 = require("discord.js");
 class SlashBase {
     constructor(client, token) {
+        this.#callbacks = [];
         this.#client = client;
         this.#token = token;
+        // @ts-expect-error
+        client.ws.on('INTERACTION_CREATE', async (i) => {
+            const channel = await this.#client.channels.fetch(i.channel_id).catch(console.error);
+            if (!channel || !(channel instanceof discord_js_1.TextChannel || channel instanceof discord_js_1.NewsChannel))
+                return;
+            const member = await channel.guild.members.fetch(i.member.user.id);
+            if (!member)
+                return;
+            const command = this.#callbacks.find(callback => callback.name === i.data.name);
+            if (command)
+                command.callback(new InteractionResponse(channel, member, i.id, i.token, new SlashTypes_js_1.SlashArguments(i.data.options?.map(i => new SlashTypes_js_1.SlashArgument(i)))), this.#client);
+        });
     }
     #token;
     #client;
@@ -57,7 +72,13 @@ class SlashBase {
         const postedCommand = await superagent_1.post(endpoint).send(command.toJSON()).set('Content-Type', 'application/json').set('Authorization', 'Bot ' + this.#token).catch(console.error);
         if (!postedCommand)
             return;
-        return new Slash_js_1.SlashCommand(postedCommand.body);
+        const posted = new Slash_js_1.SlashCommand(postedCommand.body);
+        if (posted.name && command.callback)
+            this.#callbacks.push({
+                name: posted.name,
+                callback: command.callback
+            });
+        return posted;
     }
     /**
      * Delete an existing slash command.
@@ -76,3 +97,40 @@ class SlashBase {
     }
 }
 exports.SlashBase = SlashBase;
+var InteractionResponseType;
+(function (InteractionResponseType) {
+    InteractionResponseType[InteractionResponseType["Pong"] = 1] = "Pong";
+    InteractionResponseType[InteractionResponseType["Acknowledge"] = 2] = "Acknowledge";
+    InteractionResponseType[InteractionResponseType["ChannelMessage"] = 3] = "ChannelMessage";
+    InteractionResponseType[InteractionResponseType["ChannelMessageWithSource"] = 4] = "ChannelMessageWithSource";
+    InteractionResponseType[InteractionResponseType["DefferedChannelMessageWithSource"] = 5] = "DefferedChannelMessageWithSource";
+})(InteractionResponseType || (InteractionResponseType = {}));
+class InteractionResponse {
+    constructor(channel, member, id, token, args) {
+        this.hasReplied = false;
+        this.id = id;
+        this.token = token;
+        this.member = member;
+        this.channel = channel;
+        this.arguments = args;
+    }
+    async reply(content, options) {
+        if (this.hasReplied)
+            throw new Error('You can only reply to a slash command once.');
+        this.hasReplied = true;
+        const endpoint = `https://discord.com/api/v8/interactions/${this.id}/${this.token}/callback`;
+        if (!options)
+            options = new Object();
+        let json = {
+            type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
+            data: {
+                content: typeof content === 'string' ? content : undefined,
+                flags: options.ephemeral ? 64 : undefined,
+                embeds: options.embeds?.map(i => i.toJSON()) ?? new Array(),
+                allowed_mentions: options.allowedMentions ?? undefined
+            }
+        };
+        await superagent_1.post(endpoint).set('Content-Type', 'application/json').send(JSON.stringify(json));
+    }
+}
+exports.InteractionResponse = InteractionResponse;

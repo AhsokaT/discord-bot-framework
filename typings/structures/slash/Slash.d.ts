@@ -27,4 +27,5 @@ export declare class SlashCommand {
     get description(): string | undefined;
     get options(): ApplicationCommandOption[] | undefined;
     get id(): import("./SlashTypes").Snowflake | undefined;
+    get callback(): SlashCallback | undefined;
 }

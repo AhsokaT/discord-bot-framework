@@ -1,6 +1,7 @@
 import { SlashCommand } from './Slash.js';
-import { Snowflake } from './SlashTypes.js';
-import { Client } from 'discord.js';
+import { Snowflake, SlashArguments } from './SlashTypes.js';
+import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel } from 'discord.js';
+import { Client } from '../client/Client.js';
 export declare class SlashBase {
     #private;
     constructor(client: Client, token: string);
@@ -29,3 +30,34 @@ export declare class SlashBase {
      */
     delete(command: string): Promise<SlashCommand | undefined>;
 }
+interface InteractionCallbackOptions {
+    type?: InteractionResponseTypeString;
+    embeds?: MessageEmbed[];
+    ephemeral?: boolean;
+    tts?: boolean;
+    allowedMentions?: {
+        parse?: ('users' | 'everyone' | 'roles')[];
+        roles?: string[];
+        users?: string[];
+    };
+}
+declare enum InteractionResponseType {
+    Pong = 1,
+    Acknowledge = 2,
+    ChannelMessage = 3,
+    ChannelMessageWithSource = 4,
+    DefferedChannelMessageWithSource = 5
+}
+declare type InteractionResponseTypeString = keyof typeof InteractionResponseType;
+export declare class InteractionResponse {
+    private id;
+    private token;
+    private hasReplied;
+    channel: TextChannel | NewsChannel;
+    member: GuildMember;
+    guild: Guild;
+    arguments: SlashArguments;
+    constructor(channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, args: SlashArguments);
+    reply(content?: string, options?: InteractionCallbackOptions): Promise<void>;
+}
+export {};

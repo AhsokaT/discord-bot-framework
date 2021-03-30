@@ -1,4 +1,6 @@
-import { Guild, GuildMember, NewsChannel, TextChannel } from 'discord.js';
+import { GuildMember, NewsChannel, TextChannel } from 'discord.js';
+import { InteractionResponse } from './SlashBase.js';
+import { Client } from '../client/Client.js';
 
 export type Snowflake = string | bigint;
 
@@ -52,24 +54,26 @@ export interface ApplicationCommand {
 
 export interface SlashCommandOptions extends Partial<ApplicationCommand> {
     /** The function to be executed when this command is run */
-    callback?: (member: GuildMember, channel: TextChannel | NewsChannel, guild: Guild, args: object) => void;
+    callback?: SlashCallback;
 }
 
-export type SlashCallback = (member: GuildMember, channel: TextChannel | NewsChannel, args: object) => void;
+export type SlashCallback = (response: InteractionResponse, client: Client) => void;
 
-class SlashArgument {
+export class SlashArgument {
     name: string;
     value: any;
+    type: string;
     options?: SlashArgument[];
 
-    constructor(options: { name: string, value: any, options?: SlashArgument[] }) {
+    constructor(options: { name: string, value: any, type: number, options?: SlashArgument[] }) {
         this.name = options.name;
         this.value = options.value;
+        this.type = ApplicationCommandOptionType[options.type];
         if (options.options) this.options = options.options;
     }
 }
 
-class SlashArguments {
+export class SlashArguments {
     private args: SlashArgument[] = [];
 
     constructor(args?: SlashArgument[]) {
@@ -81,6 +85,17 @@ class SlashArguments {
      * @returns The user input
      */
     public get(name: string) {
+        return this.args.find(arg => arg.name === name);
+    }
 
+    /**
+     * @returns The first user input
+     */
+    public first() {
+        return this.args[0];
+    }
+
+    public all() {
+        return this.args;
     }
 }

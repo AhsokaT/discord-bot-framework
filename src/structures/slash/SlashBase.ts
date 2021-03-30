@@ -1,27 +1,31 @@
 import { SlashCommand } from './Slash.js';
 import { post, del, get, patch } from 'superagent';
-import { SlashCallback, Snowflake } from './SlashTypes.js';
-import { Client } from 'discord.js';
+import { SlashCallback, Snowflake, SlashArgument, SlashArguments } from './SlashTypes.js';
+import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel } from 'discord.js';
+import { Client } from '../client/Client.js';
 
 export class SlashBase {
     #token: string;
     #client: Client;
     #appID?: string;
     #guildID?: string;
-    #callbacks: { name: string; callback: SlashCallback; }[];
+    #callbacks: { name: string; callback: SlashCallback; }[] = [];
 
     constructor(client: Client, token: string) {
         this.#client = client;
         this.#token = token;
 
         // @ts-expect-error
-        client.ws.on('INTERACTION_CREATE', i => {
+        client.ws.on('INTERACTION_CREATE', async i => {
+            const channel = await this.#client.channels.fetch(i.channel_id).catch(console.error);
+            if (!channel || !(channel instanceof TextChannel || channel instanceof NewsChannel)) return;
 
+            const member = await channel.guild.members.fetch(i.member.user.id);
+            if (!member) return;
 
             const command = this.#callbacks.find(callback => callback.name === i.data.name);
 
-            // @ts-expect-error
-            if (command) command.callback();
+            if (command) command.callback(new InteractionResponse(channel, member, i.id, i.token, new SlashArguments(i.data.options?.map(i => new SlashArgument(i)))), this.#client);
         });
     }
 
@@ -77,7 +81,14 @@ export class SlashBase {
 
         if (!postedCommand) return;
 
-        return new SlashCommand(postedCommand.body);
+        const posted = new SlashCommand(postedCommand.body);
+
+        if (posted.name && command.callback) this.#callbacks.push({
+            name: posted.name,
+            callback: command.callback
+        });
+
+        return posted;
     }
 
     /**
@@ -95,5 +106,68 @@ export class SlashBase {
         const deleted = await del(endpoint + `/${toDelete.id}`).set('Authorization', 'Bot ' + this.#token).catch(console.error);
 
         if (deleted && deleted.status === 204) return toDelete;
+    }
+}
+
+interface InteractionCallbackOptions {
+    type?: InteractionResponseTypeString;
+    embeds?: MessageEmbed[];
+    ephemeral?: boolean;
+    tts?: boolean;
+    allowedMentions?: {
+        parse?: ('users' | 'everyone' | 'roles')[],
+        roles?: string[];
+        users?: string[];
+    }
+}
+
+enum InteractionResponseType {
+    Pong = 1,
+    Acknowledge,
+    ChannelMessage,
+    ChannelMessageWithSource,
+    DefferedChannelMessageWithSource
+}
+
+type InteractionResponseTypeString = keyof typeof InteractionResponseType;
+
+export class InteractionResponse {
+    private id: string;
+    private token: string;
+    private hasReplied = false;
+
+    public channel: TextChannel | NewsChannel;
+    public member: GuildMember;
+    public guild: Guild;
+    public arguments: SlashArguments;
+
+    constructor(channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, args: SlashArguments) {
+        this.id = id;
+        this.token = token;
+        this.member = member;
+        this.channel = channel;
+        this.arguments = args;
+    }
+
+    public async reply(content?: string, options?: InteractionCallbackOptions) {
+        if (this.hasReplied) throw new Error('You can only reply to a slash command once.');
+
+        this.hasReplied = true;
+
+        const endpoint = `https://discord.com/api/v8/interactions/${this.id}/${this.token}/callback`;
+
+        if (!options) options = new Object();
+
+        let json = {
+            type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
+            data: {
+                content: typeof content === 'string' ? content : undefined,
+                flags: options.ephemeral ? 64 : undefined,
+                embeds: options.embeds?.map(i => i.toJSON()) ?? new Array(),
+                allowed_mentions: options.allowedMentions ?? undefined
+            }
+        };
+
+        await post(endpoint).set('Content-Type', 'application/json').send(JSON.stringify(json));
     }
 }

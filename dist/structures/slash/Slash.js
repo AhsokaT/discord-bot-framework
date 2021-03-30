@@ -104,5 +104,8 @@ class SlashCommand {
     get id() {
         return this.#data.id;
     }
+    get callback() {
+        return this.#data.callback;
+    }
 }
 exports.SlashCommand = SlashCommand;
