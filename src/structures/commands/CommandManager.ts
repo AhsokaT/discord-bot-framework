@@ -82,7 +82,7 @@ export class CommandManager {
                 }
 
                 if (command.permissions.length > 0) {
-                    embed.addField('Permissions', command.permissions.map(i => `\`${i.replaceAll('_', ' ').toLowerCase()}\``).join(' '), false);
+                    embed.addField('Permissions', command.permissions.map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
                 }
 
                 if (command.aliases.length > 0) {
@@ -150,8 +150,8 @@ export class CommandManager {
             if (!command) return;
 
             if (!message.channel.nsfw && command.nsfw) return message.channel.send('❌ This command must be run in an **NSFW** channel');
-            if (!message.member?.permissions.has(command.permissions)) return message.channel.send(`❌ You require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${toList(command.permissions.map(i => `\`${i.toLowerCase().replaceAll('_', ' ')}\``))} to run this command!`).catch(console.error);
-            if (!message.guild?.me?.permissions.has(command.permissions)) return message.channel.send(`❌ I require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${toList(command.permissions.map(i => `\`${i.toLowerCase().replaceAll('_', ' ')}\``))} to run this command!`).catch(console.error);
+            if (!message.member?.permissions.has(command.permissions)) return message.channel.send(`❌ You require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${toList(command.permissions.map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command!`).catch(console.error);
+            if (!message.guild?.me?.permissions.has(command.permissions)) return message.channel.send(`❌ I require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${toList(command.permissions.map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command!`).catch(console.error);
 
             let args: Argument[] = [];
 

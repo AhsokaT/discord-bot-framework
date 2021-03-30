@@ -58,13 +58,21 @@ export interface SlashCommandOptions extends Partial<ApplicationCommand> {
 export type SlashCallback = (member: GuildMember, channel: TextChannel | NewsChannel, args: object) => void;
 
 class SlashArgument {
-    
+    name: string;
+    value: any;
+    options?: SlashArgument[];
+
+    constructor(options: { name: string, value: any, options?: SlashArgument[] }) {
+        this.name = options.name;
+        this.value = options.value;
+        if (options.options) this.options = options.options;
+    }
 }
 
 class SlashArguments {
-    private args: object[] = [];
+    private args: SlashArgument[] = [];
 
-    constructor(args?: object) {
+    constructor(args?: SlashArgument[]) {
         if (Array.isArray(args)) this.args = args;
     }
 
