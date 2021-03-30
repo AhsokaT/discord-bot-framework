@@ -12,7 +12,6 @@ class Client extends discord_js_1.Client {
         if (!options.token)
             throw new Error('Argument for \'ClientOptions\' had no property \'token\'');
         this.token = options.token;
-        this.login();
         this.#slash = new SlashBase_1.SlashBase(this, this.token);
         this.#commands = new CommandManager_1.CommandManager(this, options);
     }

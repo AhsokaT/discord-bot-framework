@@ -1,6 +1,8 @@
-import { Message, Client, PermissionString } from 'discord.js';
-declare type CommandCallback = (message: Message, client: Client, arguments: Argument[]) => void;
-declare interface Parameter {
+import { Message, PermissionString } from 'discord.js';
+import { Arguments } from './CommandManager.js';
+import { Client } from '../client/Client.js';
+export declare type CommandCallback = (message: Message, client: Client, args: Arguments) => void;
+export interface Parameter {
     name: string;
     description?: string;
     type?: 'string' | 'number';
@@ -14,15 +16,15 @@ export interface Argument {
 }
 export interface CommandInfo {
     /**
-     * - The name of your command
+     * The name of your command
      */
     name?: string;
     /**
-     * - The function to be executed when the command is called
+     * The function to be executed when this command is invoked
      */
     callback?: CommandCallback;
     /**
-     * - A short description of your command
+     * A short description of your command
      */
     description?: string;
     /**
@@ -30,34 +32,24 @@ export interface CommandInfo {
      */
     nsfw?: boolean;
     /**
-     * - Any inputs from the user your function requires to run. Params that are not required will be automatically sorted to the back of the array
+     * Parameter(s) this command accepts
      */
     parameters?: Parameter[];
     /**
-     * - Alternate names the command can be called by
+     * Alternate names the command can be called by
      */
     aliases?: string[];
     /**
-     * - The category of commands your command belongs to
+     * The category of commands this command belongs to
      */
     category?: string;
     /**
-     * - The permissions the bot and user require to run this command
+     * Permission(s) this command requires to run
      */
-    permissions?: PermissionString | PermissionString[];
+    permissions?: PermissionString[];
 }
 export declare class Command {
     #private;
-    toObject(): {
-        name: string | undefined;
-        description: string | undefined;
-        nsfw: boolean;
-        category: string | undefined;
-        aliases: string[];
-        parameters: Parameter[];
-        permissions: PermissionString[];
-        callback: CommandCallback | undefined;
-    };
     constructor(info?: CommandInfo);
     get name(): string | undefined;
     get description(): string | undefined;
@@ -76,29 +68,42 @@ export declare class Command {
      */
     setDescription(description: string): this;
     /**
-     * @param nsfw Whether the command should only be usable in NSFW channels; false by default
+     * @param nsfw Whether the command should only be usable in NSFW channels; true by default
      */
-    setNSFW(nsfw: boolean): this;
+    setNSFW(nsfw?: boolean): this;
     /**
      * @param category The category of commands this command belongs to
      */
     setCategory(category: string): this;
+    /**
+     * @param callback The function to be executed when this command is invoked
+     * @example
+     * setCallback((message, client, args) => message.reply('pong!'));
+     */
     setCallback(callback: CommandCallback): this;
     /**
-     * @param parameter Parameter(s) this command accepts
+     * @param parameters Parameter(s) this command accepts
+     * @example
+     * addParameter({ name: 'id', description: 'The ID of a member' });
      */
-    addParameter(parameter: Parameter | Parameter[]): this;
+    addParameter(...parameters: Parameter[]): this;
     /**
-     * @param permission Permission(s) this command requires to run
+     * @param permissions Permission(s) this command requires to run
+     * @example
+     * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
-    addPermission(permission: PermissionString | PermissionString[]): this;
+    addPermissions(...permissions: PermissionString[]): this;
     /**
      * @param alias Alternative name(s) this command can be called by
+     * @example
+     * addAlias('purge', 'bulkdelete');
      */
-    addAlias(alias: string | string[]): this;
+    addAlias(...alias: string[]): this;
     /**
      * Edit the properties of this command
+     * @param info Object containing new properties
+     * @example
+     * edit({ name: 'purge', description: 'Deletes messages' });
      */
     edit(info: CommandInfo): this;
 }
-export {};

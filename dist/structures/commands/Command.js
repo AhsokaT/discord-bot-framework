@@ -18,18 +18,6 @@ class Command {
     #parameters;
     #permissions;
     #callback;
-    toObject() {
-        return {
-            name: this.name,
-            description: this.description,
-            nsfw: this.nsfw,
-            category: this.category,
-            aliases: this.aliases,
-            parameters: this.parameters,
-            permissions: this.permissions,
-            callback: this.callback,
-        };
-    }
     get name() {
         return this.#name;
     }
@@ -71,9 +59,9 @@ class Command {
         return this;
     }
     /**
-     * @param nsfw Whether the command should only be usable in NSFW channels; false by default
+     * @param nsfw Whether the command should only be usable in NSFW channels; true by default
      */
-    setNSFW(nsfw) {
+    setNSFW(nsfw = true) {
         this.#nsfw = Boolean(nsfw);
         return this;
     }
@@ -82,71 +70,72 @@ class Command {
      */
     setCategory(category) {
         if (category && typeof category === 'string')
-            this.#category = category;
+            this.#category = category.toLowerCase();
         return this;
     }
+    /**
+     * @param callback The function to be executed when this command is invoked
+     * @example
+     * setCallback((message, client, args) => message.reply('pong!'));
+     */
     setCallback(callback) {
         if (typeof callback === 'function')
             this.#callback = callback;
         return this;
     }
     /**
-     * @param parameter Parameter(s) this command accepts
+     * @param parameters Parameter(s) this command accepts
+     * @example
+     * addParameter({ name: 'id', description: 'The ID of a member' });
      */
-    addParameter(parameter) {
-        if (!parameter)
-            return this;
-        if (Array.isArray(parameter)) {
-            parameter.forEach(param => this.addParameter(param));
-            return this;
-        }
-        if (typeof parameter !== 'object')
-            throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
-        const { name, description, choices, wordCount, type, required } = parameter;
-        if (typeof name !== 'string')
-            throw new TypeError('Property \'name\' of \'parameter\' must be a string.');
-        if (description && typeof description !== 'string')
-            throw new TypeError('Property \'description\' of \'parameter\' must be a string.');
-        if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited')
-            throw new TypeError('Property \'wordCount\' of \'parameter\' must be a number or \'unlimited\'.');
-        if (type && type !== 'number' && type !== 'string')
-            throw new TypeError('Property \'type\' of \'parameter\' must either be \'number\' or \'string\'.');
-        if (choices && !Array.isArray(choices))
-            throw new TypeError('Property \'choices\' of \'parameter\' must be an array.');
-        parameter.choices?.filter(choice => typeof choice === 'string');
-        parameter.required = typeof required === 'boolean' ? required : true;
-        this.#parameters.push(parameter);
-        this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+    addParameter(...parameters) {
+        if (Array.isArray(parameters))
+            parameters.forEach(parameter => {
+                if (typeof parameter !== 'object')
+                    throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
+                const { name, description, choices, wordCount, type, required } = parameter;
+                if (typeof name !== 'string')
+                    throw new TypeError('Property \'name\' of \'parameter\' must be a string.');
+                if (description && typeof description !== 'string')
+                    throw new TypeError('Property \'description\' of \'parameter\' must be a string.');
+                if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited')
+                    throw new TypeError('Property \'wordCount\' of \'parameter\' must be a number or \'unlimited\'.');
+                if (type && type !== 'number' && type !== 'string')
+                    throw new TypeError('Property \'type\' of \'parameter\' must either be \'number\' or \'string\'.');
+                if (choices && !Array.isArray(choices))
+                    throw new TypeError('Property \'choices\' of \'parameter\' must be an array.');
+                parameter.choices?.filter(choice => typeof choice === 'string');
+                parameter.required = typeof required === 'boolean' ? required : true;
+                this.#parameters.push(parameter);
+                this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+            });
         return this;
     }
     /**
-     * @param permission Permission(s) this command requires to run
+     * @param permissions Permission(s) this command requires to run
+     * @example
+     * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
-    addPermission(permission) {
-        if (Array.isArray(permission)) {
-            permission.forEach(perm => this.addPermission(perm));
-            return this;
-        }
-        if (typeof permission !== 'string')
-            return this;
-        this.#permissions.push(permission);
+    addPermissions(...permissions) {
+        if (Array.isArray(permissions))
+            this.#permissions.push(...permissions.filter(perm => typeof perm === 'string'));
         return this;
     }
     /**
      * @param alias Alternative name(s) this command can be called by
+     * @example
+     * addAlias('purge', 'bulkdelete');
      */
-    addAlias(alias) {
-        if (Array.isArray(alias)) {
-            alias.forEach(i => this.addAlias(i));
-            return this;
-        }
-        if (typeof alias !== 'string')
-            return this;
-        this.#aliases.push(alias);
+    addAlias(...alias) {
+        if (Array.isArray(alias))
+            this.#aliases.push(...alias.filter(alias => typeof alias === 'string'));
         return this;
     }
     /**
      * Edit the properties of this command
+     * @param info Object containing new properties
+     * @example
+     * edit({ name: 'purge', description: 'Deletes messages' });
      */
     edit(info) {
         if (typeof info !== 'object')
@@ -163,11 +152,11 @@ class Command {
         if (typeof nsfw === 'boolean')
             this.setNSFW(nsfw);
         if (Array.isArray(permissions))
-            this.addPermission(permissions);
+            this.addPermissions(...permissions);
         if (Array.isArray(parameters))
-            this.addParameter(parameters);
+            this.addParameter(...parameters);
         if (Array.isArray(aliases))
-            this.addAlias(aliases);
+            this.addAlias(...aliases);
         return this;
     }
 }

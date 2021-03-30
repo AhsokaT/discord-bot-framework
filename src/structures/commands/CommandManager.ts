@@ -1,5 +1,6 @@
 import { Argument, Command, CommandInfo } from './Command.js';
-import { PermissionString, EmbedFieldData, MessageEmbed, Client, Message } from 'discord.js';
+import { PermissionString, EmbedFieldData, MessageEmbed, Message } from 'discord.js';
+import { Client } from '../client/Client.js';
 
 export interface CommandManagerOptions {
     /**
@@ -29,7 +30,7 @@ export class CommandManager {
     #client: Client;
 
     constructor(client: Client, options?: CommandManagerOptions) {
-        if (options?.categories && Array.isArray(options.categories)) this.#categories = options.categories;
+        if (options?.categories && Array.isArray(options.categories)) this.#categories = options.categories.map(i => i.toLowerCase());
 
         this.#prefix = options?.prefix ?? '';
         this.#allowBots = options?.allowBots ?? false;
@@ -40,8 +41,8 @@ export class CommandManager {
             return `${i.length > 1 ? `${i.slice(0, i.length - 1).join(', ')} ${trailingConnective} ${i[i.length - 1]}` : i }`;
         }
 
-        async function helpCommand(this: CommandManager, message: Message, client: Client, args: Argument[]) {
-            const input = args.find(arg => arg.name === 'command')?.value;
+        async function helpCommand(this: CommandManager, message: Message, client: Client, args: Arguments) {
+            const input = args.first();
             const group = this.categories.find(i => i.toLowerCase() === input?.toLowerCase());
             const command = input ? this.get(input.toLowerCase()) : null;
 
@@ -55,7 +56,7 @@ export class CommandManager {
                 const embed = new MessageEmbed({
                     color: '#2F3136',
                     author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                    title: group,
+                    title: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(),
                     description: commands.length === 0 ? 'There are currently no commands set for this category' : '',
                     fields: commands
                 });
@@ -68,16 +69,12 @@ export class CommandManager {
             if (command) {
                 let embed = new MessageEmbed({
                     color: '#2F3136',
-                    author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                    title: `${this.#prefix}${command.name}`
+                    author: { name:  command.category ? command.category.slice(0, 1).toUpperCase() + command.category.slice(1, command.category.length).toLowerCase() : this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
+                    title: this.#prefix + command.name
                 });
 
                 if (command.description) {
                     embed.addField('Description', command.description, false);
-                }
-
-                if (command.aliases.length > 0) {
-                    embed.addField('Aliases', toList(command.aliases.map(i => `\`${i}\``)), false);
                 }
 
                 if (command.parameters.length > 0) {
@@ -85,7 +82,15 @@ export class CommandManager {
                 }
 
                 if (command.permissions.length > 0) {
-                    embed.addField('Permissions', toList(command.permissions.map(i => `\` ${i.replaceAll('_', ' ').toLowerCase()} \``)), false);
+                    embed.addField('Permissions', command.permissions.map(i => `\`${i.replaceAll('_', ' ').toLowerCase()}\``).join(' '), false);
+                }
+
+                if (command.aliases.length > 0) {
+                    embed.addField('Aliases', command.aliases.map(i => `\`${i}\``).join(' '), false);
+                }
+
+                if (command.nsfw) {
+                    embed.setFooter('NSFW');
                 }
 
                 message.channel.send(embed).catch(console.error);
@@ -100,7 +105,7 @@ export class CommandManager {
             });
 
             const groups = this.categories.map(group => {
-                const field: EmbedFieldData = { name: group, value: `${this.#prefix}help ${group.toLowerCase()}`, inline: true };
+                const field: EmbedFieldData = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `\`${this.#prefix}help ${group.toLowerCase()}\``, inline: true };
 
                 return field;
             });
@@ -169,10 +174,10 @@ export class CommandManager {
                     return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
                 }
 
-                args.push({ name: param.name, value: input });
+                if (input) args.push({ name: param.name, value: input });
             }
 
-            if (command.callback) command.callback(message, this.#client, args);
+            if (command.callback) command.callback(message, this.#client, new Arguments(args));
         });
     }
 
@@ -180,12 +185,12 @@ export class CommandManager {
         return this.#allowBots;
     }
 
-    set allowBots(allowBots: boolean) {
-        if (typeof allowBots === 'boolean') this.#allowBots = allowBots;
-    }
-
     get categories() {
         return this.#categories;
+    }
+
+    get prefix() {
+        return this.#prefix;
     }
 
     /**
@@ -241,5 +246,28 @@ export class CommandManager {
         const commands = this.#commands;
 
         return commands;
+    }
+}
+
+export class Arguments {
+    private args: Argument[] = [];
+
+    constructor(args?: Argument[]) {
+        if (Array.isArray(args)) this.args = args;
+    }
+
+    /**
+     * @param name Name of your parameter
+     * @returns The user input
+     */
+    public get(name: string) {
+        return this.args.find(i => i.name === name)?.value;
+    }
+
+    /**
+     * @returns The first user input
+     */
+    public first() {
+        return this.args[0]?.value;
     }
 }

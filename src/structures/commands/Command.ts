@@ -1,8 +1,10 @@
-import { Message, Client, PermissionString } from 'discord.js';
+import { Message, PermissionString } from 'discord.js';
+import { Arguments } from './CommandManager.js';
+import { Client } from '../client/Client.js';
 
-declare type CommandCallback = (message: Message, client: Client, arguments: Argument[]) => void;
+export type CommandCallback = (message: Message, client: Client, args: Arguments) => void;
 
-declare interface Parameter {
+export interface Parameter {
     name: string;
     description?: string;
     type?: 'string' | 'number';
@@ -18,15 +20,15 @@ export interface Argument {
 
 export interface CommandInfo {
     /**
-     * - The name of your command
+     * The name of your command
      */
     name?: string;
     /**
-     * - The function to be executed when the command is called
+     * The function to be executed when this command is invoked
      */
     callback?: CommandCallback;
     /**
-     * - A short description of your command
+     * A short description of your command
      */
     description?: string;
     /**
@@ -34,21 +36,21 @@ export interface CommandInfo {
      */
     nsfw?: boolean;
     /**
-     * - Any inputs from the user your function requires to run. Params that are not required will be automatically sorted to the back of the array
+     * Parameter(s) this command accepts
      */
     parameters?: Parameter[];
     /**
-     * - Alternate names the command can be called by
+     * Alternate names the command can be called by
      */
     aliases?: string[];
     /**
-     * - The category of commands your command belongs to
+     * The category of commands this command belongs to
      */
     category?: string;
     /**
-     * - The permissions the bot and user require to run this command
+     * Permission(s) this command requires to run
      */
-    permissions?: PermissionString | PermissionString[];
+    permissions?: PermissionString[];
 }
 
 export class Command {
@@ -60,19 +62,6 @@ export class Command {
     #parameters: Parameter[] = [];
     #permissions: PermissionString[] = [];
     #callback?: CommandCallback;
-
-    public toObject() {
-        return {
-            name: this.name,
-            description: this.description,
-            nsfw: this.nsfw,
-            category: this.category,
-            aliases: this.aliases,
-            parameters: this.parameters,
-            permissions: this.permissions,
-            callback: this.callback,
-        }
-    }
 
     constructor(info?: CommandInfo) {
         if (info) this.edit(info);
@@ -127,9 +116,9 @@ export class Command {
     }
 
     /**
-     * @param nsfw Whether the command should only be usable in NSFW channels; false by default
+     * @param nsfw Whether the command should only be usable in NSFW channels; true by default
      */
-    public setNSFW(nsfw: boolean): this {
+    public setNSFW(nsfw: boolean = true): this {
         this.#nsfw = Boolean(nsfw);
         return this;
     }
@@ -138,10 +127,15 @@ export class Command {
      * @param category The category of commands this command belongs to
      */
     public setCategory(category: string): this {
-        if (category && typeof category === 'string') this.#category = category;
+        if (category && typeof category === 'string') this.#category = category.toLowerCase();
         return this;
     }
 
+    /**
+     * @param callback The function to be executed when this command is invoked
+     * @example
+     * setCallback((message, client, args) => message.reply('pong!'));
+     */
     public setCallback(callback: CommandCallback): this {
         if (typeof callback === 'function') this.#callback = callback;        
 
@@ -149,72 +143,59 @@ export class Command {
     }
 
     /**
-     * @param parameter Parameter(s) this command accepts
+     * @param parameters Parameter(s) this command accepts
+     * @example
+     * addParameter({ name: 'id', description: 'The ID of a member' });
      */
-    public addParameter(parameter: Parameter | Parameter[]): this {
-        if (!parameter) return this;
+    public addParameter(...parameters: Parameter[]): this {
+        if (Array.isArray(parameters)) parameters.forEach(parameter => {
+            if (typeof parameter !== 'object') throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
 
-        if (Array.isArray(parameter)) {
-            parameter.forEach(param => this.addParameter(param));
+            const { name, description, choices, wordCount, type, required } = parameter;
 
-            return this;
-        }
+            if (typeof name !== 'string') throw new TypeError('Property \'name\' of \'parameter\' must be a string.');
+            if (description && typeof description !== 'string') throw new TypeError('Property \'description\' of \'parameter\' must be a string.');
+            if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited') throw new TypeError('Property \'wordCount\' of \'parameter\' must be a number or \'unlimited\'.');
+            if (type && type !== 'number' && type !== 'string') throw new TypeError('Property \'type\' of \'parameter\' must either be \'number\' or \'string\'.');
+            if (choices && !Array.isArray(choices)) throw new TypeError('Property \'choices\' of \'parameter\' must be an array.');
 
-        if (typeof parameter !== 'object') throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
+            parameter.choices?.filter(choice => typeof choice === 'string');
+            parameter.required = typeof required === 'boolean' ? required : true;
 
-        const { name, description, choices, wordCount, type, required } = parameter;
-
-        if (typeof name !== 'string') throw new TypeError('Property \'name\' of \'parameter\' must be a string.');
-        if (description && typeof description !== 'string') throw new TypeError('Property \'description\' of \'parameter\' must be a string.');
-        if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited') throw new TypeError('Property \'wordCount\' of \'parameter\' must be a number or \'unlimited\'.');
-        if (type && type !== 'number' && type !== 'string') throw new TypeError('Property \'type\' of \'parameter\' must either be \'number\' or \'string\'.');
-        if (choices && !Array.isArray(choices)) throw new TypeError('Property \'choices\' of \'parameter\' must be an array.');
-
-        parameter.choices?.filter(choice => typeof choice === 'string');
-        parameter.required = typeof required === 'boolean' ? required : true;
-
-        this.#parameters.push(parameter);
-        this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+            this.#parameters.push(parameter);
+            this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+        });
 
         return this;
     }
 
     /**
-     * @param permission Permission(s) this command requires to run
+     * @param permissions Permission(s) this command requires to run
+     * @example
+     * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
-    public addPermission(permission: PermissionString | PermissionString[]): this {
-        if (Array.isArray(permission)) {
-            permission.forEach(perm => this.addPermission(perm));
-
-            return this;
-        }
-
-        if (typeof permission !== 'string') return this;
-
-        this.#permissions.push(permission);
+    public addPermissions(...permissions: PermissionString[]): this {
+        if (Array.isArray(permissions)) this.#permissions.push(...permissions.filter(perm => typeof perm === 'string'));
 
         return this;
     }
 
     /**
      * @param alias Alternative name(s) this command can be called by
+     * @example
+     * addAlias('purge', 'bulkdelete');
      */
-    public addAlias(alias: string | string[]): this {
-        if (Array.isArray(alias)) {
-            alias.forEach(i => this.addAlias(i));
-
-            return this;
-        }
-
-        if (typeof alias !== 'string') return this;
-
-        this.#aliases.push(alias);
+    public addAlias(...alias: string[]): this {
+        if (Array.isArray(alias)) this.#aliases.push(...alias.filter(alias => typeof alias === 'string'));
 
         return this;
     }
 
     /**
      * Edit the properties of this command
+     * @param info Object containing new properties
+     * @example
+     * edit({ name: 'purge', description: 'Deletes messages' });
      */
     public edit(info: CommandInfo): this {
         if (typeof info !== 'object') throw new TypeError('Parameter for \'info\' must be of type \'CommandInfo\'.');
@@ -226,9 +207,9 @@ export class Command {
         if (category) this.setCategory(category);
         if (callback) this.setCallback(callback);
         if (typeof nsfw === 'boolean') this.setNSFW(nsfw);
-        if (Array.isArray(permissions)) this.addPermission(permissions);
-        if (Array.isArray(parameters)) this.addParameter(parameters);
-        if (Array.isArray(aliases)) this.addAlias(aliases);
+        if (Array.isArray(permissions)) this.addPermissions(...permissions);
+        if (Array.isArray(parameters)) this.addParameter(...parameters);
+        if (Array.isArray(aliases)) this.addAlias(...aliases);
 
         return this;
     }

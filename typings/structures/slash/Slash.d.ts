@@ -6,19 +6,19 @@ export declare class SlashCommand {
     /**
      * @param name The name of your slash command.
      */
-    setName(name: string): void;
+    setName(name: string): this;
     /**
      * @param description The description of your slash command.
      */
-    setDescription(description: string): void;
+    setDescription(description: string): this;
     /**
      * @param callback The function to be executed when the command is run.
      */
-    setCallback(callback: SlashCallback): void;
+    setCallback(callback: SlashCallback): this;
     /**
      * Add a user input option
      */
-    addOption(option: ApplicationCommandOption): void;
+    addOption(...options: ApplicationCommandOption[]): this;
     /**
      * @returns A JSON representation of this slash command.
      */

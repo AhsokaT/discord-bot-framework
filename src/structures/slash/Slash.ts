@@ -1,21 +1,19 @@
 import { ApplicationCommandOptionType, ApplicationCommandOption, SlashCommandOptions, SlashCallback } from './SlashTypes';
 
 export class SlashCommand {
-    #data: SlashCommandOptions;
+    #data: SlashCommandOptions = new Object();
 
     constructor(options?: SlashCommandOptions) {
-        this.#data = new Object();
-
         if (!options) return;
 
         const { name, description, options: opts, id, callback } = options;
 
         if (id) this.#data = { id: id };
 
-        if (name && typeof name === 'string' && new RegExp(/^[\w-]{1,32}$/).test(name)) this.#data.name = name;
-        if (description && typeof description === 'string') this.#data.description = description;
-        if (callback) this.#data.callback = callback;
-        if (opts && Array.isArray(opts)) this.#data.options = this.checkOptions(opts);
+        if (name) this.setName(name);
+        if (callback) this.setCallback(callback);
+        if (description) this.setDescription(description);
+        if (Array.isArray(opts)) this.addOption(...opts);
     }
 
     private checkOptions(options: ApplicationCommandOption[]): ApplicationCommandOption[] {
@@ -41,33 +39,39 @@ export class SlashCommand {
     /**
      * @param name The name of your slash command.
      */
-    public setName(name: string) {
+    public setName(name: string): this {
         if (name && typeof name === 'string' && new RegExp(/^[\w-]{1,32}$/).test(name)) this.#data.name = name;
+        return this;
     }
 
     /**
      * @param description The description of your slash command.
      */
-    public setDescription(description: string) {
+    public setDescription(description: string): this {
         if (description && typeof description === 'string' && description.length <= 100) this.#data.description = description;
+        return this;
     }
 
     /**
      * @param callback The function to be executed when the command is run.
      */
-    public setCallback(callback: SlashCallback) {
-        this.#data.callback = callback;
+    public setCallback(callback: SlashCallback): this {
+        if (typeof callback === 'function') this.#data.callback = callback;
+        return this;
     }
 
     /**
      * Add a user input option
      */
-    public addOption(option: ApplicationCommandOption) {
-        if (!option) throw new Error('');
-        let opt = this.checkOptions([option]).shift();
+    public addOption(...options: ApplicationCommandOption[]): this {
+        if (Array.isArray(options)) options.forEach(option => {
+            let opt = this.checkOptions([option]).shift();
 
-        if (!this.#data.options) this.#data.options = [];
-        if (opt) this.#data.options?.push(opt);
+            if (!this.#data.options) this.#data.options = [];
+            if (opt) this.#data.options?.push(opt);
+        });
+
+        return this;
     }
 
     /**

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommandManager = void 0;
+exports.Arguments = exports.CommandManager = void 0;
 const Command_js_1 = require("./Command.js");
 const discord_js_1 = require("discord.js");
 class CommandManager {
@@ -8,7 +8,7 @@ class CommandManager {
         this.#commands = [];
         this.#categories = [];
         if (options?.categories && Array.isArray(options.categories))
-            this.#categories = options.categories;
+            this.#categories = options.categories.map(i => i.toLowerCase());
         this.#prefix = options?.prefix ?? '';
         this.#allowBots = options?.allowBots ?? false;
         this.#permissions = options?.permissions ?? [];
@@ -17,7 +17,7 @@ class CommandManager {
             return `${i.length > 1 ? `${i.slice(0, i.length - 1).join(', ')} ${trailingConnective} ${i[i.length - 1]}` : i}`;
         }
         async function helpCommand(message, client, args) {
-            const input = args.find(arg => arg.name === 'command')?.value;
+            const input = args.first();
             const group = this.categories.find(i => i.toLowerCase() === input?.toLowerCase());
             const command = input ? this.get(input.toLowerCase()) : null;
             if (group) {
@@ -28,7 +28,7 @@ class CommandManager {
                 const embed = new discord_js_1.MessageEmbed({
                     color: '#2F3136',
                     author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                    title: group,
+                    title: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(),
                     description: commands.length === 0 ? 'There are currently no commands set for this category' : '',
                     fields: commands
                 });
@@ -38,20 +38,23 @@ class CommandManager {
             if (command) {
                 let embed = new discord_js_1.MessageEmbed({
                     color: '#2F3136',
-                    author: { name: this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                    title: `${this.#prefix}${command.name}`
+                    author: { name: command.category ? command.category.slice(0, 1).toUpperCase() + command.category.slice(1, command.category.length).toLowerCase() : this.#client.user?.username, iconURL: this.#client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
+                    title: this.#prefix + command.name
                 });
                 if (command.description) {
                     embed.addField('Description', command.description, false);
-                }
-                if (command.aliases.length > 0) {
-                    embed.addField('Aliases', toList(command.aliases.map(i => `\`${i}\``)), false);
                 }
                 if (command.parameters.length > 0) {
                     embed.addField('Parameters', command.parameters.map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
                 }
                 if (command.permissions.length > 0) {
-                    embed.addField('Permissions', toList(command.permissions.map(i => `\` ${i.replaceAll('_', ' ').toLowerCase()} \``)), false);
+                    embed.addField('Permissions', command.permissions.map(i => `\`${i.replaceAll('_', ' ').toLowerCase()}\``).join(' '), false);
+                }
+                if (command.aliases.length > 0) {
+                    embed.addField('Aliases', command.aliases.map(i => `\`${i}\``).join(' '), false);
+                }
+                if (command.nsfw) {
+                    embed.setFooter('NSFW');
                 }
                 message.channel.send(embed).catch(console.error);
                 return;
@@ -61,7 +64,7 @@ class CommandManager {
                 return field;
             });
             const groups = this.categories.map(group => {
-                const field = { name: group, value: `${this.#prefix}help ${group.toLowerCase()}`, inline: true };
+                const field = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `\`${this.#prefix}help ${group.toLowerCase()}\``, inline: true };
                 return field;
             });
             const invite = await this.#client.generateInvite({ permissions: this.#permissions });
@@ -120,10 +123,11 @@ class CommandManager {
                 if (param.type === 'number' && !parseInt(input, 10)) {
                     return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
                 }
-                args.push({ name: param.name, value: input });
+                if (input)
+                    args.push({ name: param.name, value: input });
             }
             if (command.callback)
-                command.callback(message, this.#client, args);
+                command.callback(message, this.#client, new Arguments(args));
         });
     }
     #commands;
@@ -135,12 +139,11 @@ class CommandManager {
     get allowBots() {
         return this.#allowBots;
     }
-    set allowBots(allowBots) {
-        if (typeof allowBots === 'boolean')
-            this.#allowBots = allowBots;
-    }
     get categories() {
         return this.#categories;
+    }
+    get prefix() {
+        return this.#prefix;
     }
     /**
      * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
@@ -192,3 +195,24 @@ class CommandManager {
     }
 }
 exports.CommandManager = CommandManager;
+class Arguments {
+    constructor(args) {
+        this.args = [];
+        if (Array.isArray(args))
+            this.args = args;
+    }
+    /**
+     * @param name Name of your parameter
+     * @returns The user input
+     */
+    get(name) {
+        return this.args.find(i => i.name === name)?.value;
+    }
+    /**
+     * @returns The first user input
+     */
+    first() {
+        return this.args[0]?.value;
+    }
+}
+exports.Arguments = Arguments;

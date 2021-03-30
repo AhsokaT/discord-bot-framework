@@ -30,9 +30,7 @@ const client = new Client({
     prefix: '$', // The bot will use this to discriminate messages
     token: 'A valid Discord bot token',
     categories: [ 'Miscellaneous', 'Information' ], // Categories that individual commands can belong to
-    clientOptions: { // Discord.JS Client options
-        presence: { status: 'idle' }
-    }
+    presence: { status: 'idle' }
 });
 
 // .commands.add(); also accepts an instance of the Command class, incase you declare your commands elsewhere
@@ -49,7 +47,7 @@ client.commands.add({
     ],
     category: 'Miscellaneous', // Specify the category this command belongs to
     callback: function (message, client, args) {
-        message.reply(`Hey, ${args['name']}!`);
+        message.reply(`Hey, ${args.first()}!`);
     }
 });
 
@@ -68,8 +66,9 @@ client.commands.add({
         }
     ],
     callback: function(message, client, args) {
-        // args is an Array of Argument objects
-        const amount = args.find(arg => arg.name === 'amount').value;
+        const amount = args.first();
+        // or
+        const amount = args.get('amount');
 
         message.channel.bulkDelete(amount).catch(error => message.reply('I could not delete any messages!'));
     }

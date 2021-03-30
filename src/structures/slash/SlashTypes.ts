@@ -55,4 +55,24 @@ export interface SlashCommandOptions extends Partial<ApplicationCommand> {
     callback?: (member: GuildMember, channel: TextChannel | NewsChannel, guild: Guild, args: object) => void;
 }
 
-export type SlashCallback = (member: GuildMember, channel: TextChannel | NewsChannel, guild: Guild, args: object) => void;
+export type SlashCallback = (member: GuildMember, channel: TextChannel | NewsChannel, args: object) => void;
+
+class SlashArgument {
+    
+}
+
+class SlashArguments {
+    private args: object[] = [];
+
+    constructor(args?: object) {
+        if (Array.isArray(args)) this.args = args;
+    }
+
+    /**
+     * @param name Name of your parameter
+     * @returns The user input
+     */
+    public get(name: string) {
+
+    }
+}

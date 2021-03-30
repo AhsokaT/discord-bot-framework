@@ -13,6 +13,16 @@ export class SlashBase {
     constructor(client: Client, token: string) {
         this.#client = client;
         this.#token = token;
+
+        // @ts-expect-error
+        client.ws.on('INTERACTION_CREATE', i => {
+
+
+            const command = this.#callbacks.find(callback => callback.name === i.data.name);
+
+            // @ts-expect-error
+            if (command) command.callback();
+        });
     }
 
     private async endpoint(): Promise<string> {
@@ -45,7 +55,7 @@ export class SlashBase {
      */
     public async all(): Promise<SlashCommand[]> {
         const endpoint = await this.endpoint();
-        console.log(endpoint);
+
         const res = await get(endpoint).set('Authorization', 'Bot ' + this.#token).catch(console.error);
 
         return res ? res.body.map(i => new SlashCommand(i)) : [];
@@ -57,8 +67,8 @@ export class SlashBase {
      */
     public async post(command: SlashCommand): Promise<SlashCommand | undefined> {
         const endpoint = await this.endpoint();
-        console.log(endpoint);
-        if (!(command instanceof SlashCommand)) command = new SlashCommand(command);
+
+        if (!(command instanceof SlashCommand)) return;
 
         if (!command.name) throw new Error('Slash commands must have a valid name set; a string with a length greater than zero.');
         if (!command.description) throw new Error('Slash commands must have a valid description set; a string with a length greater than zero.');

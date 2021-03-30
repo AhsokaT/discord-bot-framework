@@ -19,8 +19,6 @@ export class Client extends DJSClient {
 
         this.token = options.token;
 
-        this.login();
-
         this.#slash = new SlashBase(this, this.token);
         this.#commands = new CommandManager(this, options);
     }

@@ -39,7 +39,6 @@ class SlashBase {
      */
     async all() {
         const endpoint = await this.endpoint();
-        console.log(endpoint);
         const res = await superagent_1.get(endpoint).set('Authorization', 'Bot ' + this.#token).catch(console.error);
         return res ? res.body.map(i => new Slash_js_1.SlashCommand(i)) : [];
     }
@@ -49,9 +48,8 @@ class SlashBase {
      */
     async post(command) {
         const endpoint = await this.endpoint();
-        console.log(endpoint);
         if (!(command instanceof Slash_js_1.SlashCommand))
-            command = new Slash_js_1.SlashCommand(command);
+            return;
         if (!command.name)
             throw new Error('Slash commands must have a valid name set; a string with a length greater than zero.');
         if (!command.description)
