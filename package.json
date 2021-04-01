@@ -1,6 +1,6 @@
 {
   "name": "@pat.npm.js/discord-bot-framework",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Basic Discord bot framework designed with discord.js",
   "main": "./dist/index.js",
   "types": "./typings/index.d.ts",

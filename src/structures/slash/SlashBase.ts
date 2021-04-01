@@ -77,8 +77,6 @@ export class SlashBase {
 
             this.#commands.push(existing);
 
-            console.log('Returning existing');
-
             return existing;
         }
 

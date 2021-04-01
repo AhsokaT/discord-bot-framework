@@ -66,11 +66,10 @@ class SlashBase {
         if (!command.description)
             throw new Error('Slash commands must have a valid description set; a string with a length greater than zero.');
         const existing = (await this.all()).find(cmd => cmd.name === command.name);
-        if (existing) {
+        if (existing && existing.toJSON() === command.toJSON()) {
             if (typeof command.callback === 'function')
                 existing.setCallback(command.callback);
             this.#commands.push(existing);
-            console.log('Returning existing');
             return existing;
         }
         let posted = this.#guildID ?

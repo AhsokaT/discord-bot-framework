@@ -13,7 +13,6 @@ class Client extends discord_js_1.Client {
         if (!options.token)
             throw new Error('Argument for \'ClientOptions\' had no property \'token\'');
         this.token = options.token;
-        this.discord = REST_js_1.default(this.token);
         this.#slash = new SlashBase_1.SlashBase(this);
         this.#commands = new CommandManager_1.CommandManager(this, options);
     }
@@ -27,6 +26,9 @@ class Client extends discord_js_1.Client {
     }
     get slash() {
         return this.#slash;
+    }
+    get discord() {
+        return REST_js_1.default(this.token);
     }
 }
 exports.Client = Client;

@@ -9,8 +9,6 @@ export interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
 }
 
 export class Client extends DJSClient {
-    discord: any;
-
     #slash: SlashBase;
     #commands: CommandManager;
 
@@ -21,7 +19,6 @@ export class Client extends DJSClient {
         if (!options.token) throw new Error('Argument for \'ClientOptions\' had no property \'token\'');
 
         this.token = options.token;
-        this.discord = rest(this.token);
 
         this.#slash = new SlashBase(this);
         this.#commands = new CommandManager(this, options);
@@ -37,5 +34,9 @@ export class Client extends DJSClient {
 
     get slash() {
         return this.#slash;
+    }
+
+    get discord() {
+        return rest(this.token);
     }
 }

@@ -1,6 +1,6 @@
 import APIRequest from './APIRequest.js';
 
-export default function (token: string) {
+export default function (token: string | null) {
     const endpoint = [ 'https://discord.com/api/v8' ];
 
     const handler = {
@@ -10,7 +10,7 @@ export default function (token: string) {
             if (['get', 'post', 'patch', 'delete'].includes(name)) return async (options: any = {}) => {
                 if (!options.headers) options.headers = {};
 
-                options.headers['Authorization'] = 'Bot ' + token;
+                if (token) options.headers['Authorization'] = 'Bot ' + token;
 
                 return new APIRequest(name, endpoint.join('/'), options).make();
             };

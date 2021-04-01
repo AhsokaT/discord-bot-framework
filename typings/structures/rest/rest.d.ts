@@ -1,1 +1,1 @@
-export default function (token: string): any;
+export default function (token: string | null): any;
