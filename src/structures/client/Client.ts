@@ -2,8 +2,9 @@ import { SlashBase } from '../slash/SlashBase';
 import { Client as DJSClient } from 'discord.js';
 import { ClientOptions as DJSClientOptions } from 'discord.js';
 import { CommandManager, CommandManagerOptions } from '../commands/CommandManager';
+import api from './https.js';
 
-interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
+export interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
     token: string;
 }
 
@@ -19,7 +20,7 @@ export class Client extends DJSClient {
 
         this.token = options.token;
 
-        this.#slash = new SlashBase(this, this.token);
+        this.#slash = new SlashBase(this);
         this.#commands = new CommandManager(this, options);
     }
 
@@ -33,5 +34,9 @@ export class Client extends DJSClient {
 
     get slash() {
         return this.#slash;
+    }
+
+    get discordapi() {
+        return api(this.token);
     }
 }

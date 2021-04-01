@@ -1,11 +1,10 @@
 import { SlashCommand } from './Slash.js';
-import { Snowflake, SlashArguments } from './SlashTypes.js';
-import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel } from 'discord.js';
+import { Snowflake } from './SlashTypes.js';
+import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User } from 'discord.js';
 import { Client } from '../client/Client.js';
 export declare class SlashBase {
     #private;
-    constructor(client: Client, token: string);
-    private endpoint;
+    constructor(client: Client);
     /**
      * Alter your slash commands on a server; alterations to server scope commands take place immediately
      * @param id The ID of a Discord server
@@ -42,7 +41,6 @@ interface InteractionCallbackOptions {
     };
 }
 declare enum InteractionResponseType {
-    Pong = 1,
     Acknowledge = 2,
     ChannelMessage = 3,
     ChannelMessageWithSource = 4,
@@ -50,14 +48,42 @@ declare enum InteractionResponseType {
 }
 declare type InteractionResponseTypeString = keyof typeof InteractionResponseType;
 export declare class InteractionResponse {
-    private id;
-    private token;
     private hasReplied;
+    private client;
+    id: string;
+    token: string;
     channel: TextChannel | NewsChannel;
     member: GuildMember;
     guild: Guild;
-    arguments: SlashArguments;
-    constructor(channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, args: SlashArguments);
-    reply(content?: string, options?: InteractionCallbackOptions): Promise<void>;
+    options: InteractionOptions;
+    author: User;
+    constructor(client: Client, channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, options: InteractionOptions);
+    reply(content?: string | MessageEmbed, options?: InteractionCallbackOptions): Promise<void>;
+}
+export declare class InteractionOption {
+    name: string;
+    value: any;
+    type: string;
+    options?: InteractionOption[];
+    constructor(options: {
+        name: string;
+        value: any;
+        type: number;
+        options?: InteractionOption[];
+    });
+}
+export declare class InteractionOptions {
+    private args;
+    constructor(args?: InteractionOption[]);
+    /**
+     * @param name Name of your parameter
+     * @returns The user input
+     */
+    get(name: string): any;
+    /**
+     * @returns The first user input
+     */
+    first(): any;
+    all(): InteractionOption[];
 }
 export {};

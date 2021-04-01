@@ -1,38 +1,29 @@
 import { SlashCommand } from './Slash.js';
-import { post, del, get, patch } from 'superagent';
-import { SlashCallback, Snowflake, SlashArgument, SlashArguments } from './SlashTypes.js';
-import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel } from 'discord.js';
+import { ApplicationCommandOptionType, Snowflake } from './SlashTypes.js';
+import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User } from 'discord.js';
 import { Client } from '../client/Client.js';
 
 export class SlashBase {
-    #token: string;
     #client: Client;
-    #appID?: string;
-    #guildID?: string;
-    #callbacks: { name: string; callback: SlashCallback; }[] = [];
+    #applicationID: string;
+    #commands: SlashCommand[] = [];
+    #guildID: string | undefined;
 
-    constructor(client: Client, token: string) {
+    constructor(client: Client) {
         this.#client = client;
-        this.#token = token;
 
         // @ts-expect-error
         client.ws.on('INTERACTION_CREATE', async i => {
             const channel = await this.#client.channels.fetch(i.channel_id).catch(console.error);
             if (!channel || !(channel instanceof TextChannel || channel instanceof NewsChannel)) return;
 
-            const member = await channel.guild.members.fetch(i.member.user.id);
+            const member = await channel.guild.members.fetch(i.member.user.id).catch(console.error);
             if (!member) return;
 
-            const command = this.#callbacks.find(callback => callback.name === i.data.name);
+            const command = this.#commands.find(command => command.name === i.data.name);
 
-            if (command) command.callback(new InteractionResponse(channel, member, i.id, i.token, new SlashArguments(i.data.options?.map(i => new SlashArgument(i)))), this.#client);
+            if (command && command.callback) command.callback(new InteractionResponse(this.#client, channel, member, i.id, i.token, new InteractionOptions(i.data.options?.map(i => new InteractionOption(i)))), this.#client);
         });
-    }
-
-    private async endpoint(): Promise<string> {
-        if (!this.#appID) this.#appID = (await this.#client.fetchApplication()).id;
-
-        return `https://discord.com/api/v8/applications/${this.#appID}/${this.#guildID ? `guilds/${this.#guildID}/commands` : 'commands'}`;
     }
 
     /**
@@ -58,11 +49,13 @@ export class SlashBase {
      * @returns an array of your slash commands.
      */
     public async all(): Promise<SlashCommand[]> {
-        const endpoint = await this.endpoint();
+        if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
 
-        const res = await get(endpoint).set('Authorization', 'Bot ' + this.#token).catch(console.error);
+        const commands = this.#guildID ?
+        await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
+        await this.#client.discordapi.applications(this.#applicationID).commands.get();
 
-        return res ? res.body.map(i => new SlashCommand(i)) : [];
+        return commands ? commands.map(command => new SlashCommand(command)) : [];
     }
 
     /**
@@ -70,23 +63,35 @@ export class SlashBase {
      * @param command An instance of the SlashCommand class.
      */
     public async post(command: SlashCommand): Promise<SlashCommand | undefined> {
-        const endpoint = await this.endpoint();
+        if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
 
         if (!(command instanceof SlashCommand)) return;
 
         if (!command.name) throw new Error('Slash commands must have a valid name set; a string with a length greater than zero.');
         if (!command.description) throw new Error('Slash commands must have a valid description set; a string with a length greater than zero.');
 
-        const postedCommand = await post(endpoint).send(command.toJSON()).set('Content-Type', 'application/json').set('Authorization', 'Bot ' + this.#token).catch(console.error);
+        const existing = (await this.all()).find(cmd => cmd.name === command.name);
 
-        if (!postedCommand) return;
+        if (existing) {
+            if (typeof command.callback === 'function') existing.setCallback(command.callback);
 
-        const posted = new SlashCommand(postedCommand.body);
+            this.#commands.push(existing);
 
-        if (posted.name && command.callback) this.#callbacks.push({
-            name: posted.name,
-            callback: command.callback
-        });
+            console.log('Returning existing');
+
+            return existing;
+        }
+
+        let posted = this.#guildID ?
+        await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands.post({ body: command.toJSON() }) :
+        await this.#client.discordapi.applications(this.#applicationID).commands.post({ body: command.toJSON() });
+
+        if (!posted) return;
+
+        posted = new SlashCommand(posted);
+        if (typeof command.callback === 'function') posted.setCallback(command.callback);
+
+        this.#commands.push(posted);
 
         return posted;
     }
@@ -96,16 +101,19 @@ export class SlashBase {
      * @param command The name or ID of a slash command.
      */
     public async delete(command: string): Promise<SlashCommand | undefined> {
+        if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
+
         if (!command) throw new Error('You must provide the name or ID of a slash command.');
-        const endpoint = await this.endpoint();
 
-        const toDelete = (await this.all()).find(i => i.name === command || i.id === command);
+        const existing = (await this.all()).find(i => i.name === command || i.id === command);
 
-        if (!toDelete) return;
+        if (!existing) return;
 
-        const deleted = await del(endpoint + `/${toDelete.id}`).set('Authorization', 'Bot ' + this.#token).catch(console.error);
+        const deleted = this.#guildID ?
+        await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands(existing.id).delete() :
+        await this.#client.discordapi.applications(this.#applicationID).commands(existing.id).delete();
 
-        if (deleted && deleted.status === 204) return toDelete;
+        if (deleted && deleted.status === 204) return existing;
     }
 }
 
@@ -122,8 +130,7 @@ interface InteractionCallbackOptions {
 }
 
 enum InteractionResponseType {
-    Pong = 1,
-    Acknowledge,
+    Acknowledge = 2,
     ChannelMessage,
     ChannelMessageWithSource,
     DefferedChannelMessageWithSource
@@ -132,29 +139,32 @@ enum InteractionResponseType {
 type InteractionResponseTypeString = keyof typeof InteractionResponseType;
 
 export class InteractionResponse {
-    private id: string;
-    private token: string;
     private hasReplied = false;
+    private client: Client;
 
+    public id: string;
+    public token: string;
     public channel: TextChannel | NewsChannel;
     public member: GuildMember;
     public guild: Guild;
-    public arguments: SlashArguments;
+    public options: InteractionOptions;
+    public author: User;
 
-    constructor(channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, args: SlashArguments) {
+    constructor(client: Client, channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, options: InteractionOptions) {
         this.id = id;
         this.token = token;
+        this.client = client;
         this.member = member;
         this.channel = channel;
-        this.arguments = args;
+        this.options = options;
+        this.guild = member.guild;
+        this.author = member.user;
     }
 
-    public async reply(content?: string, options?: InteractionCallbackOptions) {
-        if (this.hasReplied) throw new Error('You can only reply to a slash command once.');
+    public async reply(content?: string | MessageEmbed, options?: InteractionCallbackOptions) {
+        if (this.hasReplied) throw new Error('You can only reply to a slash command once; to send followup messages, use \'interaction.channel.send();\'');
 
         this.hasReplied = true;
-
-        const endpoint = `https://discord.com/api/v8/interactions/${this.id}/${this.token}/callback`;
 
         if (!options) options = new Object();
 
@@ -168,6 +178,49 @@ export class InteractionResponse {
             }
         };
 
-        await post(endpoint).set('Content-Type', 'application/json').send(JSON.stringify(json));
+        if (content instanceof MessageEmbed) json.data.embeds.push(content.toJSON());
+
+        await this.client.discordapi.interactions(this.id, this.token).callback.post({ body: json });
+    }
+}
+
+export class InteractionOption {
+    name: string;
+    value: any;
+    type: string;
+    options?: InteractionOption[];
+
+    constructor(options: { name: string, value: any, type: number, options?: InteractionOption[] }) {
+        this.name = options.name;
+        this.value = options.value;
+        this.type = ApplicationCommandOptionType[options.type];
+        if (options.options) this.options = options.options;
+    }
+}
+
+export class InteractionOptions {
+    private args: InteractionOption[] = [];
+
+    constructor(args?: InteractionOption[]) {
+        if (Array.isArray(args)) this.args = args;
+    }
+
+    /**
+     * @param name Name of your parameter
+     * @returns The user input
+     */
+    public get(name: string) {
+        return this.args.find(arg => arg.name === name)?.value;
+    }
+
+    /**
+     * @returns The first user input
+     */
+    public first() {
+        return this.args[0]?.value;
+    }
+
+    public all() {
+        return this.args;
     }
 }

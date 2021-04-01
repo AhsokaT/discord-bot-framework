@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, ApplicationCommandOption, SlashCommandOptions, SlashCallback } from './SlashTypes';
+import { ApplicationCommandOptionType, ApplicationCommandOption, SlashCommandOptions, SlashCallback, ApplicationCommandOptionTypeString, ApplicationCommandOptionTypeResolvable, ApplicationCommandOptionChoice } from './SlashTypes';
 
 export class SlashCommand {
     #data: SlashCommandOptions = new Object();
@@ -8,12 +8,12 @@ export class SlashCommand {
 
         const { name, description, options: opts, id, callback } = options;
 
-        if (id) this.#data = { id: id };
+        if (id) this.#data = { id };
 
         if (name) this.setName(name);
         if (callback) this.setCallback(callback);
         if (description) this.setDescription(description);
-        if (Array.isArray(opts)) this.addOption(...opts);
+        if (Array.isArray(opts)) this.addOptions(...opts);
     }
 
     private checkOptions(options: ApplicationCommandOption[]): ApplicationCommandOption[] {
@@ -37,7 +37,7 @@ export class SlashCommand {
     }
 
     /**
-     * @param name The name of your slash command.
+     * @param name The name of your slash command
      */
     public setName(name: string): this {
         if (name && typeof name === 'string' && new RegExp(/^[\w-]{1,32}$/).test(name)) this.#data.name = name;
@@ -45,7 +45,7 @@ export class SlashCommand {
     }
 
     /**
-     * @param description The description of your slash command.
+     * @param description The description of your slash command
      */
     public setDescription(description: string): this {
         if (description && typeof description === 'string' && description.length <= 100) this.#data.description = description;
@@ -53,7 +53,7 @@ export class SlashCommand {
     }
 
     /**
-     * @param callback The function to be executed when the command is run.
+     * @param callback The function to be executed when this command is invoked
      */
     public setCallback(callback: SlashCallback): this {
         if (typeof callback === 'function') this.#data.callback = callback;
@@ -62,8 +62,24 @@ export class SlashCommand {
 
     /**
      * Add a user input option
+     * @param name 1-32 character name matching `^[\w-]{1,32}$`
+     * @param description 1-100 character description
+     * @param type Value of ApplicationCommandOptionTypeResolvable
+     * @param required If the parameter is required or optional --default `false`
+     * @param choices Choices for `string` and `number` types for the user to pick from
+     * @param options If the option is a subcommand or subcommand group type, this nested options will be the parameters
+     * @returns {this}
      */
-    public addOption(...options: ApplicationCommandOption[]): this {
+    public addOption(name: string, description: string, type: ApplicationCommandOptionTypeResolvable, required: boolean = true, choices?: ApplicationCommandOptionChoice[], options?: ApplicationCommandOption[]): this {
+        this.addOptions({ name, description, type, required, choices, options });
+
+        return this;
+    }
+
+    /**
+     * Add user input option(s)
+     */
+    public addOptions(...options: ApplicationCommandOption[]): this {
         if (Array.isArray(options)) options.forEach(option => {
             let opt = this.checkOptions([option]).shift();
 
@@ -75,16 +91,14 @@ export class SlashCommand {
     }
 
     /**
-     * @returns A JSON representation of this slash command.
+     * @returns A JSON representation of this slash command
      */
     public toJSON() {
-        const data = {
+        return {
             name: this.name,
             description: this.description,
             options: this.options
         };
-
-        return JSON.stringify(data);
     }
 
     get name() {

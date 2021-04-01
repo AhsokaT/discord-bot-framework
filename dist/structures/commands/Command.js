@@ -84,11 +84,32 @@ class Command {
         return this;
     }
     /**
+     * @param name
+     * @param description
+     * @param type
+     * @param wordCount
+     * @param required
+     * @param choices
+     * @example
+     * addParameter('id', 'The ID of a member');
+     */
+    addParameter(name, description, type, wordCount, required, choices) {
+        this.addParameters({
+            name,
+            description,
+            type,
+            wordCount,
+            required,
+            choices
+        });
+        return this;
+    }
+    /**
      * @param parameters Parameter(s) this command accepts
      * @example
-     * addParameter({ name: 'id', description: 'The ID of a member' });
+     * addParameters({ name: 'id', description: 'The ID of a member' }, { name: 'role', description: 'The ID of a role' });
      */
-    addParameter(...parameters) {
+    addParameters(...parameters) {
         if (Array.isArray(parameters))
             parameters.forEach(parameter => {
                 if (typeof parameter !== 'object')
@@ -154,7 +175,7 @@ class Command {
         if (Array.isArray(permissions))
             this.addPermissions(...permissions);
         if (Array.isArray(parameters))
-            this.addParameter(...parameters);
+            this.addParameters(...parameters);
         if (Array.isArray(aliases))
             this.addAlias(...aliases);
         return this;

@@ -143,11 +143,34 @@ export class Command {
     }
 
     /**
+     * @param name 
+     * @param description 
+     * @param type 
+     * @param wordCount 
+     * @param required 
+     * @param choices 
+     * @example
+     * addParameter('id', 'The ID of a member');
+     */
+    public addParameter(name: string, description?: string, type?: 'string' | 'number', wordCount?: number | 'unlimited', required?: boolean, choices?: string[]): this {
+        this.addParameters({
+            name,
+            description,
+            type,
+            wordCount,
+            required,
+            choices
+        });
+
+        return this;
+    }
+
+    /**
      * @param parameters Parameter(s) this command accepts
      * @example
-     * addParameter({ name: 'id', description: 'The ID of a member' });
+     * addParameters({ name: 'id', description: 'The ID of a member' }, { name: 'role', description: 'The ID of a role' });
      */
-    public addParameter(...parameters: Parameter[]): this {
+    public addParameters(...parameters: Parameter[]): this {
         if (Array.isArray(parameters)) parameters.forEach(parameter => {
             if (typeof parameter !== 'object') throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
 
@@ -208,7 +231,7 @@ export class Command {
         if (callback) this.setCallback(callback);
         if (typeof nsfw === 'boolean') this.setNSFW(nsfw);
         if (Array.isArray(permissions)) this.addPermissions(...permissions);
-        if (Array.isArray(parameters)) this.addParameter(...parameters);
+        if (Array.isArray(parameters)) this.addParameters(...parameters);
         if (Array.isArray(aliases)) this.addAlias(...aliases);
 
         return this;

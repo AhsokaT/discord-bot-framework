@@ -2,7 +2,7 @@ import { SlashBase } from '../slash/SlashBase';
 import { Client as DJSClient } from 'discord.js';
 import { ClientOptions as DJSClientOptions } from 'discord.js';
 import { CommandManager, CommandManagerOptions } from '../commands/CommandManager';
-interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
+export interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
     token: string;
 }
 export declare class Client extends DJSClient {
@@ -11,5 +11,5 @@ export declare class Client extends DJSClient {
     logout(): void;
     get commands(): CommandManager;
     get slash(): SlashBase;
+    get discordapi(): any;
 }
-export {};

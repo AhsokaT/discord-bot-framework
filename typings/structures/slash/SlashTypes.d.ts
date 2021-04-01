@@ -47,30 +47,4 @@ export interface SlashCommandOptions extends Partial<ApplicationCommand> {
     /** The function to be executed when this command is run */
     callback?: SlashCallback;
 }
-export declare type SlashCallback = (response: InteractionResponse, client: Client) => void;
-export declare class SlashArgument {
-    name: string;
-    value: any;
-    type: string;
-    options?: SlashArgument[];
-    constructor(options: {
-        name: string;
-        value: any;
-        type: number;
-        options?: SlashArgument[];
-    });
-}
-export declare class SlashArguments {
-    private args;
-    constructor(args?: SlashArgument[]);
-    /**
-     * @param name Name of your parameter
-     * @returns The user input
-     */
-    get(name: string): SlashArgument | undefined;
-    /**
-     * @returns The first user input
-     */
-    first(): SlashArgument;
-    all(): SlashArgument[];
-}
+export declare type SlashCallback = (interaction: InteractionResponse, client: Client) => void;

@@ -82,11 +82,22 @@ export declare class Command {
      */
     setCallback(callback: CommandCallback): this;
     /**
+     * @param name
+     * @param description
+     * @param type
+     * @param wordCount
+     * @param required
+     * @param choices
+     * @example
+     * addParameter('id', 'The ID of a member');
+     */
+    addParameter(name: string, description?: string, type?: 'string' | 'number', wordCount?: number | 'unlimited', required?: boolean, choices?: string[]): this;
+    /**
      * @param parameters Parameter(s) this command accepts
      * @example
-     * addParameter({ name: 'id', description: 'The ID of a member' });
+     * addParameters({ name: 'id', description: 'The ID of a member' }, { name: 'role', description: 'The ID of a role' });
      */
-    addParameter(...parameters: Parameter[]): this;
+    addParameters(...parameters: Parameter[]): this;
     /**
      * @param permissions Permission(s) this command requires to run
      * @example
