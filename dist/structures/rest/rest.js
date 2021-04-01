@@ -11,7 +11,7 @@ function default_1(token) {
                 return async (options = {}) => {
                     if (!options.headers)
                         options.headers = {};
-                    // options.headers['Authorization'] = 'Bot ' + token;
+                    options.headers['Authorization'] = 'Bot ' + token;
                     return new APIRequest_js_1.default(name, endpoint.join('/'), options).make();
                 };
             endpoint.push(name);
