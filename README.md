@@ -16,6 +16,8 @@ const client = new Client({
     presence: { status: 'online' }
 });
 
+client.login();
+
 client.commands.add(
     new Command()
         // The name of your command

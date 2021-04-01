@@ -4,7 +4,7 @@ exports.Client = void 0;
 const SlashBase_1 = require("../slash/SlashBase");
 const discord_js_1 = require("discord.js");
 const CommandManager_1 = require("../commands/CommandManager");
-const https_js_1 = require("./https.js");
+const REST_js_1 = require("../rest/REST.js");
 class Client extends discord_js_1.Client {
     constructor(options) {
         super(options);
@@ -13,6 +13,8 @@ class Client extends discord_js_1.Client {
         if (!options.token)
             throw new Error('Argument for \'ClientOptions\' had no property \'token\'');
         this.token = options.token;
+        this.discord = REST_js_1.default(this.token);
+        this.discord.users('@me').get().then(console.log);
         this.#slash = new SlashBase_1.SlashBase(this);
         this.#commands = new CommandManager_1.CommandManager(this, options);
     }
@@ -26,9 +28,6 @@ class Client extends discord_js_1.Client {
     }
     get slash() {
         return this.#slash;
-    }
-    get discordapi() {
-        return https_js_1.default(this.token);
     }
 }
 exports.Client = Client;

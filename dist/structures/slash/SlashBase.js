@@ -48,8 +48,8 @@ class SlashBase {
         if (!this.#applicationID)
             this.#applicationID = (await this.#client.fetchApplication()).id;
         const commands = this.#guildID ?
-            await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
-            await this.#client.discordapi.applications(this.#applicationID).commands.get();
+            await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
+            await this.#client.discord.applications(this.#applicationID).commands.get();
         return commands ? commands.map(command => new Slash_js_1.SlashCommand(command)) : [];
     }
     /**
@@ -74,8 +74,8 @@ class SlashBase {
             return existing;
         }
         let posted = this.#guildID ?
-            await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands.post({ body: command.toJSON() }) :
-            await this.#client.discordapi.applications(this.#applicationID).commands.post({ body: command.toJSON() });
+            await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.post({ body: command.toJSON() }) :
+            await this.#client.discord.applications(this.#applicationID).commands.post({ body: command.toJSON() });
         if (!posted)
             return;
         posted = new Slash_js_1.SlashCommand(posted);
@@ -97,8 +97,8 @@ class SlashBase {
         if (!existing)
             return;
         const deleted = this.#guildID ?
-            await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands(existing.id).delete() :
-            await this.#client.discordapi.applications(this.#applicationID).commands(existing.id).delete();
+            await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands(existing.id).delete() :
+            await this.#client.discord.applications(this.#applicationID).commands(existing.id).delete();
         if (deleted && deleted.status === 204)
             return existing;
     }
@@ -140,7 +140,7 @@ class InteractionResponse {
         };
         if (content instanceof discord_js_1.MessageEmbed)
             json.data.embeds.push(content.toJSON());
-        await this.client.discordapi.interactions(this.id, this.token).callback.post({ body: json });
+        await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
 }
 exports.InteractionResponse = InteractionResponse;

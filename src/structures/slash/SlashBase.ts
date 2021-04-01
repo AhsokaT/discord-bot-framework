@@ -52,8 +52,8 @@ export class SlashBase {
         if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
 
         const commands = this.#guildID ?
-        await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
-        await this.#client.discordapi.applications(this.#applicationID).commands.get();
+        await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
+        await this.#client.discord.applications(this.#applicationID).commands.get();
 
         return commands ? commands.map(command => new SlashCommand(command)) : [];
     }
@@ -83,8 +83,8 @@ export class SlashBase {
         }
 
         let posted = this.#guildID ?
-        await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands.post({ body: command.toJSON() }) :
-        await this.#client.discordapi.applications(this.#applicationID).commands.post({ body: command.toJSON() });
+        await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.post({ body: command.toJSON() }) :
+        await this.#client.discord.applications(this.#applicationID).commands.post({ body: command.toJSON() });
 
         if (!posted) return;
 
@@ -110,8 +110,8 @@ export class SlashBase {
         if (!existing) return;
 
         const deleted = this.#guildID ?
-        await this.#client.discordapi.applications(this.#applicationID).guilds(this.#guildID).commands(existing.id).delete() :
-        await this.#client.discordapi.applications(this.#applicationID).commands(existing.id).delete();
+        await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands(existing.id).delete() :
+        await this.#client.discord.applications(this.#applicationID).commands(existing.id).delete();
 
         if (deleted && deleted.status === 204) return existing;
     }
@@ -180,7 +180,7 @@ export class InteractionResponse {
 
         if (content instanceof MessageEmbed) json.data.embeds.push(content.toJSON());
 
-        await this.client.discordapi.interactions(this.id, this.token).callback.post({ body: json });
+        await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
 }
 

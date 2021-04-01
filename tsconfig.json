@@ -10,6 +10,7 @@
         "allowJs": true,
         "checkJs": true,
         "strictNullChecks": true,
+        "removeComments": false,
         "target": "ESNext",
         "moduleResolution": "Node",
         "module": "CommonJS",
