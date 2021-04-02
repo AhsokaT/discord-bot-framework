@@ -55,7 +55,7 @@ export class SlashBase {
         await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
         await this.#client.discord.applications(this.#applicationID).commands.get();
 
-        return commands ? commands.map(command => new SlashCommand(command)) : [];
+        return commands ? (await commands.json()).map(command => new SlashCommand(command)) : [];
     }
 
     /**
@@ -86,7 +86,7 @@ export class SlashBase {
 
         if (!posted) return;
 
-        posted = new SlashCommand(posted);
+        posted = new SlashCommand(await posted.json());
         if (typeof command.callback === 'function') posted.setCallback(command.callback);
 
         this.#commands.push(posted);
@@ -164,19 +164,32 @@ export class InteractionResponse {
 
         this.hasReplied = true;
 
-        if (!options) options = new Object();
+        if (!options) options = {};
 
-        let json = {
+        const { embeds, ephemeral, allowedMentions } = options;
+
+        let json: any = {
             type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
-            data: {
-                content: typeof content === 'string' ? content : undefined,
-                flags: options.ephemeral ? 64 : undefined,
-                embeds: options.embeds?.map(i => i.toJSON()) ?? new Array(),
-                allowed_mentions: options.allowedMentions ?? undefined
-            }
+            data: {}
         };
 
-        if (content instanceof MessageEmbed) json.data.embeds.push(content.toJSON());
+        if (ephemeral) {
+            json.data.flags = 64;
+        }
+
+        if (typeof content === 'string') {
+            json.data.content = content;
+        }
+
+        if (Array.isArray(embeds)) {
+            json.data.embeds = embeds;
+        }
+
+        if (allowedMentions) {
+            json.data.allowed_mentions = allowedMentions;
+        }
+
+        if (typeof content === 'object') json.data.embeds.push(content.toJSON());
 
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }

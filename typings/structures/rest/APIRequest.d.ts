@@ -11,5 +11,5 @@ export default class APIRequest {
         };
         body?: any;
     });
-    make(): Promise<any>;
+    make(): Promise<import("node-fetch").Response>;
 }

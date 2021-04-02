@@ -40,7 +40,7 @@ export class SlashCommand {
      * @param name The name of your slash command
      */
     public setName(name: string): this {
-        if (name && typeof name === 'string' && new RegExp(/^[\w-]{1,32}$/).test(name)) this.#data.name = name;
+        if (name && typeof name === 'string' && new RegExp(/^[\w-]{1,32}$/).test(name)) this.#data.name = name.toLowerCase();
         return this;
     }
 

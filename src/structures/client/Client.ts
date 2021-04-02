@@ -37,6 +37,6 @@ export class Client extends DJSClient {
     }
 
     get discord() {
-        return rest(this.token);
+        return rest('Bot ' + this.token);
     }
 }

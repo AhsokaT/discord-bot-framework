@@ -14,17 +14,11 @@ class APIRequest {
                 this.body = JSON.stringify(this.body);
             this.headers['Content-Type'] = 'application/json';
         }
-        return this.method === 'get' || this.method === 'post' ?
-            await (await node_fetch_1.default(this.url, {
-                method: this.method,
-                headers: this.headers,
-                body: this.body
-            })).json() :
-            await node_fetch_1.default(this.url, {
-                method: this.method,
-                headers: this.headers,
-                body: this.body
-            });
+        return await node_fetch_1.default(this.url, {
+            method: this.method,
+            headers: this.headers,
+            body: this.body
+        });
     }
 }
 exports.default = APIRequest;

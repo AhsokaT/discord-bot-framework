@@ -50,7 +50,7 @@ class SlashBase {
         const commands = this.#guildID ?
             await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
             await this.#client.discord.applications(this.#applicationID).commands.get();
-        return commands ? commands.map(command => new Slash_js_1.SlashCommand(command)) : [];
+        return commands ? (await commands.json()).map(command => new Slash_js_1.SlashCommand(command)) : [];
     }
     /**
      * Post your slash command to Discord.
@@ -66,7 +66,7 @@ class SlashBase {
         if (!command.description)
             throw new Error('Slash commands must have a valid description set; a string with a length greater than zero.');
         const existing = (await this.all()).find(cmd => cmd.name === command.name);
-        if (existing && existing.toJSON() === command.toJSON()) {
+        if (existing) {
             if (typeof command.callback === 'function')
                 existing.setCallback(command.callback);
             this.#commands.push(existing);
@@ -77,7 +77,7 @@ class SlashBase {
             await this.#client.discord.applications(this.#applicationID).commands.post({ body: command.toJSON() });
         if (!posted)
             return;
-        posted = new Slash_js_1.SlashCommand(posted);
+        posted = new Slash_js_1.SlashCommand(await posted.json());
         if (typeof command.callback === 'function')
             posted.setCallback(command.callback);
         this.#commands.push(posted);
@@ -127,17 +127,25 @@ class InteractionResponse {
             throw new Error('You can only reply to a slash command once; to send followup messages, use \'interaction.channel.send();\'');
         this.hasReplied = true;
         if (!options)
-            options = new Object();
+            options = {};
+        const { embeds, ephemeral, allowedMentions } = options;
         let json = {
             type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
-            data: {
-                content: typeof content === 'string' ? content : undefined,
-                flags: options.ephemeral ? 64 : undefined,
-                embeds: options.embeds?.map(i => i.toJSON()) ?? new Array(),
-                allowed_mentions: options.allowedMentions ?? undefined
-            }
+            data: {}
         };
-        if (content instanceof discord_js_1.MessageEmbed)
+        if (ephemeral) {
+            json.data.flags = 64;
+        }
+        if (typeof content === 'string') {
+            json.data.content = content;
+        }
+        if (Array.isArray(embeds)) {
+            json.data.embeds = embeds;
+        }
+        if (allowedMentions) {
+            json.data.allowed_mentions = allowedMentions;
+        }
+        if (typeof content === 'object')
             json.data.embeds.push(content.toJSON());
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }

@@ -20,13 +20,7 @@ export default class APIRequest {
             this.headers['Content-Type'] = 'application/json';
         }
 
-        return this.method === 'get' || this.method === 'post' ?
-        await (await fetch(this.url, {
-            method: this.method,
-            headers: this.headers,
-            body: this.body
-        })).json() :
-        await fetch(this.url, {
+        return await fetch(this.url, {
             method: this.method,
             headers: this.headers,
             body: this.body
