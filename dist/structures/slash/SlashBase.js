@@ -140,7 +140,7 @@ class InteractionResponse {
             json.data.content = content;
         }
         if (Array.isArray(embeds)) {
-            json.data.embeds = embeds;
+            json.data.embeds = embeds.map(embed => embed.toJSON());
         }
         if (allowedMentions) {
             json.data.allowed_mentions = allowedMentions;

@@ -182,7 +182,7 @@ export class InteractionResponse {
         }
 
         if (Array.isArray(embeds)) {
-            json.data.embeds = embeds;
+            json.data.embeds = embeds.map(embed => embed.toJSON());
         }
 
         if (allowedMentions) {
