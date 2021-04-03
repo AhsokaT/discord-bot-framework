@@ -177,7 +177,7 @@ export class InteractionResponse {
             json.data.flags = 64;
         }
 
-        if (typeof content === 'string') {
+        if (typeof content === 'string' && content) {
             json.data.content = content;
         }
 
@@ -191,6 +191,7 @@ export class InteractionResponse {
 
         if (content instanceof MessageEmbed) {
             if (!json.data.embeds) json.data.embeds = [];
+            console.log(json);
             json.data.embeds.push(content.toJSON());
         }
 
