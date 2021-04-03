@@ -145,7 +145,7 @@ class InteractionResponse {
         if (allowedMentions) {
             json.data.allowed_mentions = allowedMentions;
         }
-        if (typeof content === 'object')
+        if (content instanceof discord_js_1.MessageEmbed)
             json.data.embeds.push(content.toJSON());
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
