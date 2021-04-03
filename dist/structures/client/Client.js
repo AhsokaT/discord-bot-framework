@@ -4,7 +4,7 @@ exports.Client = void 0;
 const SlashBase_1 = require("../slash/SlashBase");
 const discord_js_1 = require("discord.js");
 const CommandManager_1 = require("../commands/CommandManager");
-const REST_js_1 = require("../rest/REST.js");
+const APIRequest_js_1 = require("../rest/APIRequest.js");
 class Client extends discord_js_1.Client {
     constructor(options) {
         super(options);
@@ -28,7 +28,30 @@ class Client extends discord_js_1.Client {
         return this.#slash;
     }
     get discord() {
-        return REST_js_1.default('Bot ' + this.token);
+        return function (auth) {
+            const endpoint = ['https://discord.com/api/v8'];
+            const handler = {
+                get(target, name) {
+                    if (name === 'toString')
+                        return () => endpoint.join('/');
+                    if (['get', 'post', 'patch', 'delete'].includes(name))
+                        return async (options = {}) => {
+                            if (!options.headers)
+                                options.headers = {};
+                            if (auth && !name.endsWith('callback'))
+                                options.headers['Authorization'] = auth;
+                            return new APIRequest_js_1.default(name, endpoint.join('/'), options).make();
+                        };
+                    endpoint.push(name);
+                    return new Proxy(() => { }, handler);
+                },
+                apply(target, that, args) {
+                    endpoint.push(...args);
+                    return new Proxy(() => { }, handler);
+                }
+            };
+            return new Proxy(() => { }, handler);
+        }('Bot ' + this.token);
     }
 }
 exports.Client = Client;
