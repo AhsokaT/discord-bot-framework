@@ -136,7 +136,7 @@ class InteractionResponse {
         if (ephemeral) {
             json.data.flags = 64;
         }
-        if (typeof content === 'string') {
+        if (typeof content === 'string' && content) {
             json.data.content = content;
         }
         if (Array.isArray(embeds)) {
@@ -145,8 +145,14 @@ class InteractionResponse {
         if (allowedMentions) {
             json.data.allowed_mentions = allowedMentions;
         }
-        if (content instanceof discord_js_1.MessageEmbed)
+        console.log(1);
+        if (content instanceof discord_js_1.MessageEmbed) {
+            if (!json.data.embeds)
+                json.data.embeds = [];
+            console.log(2, json);
             json.data.embeds.push(content.toJSON());
+        }
+        console.log(3);
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
 }
