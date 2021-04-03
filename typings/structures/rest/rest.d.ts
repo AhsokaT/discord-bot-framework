@@ -1,1 +1,1 @@
-export default function endpointConstructor(auth: string): any;
+export default function (auth: string): any;
