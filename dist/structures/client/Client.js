@@ -28,7 +28,7 @@ class Client extends discord_js_1.Client {
         return this.#slash;
     }
     get discord() {
-        return REST_js_1.endpointConstructor('Bot ' + this.token);
+        return REST_js_1.default('Bot ' + this.token);
     }
 }
 exports.Client = Client;

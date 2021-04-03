@@ -1,6 +1,6 @@
 import APIRequest from './APIRequest.js';
 
-export function endpointConstructor(auth: string) {
+export default function (auth: string) {
     const endpoint = [ 'https://discord.com/api/v8' ];
 
     const handler = {

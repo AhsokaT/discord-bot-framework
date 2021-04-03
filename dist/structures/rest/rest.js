@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.endpointConstructor = void 0;
 const APIRequest_js_1 = require("./APIRequest.js");
-function endpointConstructor(auth) {
+function default_1(auth) {
     const endpoint = ['https://discord.com/api/v8'];
     const handler = {
         get(target, name) {
@@ -26,4 +25,4 @@ function endpointConstructor(auth) {
     };
     return new Proxy(() => { }, handler);
 }
-exports.endpointConstructor = endpointConstructor;
+exports.default = default_1;
