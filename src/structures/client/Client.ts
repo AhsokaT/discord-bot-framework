@@ -2,7 +2,7 @@ import { SlashBase } from '../slash/SlashBase';
 import { Client as DJSClient } from 'discord.js';
 import { ClientOptions as DJSClientOptions } from 'discord.js';
 import { CommandManager, CommandManagerOptions } from '../commands/CommandManager';
-import rest from '../rest/REST.js';
+import { endpointConstructor } from '../rest/REST.js';
 
 export interface ClientOptions extends CommandManagerOptions, DJSClientOptions {
     token: string;
@@ -37,6 +37,6 @@ export class Client extends DJSClient {
     }
 
     get discord() {
-        return rest('Bot ' + this.token);
+        return endpointConstructor('Bot ' + this.token);
     }
 }
