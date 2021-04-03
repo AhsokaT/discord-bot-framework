@@ -160,41 +160,42 @@ export class InteractionResponse {
     }
 
     public async reply(content?: string | MessageEmbed, options?: InteractionCallbackOptions) {
+        console.log(1);
         if (this.hasReplied) throw new Error('You can only reply to a slash command once; to send followup messages, use \'interaction.channel.send();\'');
 
         this.hasReplied = true;
 
         if (!options) options = {};
-
+        console.log(2);
         const { embeds, ephemeral, allowedMentions } = options;
-
+        console.log(3);
         let json: any = {
             type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
             data: {}
         };
-
+        console.log(4);
         if (ephemeral) {
             json.data.flags = 64;
         }
-
+        console.log(5);
         if (typeof content === 'string' && content) {
             json.data.content = content;
         }
-
+        console.log(6);
         if (Array.isArray(embeds)) {
             json.data.embeds = embeds.map(embed => embed.toJSON());
         }
-
+        console.log(7);
         if (allowedMentions) {
             json.data.allowed_mentions = allowedMentions;
         }
-        console.log(1);
+        console.log(8);
         if (content instanceof MessageEmbed) {
             if (!json.data.embeds) json.data.embeds = [];
-            console.log(2, json);
+            console.log(9, json);
             json.data.embeds.push(content.toJSON());
         }
-        console.log(3);
+        console.log(10);
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
 }
