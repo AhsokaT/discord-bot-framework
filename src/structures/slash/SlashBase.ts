@@ -189,7 +189,10 @@ export class InteractionResponse {
             json.data.allowed_mentions = allowedMentions;
         }
 
-        if (content instanceof MessageEmbed) json.data.embeds.push(content.toJSON());
+        if (content instanceof MessageEmbed) {
+            if (!json.data.embeds) json.data.embeds = [];
+            json.data.embeds.push(content.toJSON());
+        }
 
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
