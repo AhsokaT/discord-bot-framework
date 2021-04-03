@@ -6,7 +6,7 @@
   "types": "./typings/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "npm install"
+    "prepare": "tsc"
   },
   "keywords": [
     "discordapp",
@@ -20,7 +20,6 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "discord-api-types": "^0.12.1",
     "discord.js": "^12.5.2",
     "node-fetch": "^2.6.1"
   },
