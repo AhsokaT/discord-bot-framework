@@ -188,13 +188,13 @@ export class InteractionResponse {
         if (allowedMentions) {
             json.data.allowed_mentions = allowedMentions;
         }
-
+        console.log(1);
         if (content instanceof MessageEmbed) {
             if (!json.data.embeds) json.data.embeds = [];
-            console.log(json);
+            console.log(2, json);
             json.data.embeds.push(content.toJSON());
         }
-
+        console.log(3);
         await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
     }
 }
