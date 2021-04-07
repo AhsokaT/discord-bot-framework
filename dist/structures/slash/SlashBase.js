@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InteractionOptions = exports.InteractionOption = exports.InteractionResponse = exports.SlashBase = void 0;
+exports.SlashBase = void 0;
 const Slash_js_1 = require("./Slash.js");
-const SlashTypes_js_1 = require("./SlashTypes.js");
 const discord_js_1 = require("discord.js");
+const Interaction_js_1 = require("./Interaction.js");
 class SlashBase {
     constructor(client) {
         this.#commands = [];
@@ -18,7 +18,7 @@ class SlashBase {
                 return;
             const command = this.#commands.find(command => command.name === i.data.name);
             if (command && command.callback)
-                command.callback(new InteractionResponse(this.#client, channel, member, i.id, i.token, new InteractionOptions(i.data.options?.map(i => new InteractionOption(i)))), this.#client);
+                command.callback(new Interaction_js_1.Interaction(this.#client, channel, member, i.id, i.token, i.application_id, new Interaction_js_1.InteractionOptions(i.data.options?.map(i => new Interaction_js_1.InteractionOption(i)))), this.#client);
         });
     }
     #client;
@@ -103,88 +103,3 @@ class SlashBase {
     }
 }
 exports.SlashBase = SlashBase;
-var InteractionResponseType;
-(function (InteractionResponseType) {
-    InteractionResponseType[InteractionResponseType["Acknowledge"] = 2] = "Acknowledge";
-    InteractionResponseType[InteractionResponseType["ChannelMessage"] = 3] = "ChannelMessage";
-    InteractionResponseType[InteractionResponseType["ChannelMessageWithSource"] = 4] = "ChannelMessageWithSource";
-    InteractionResponseType[InteractionResponseType["DefferedChannelMessageWithSource"] = 5] = "DefferedChannelMessageWithSource";
-})(InteractionResponseType || (InteractionResponseType = {}));
-class InteractionResponse {
-    constructor(client, channel, member, id, token, options) {
-        this.hasReplied = false;
-        this.id = id;
-        this.token = token;
-        this.client = client;
-        this.member = member;
-        this.channel = channel;
-        this.options = options;
-        this.guild = member.guild;
-        this.author = member.user;
-    }
-    async reply(content, options) {
-        if (this.hasReplied)
-            throw new Error('You can only reply to a slash command once; to send followup messages, use \'interaction.channel.send();\'');
-        this.hasReplied = true;
-        if (!options)
-            options = {};
-        const { embeds, ephemeral, allowedMentions } = options;
-        let json = {
-            type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
-            data: {}
-        };
-        if (ephemeral) {
-            json.data.flags = 64;
-        }
-        if (typeof content === 'string' && content) {
-            json.data.content = content;
-        }
-        if (Array.isArray(embeds)) {
-            json.data.embeds = embeds.map(embed => embed.toJSON());
-        }
-        if (allowedMentions) {
-            json.data.allowed_mentions = allowedMentions;
-        }
-        if (content instanceof discord_js_1.MessageEmbed) {
-            if (!json.data.embeds)
-                json.data.embeds = [];
-            json.data.embeds.push(content.toJSON());
-        }
-        await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
-    }
-}
-exports.InteractionResponse = InteractionResponse;
-class InteractionOption {
-    constructor(options) {
-        this.name = options.name;
-        this.value = options.value;
-        this.type = SlashTypes_js_1.ApplicationCommandOptionType[options.type];
-        if (options.options)
-            this.options = options.options;
-    }
-}
-exports.InteractionOption = InteractionOption;
-class InteractionOptions {
-    constructor(args) {
-        this.args = [];
-        if (Array.isArray(args))
-            this.args = args;
-    }
-    /**
-     * @param name Name of your parameter
-     * @returns The user input
-     */
-    get(name) {
-        return this.args.find(arg => arg.name === name)?.value;
-    }
-    /**
-     * @returns The first user input
-     */
-    first() {
-        return this.args[0]?.value;
-    }
-    all() {
-        return this.args;
-    }
-}
-exports.InteractionOptions = InteractionOptions;

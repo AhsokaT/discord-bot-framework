@@ -1,4 +1,4 @@
-import { InteractionResponse } from './SlashBase.js';
+import { Interaction } from './Interaction.js';
 import { Client } from '../client/Client.js';
 
 export type Snowflake = string | bigint;
@@ -56,4 +56,4 @@ export interface SlashCommandOptions extends Partial<ApplicationCommand> {
     callback?: SlashCallback;
 }
 
-export type SlashCallback = (interaction: InteractionResponse, client: Client) => void;
+export type SlashCallback = (interaction: Interaction, client: Client) => void;

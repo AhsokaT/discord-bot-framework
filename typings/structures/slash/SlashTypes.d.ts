@@ -1,4 +1,4 @@
-import { InteractionResponse } from './SlashBase.js';
+import { Interaction } from './Interaction.js';
 import { Client } from '../client/Client.js';
 export declare type Snowflake = string | bigint;
 export declare enum ApplicationCommandOptionType {
@@ -47,4 +47,4 @@ export interface SlashCommandOptions extends Partial<ApplicationCommand> {
     /** The function to be executed when this command is run */
     callback?: SlashCallback;
 }
-export declare type SlashCallback = (interaction: InteractionResponse, client: Client) => void;
+export declare type SlashCallback = (interaction: Interaction, client: Client) => void;

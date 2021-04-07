@@ -1,7 +1,7 @@
 import { SlashCommand } from './Slash.js';
-import { ApplicationCommandOptionType, Snowflake } from './SlashTypes.js';
-import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User } from 'discord.js';
+import { NewsChannel, TextChannel } from 'discord.js';
 import { Client } from '../client/Client.js';
+import { Interaction, InteractionOptions, InteractionOption } from './Interaction.js';
 
 export class SlashBase {
     #client: Client;
@@ -22,7 +22,7 @@ export class SlashBase {
 
             const command = this.#commands.find(command => command.name === i.data.name);
 
-            if (command && command.callback) command.callback(new InteractionResponse(this.#client, channel, member, i.id, i.token, new InteractionOptions(i.data.options?.map(i => new InteractionOption(i)))), this.#client);
+            if (command && command.callback) command.callback(new Interaction(this.#client, channel, member, i.id, i.token, i.application_id, new InteractionOptions(i.data.options?.map(i => new InteractionOption(i)))), this.#client);
         });
     }
 
@@ -30,7 +30,7 @@ export class SlashBase {
      * Alter your slash commands on a server; alterations to server scope commands take place immediately
      * @param id The ID of a Discord server
      */
-    public guild(id: Snowflake): SlashBase {
+    public guild(id: string): SlashBase {
         if (typeof id === 'string') this.#guildID = id;
 
         return this;
@@ -112,129 +112,5 @@ export class SlashBase {
         await this.#client.discord.applications(this.#applicationID).commands(existing.id).delete();
 
         if (deleted && deleted.status === 204) return existing;
-    }
-}
-
-interface InteractionCallbackOptions {
-    type?: InteractionResponseTypeString;
-    embeds?: MessageEmbed[];
-    ephemeral?: boolean;
-    tts?: boolean;
-    allowedMentions?: {
-        parse?: ('users' | 'everyone' | 'roles')[],
-        roles?: string[];
-        users?: string[];
-    }
-}
-
-enum InteractionResponseType {
-    Acknowledge = 2,
-    ChannelMessage,
-    ChannelMessageWithSource,
-    DefferedChannelMessageWithSource
-}
-
-type InteractionResponseTypeString = keyof typeof InteractionResponseType;
-
-export class InteractionResponse {
-    private hasReplied = false;
-    private client: Client;
-
-    public id: string;
-    public token: string;
-    public channel: TextChannel | NewsChannel;
-    public member: GuildMember;
-    public guild: Guild;
-    public options: InteractionOptions;
-    public author: User;
-
-    constructor(client: Client, channel: TextChannel | NewsChannel, member: GuildMember, id: string, token: string, options: InteractionOptions) {
-        this.id = id;
-        this.token = token;
-        this.client = client;
-        this.member = member;
-        this.channel = channel;
-        this.options = options;
-        this.guild = member.guild;
-        this.author = member.user;
-    }
-
-    public async reply(content?: string | MessageEmbed, options?: InteractionCallbackOptions) {
-        if (this.hasReplied) throw new Error('You can only reply to a slash command once; to send followup messages, use \'interaction.channel.send();\'');
-
-        this.hasReplied = true;
-
-        if (!options) options = {};
-
-        const { embeds, ephemeral, allowedMentions } = options;
-
-        let json: any = {
-            type: InteractionResponseType[options.type ?? 'ChannelMessageWithSource'],
-            data: {}
-        };
-
-        if (ephemeral) {
-            json.data.flags = 64;
-        }
-
-        if (typeof content === 'string' && content) {
-            json.data.content = content;
-        }
-
-        if (Array.isArray(embeds)) {
-            json.data.embeds = embeds.map(embed => embed.toJSON());
-        }
-
-        if (allowedMentions) {
-            json.data.allowed_mentions = allowedMentions;
-        }
-
-        if (content instanceof MessageEmbed) {
-            if (!json.data.embeds) json.data.embeds = [];
-            json.data.embeds.push(content.toJSON());
-        }
-
-        await this.client.discord.interactions(this.id, this.token).callback.post({ body: json });
-    }
-}
-
-export class InteractionOption {
-    name: string;
-    value: any;
-    type: string;
-    options?: InteractionOption[];
-
-    constructor(options: { name: string, value: any, type: number, options?: InteractionOption[] }) {
-        this.name = options.name;
-        this.value = options.value;
-        this.type = ApplicationCommandOptionType[options.type];
-        if (options.options) this.options = options.options;
-    }
-}
-
-export class InteractionOptions {
-    private args: InteractionOption[] = [];
-
-    constructor(args?: InteractionOption[]) {
-        if (Array.isArray(args)) this.args = args;
-    }
-
-    /**
-     * @param name Name of your parameter
-     * @returns The user input
-     */
-    public get(name: string) {
-        return this.args.find(arg => arg.name === name)?.value;
-    }
-
-    /**
-     * @returns The first user input
-     */
-    public first() {
-        return this.args[0]?.value;
-    }
-
-    public all() {
-        return this.args;
     }
 }
