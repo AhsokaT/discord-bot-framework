@@ -44,7 +44,6 @@ export class InteractionMessage {
         await this.client.discord.webhooks(this.applicationID, this.token).messages('@original').delete();
 
         if (res.status === 204) return this;
-        console.log(await res.json());
     }
 
     public async edit(content?: string | MessageEmbed, options: InteractionMessageOptions = {}): Promise<InteractionMessage> {
@@ -53,9 +52,6 @@ export class InteractionMessage {
         const res = this.id ?
         await this.client.discord.webhooks(this.applicationID, this.token).messages(this.id).patch({ body: message.resolve() }) :
         await this.client.discord.webhooks(this.applicationID, this.token).messages('@original').patch({ body: message.resolve() });
-
-        console.log(res.status);
-        console.log(await res.json());
 
         return this;
     }

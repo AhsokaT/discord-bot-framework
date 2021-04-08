@@ -1,25 +1,8 @@
 import { ApplicationCommandOptionType } from './SlashTypes.js';
-import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User, APIMessage } from 'discord.js';
+import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User } from 'discord.js';
 import { Client } from '../client/Client.js';
 import { InteractionMessage, InitialInteractionMessage } from './InteractionMessage.js';
-import { APIInteractionMessage, APIInteractionResponse } from './APIInteractionMessage.js';
-
-interface AllowedMentions {
-    parse?: ('users' | 'everyone' | 'roles')[],
-    roles?: string[];
-    users?: string[];
-}
-
-interface InteractionMessageOptions {
-    embeds?: MessageEmbed[];
-    tts?: boolean;
-    allowedMentions?: AllowedMentions;
-}
-
-interface InteractionInitialResponseOptions extends InteractionMessageOptions {
-    type?: InteractionResponseTypeString;
-    ephemeral?: boolean;
-}
+import { APIInteractionMessage, APIInteractionResponse, InteractionResponseOptions } from './APIInteractionMessage.js';
 
 export enum InteractionResponseType {
     Acknowledge = 2,
@@ -30,95 +13,6 @@ export enum InteractionResponseType {
 
 export type InteractionResponseTypeString = keyof typeof InteractionResponseType;
 
-// export class APIInteractionMessage {
-//     public content?: string | MessageEmbed;
-//     public tts: boolean;
-//     public embeds: MessageEmbed[];
-//     public allowedMentions: AllowedMentions;
-
-//     constructor(content?: string | MessageEmbed, options: InteractionMessageOptions = {}) {
-//         if (content) this.content = content;
-
-//         const { tts, embeds, allowedMentions } = options;
-
-//         this.tts = Boolean(tts);
-//         this.embeds = embeds ?? [];
-//         this.allowedMentions = allowedMentions ?? {};
-//     }
-
-//     public construct(): any {
-//         let obj: any = {
-//             data: {
-//                 tts: this.tts,
-//                 embeds: this.embeds.map(embed => embed.toJSON()),
-//                 allowed_mentions: this.allowedMentions
-//             }
-//         };
-
-//         if (typeof this.content === 'string') obj.data.content = this.content;
-//         if (this.content instanceof MessageEmbed) obj.data.embeds.push(this.content.toJSON());
-
-//         if (this instanceof APIInteractionInitialResponse) {
-//             obj.type = InteractionResponseType[this.type];
-//             if (this.ephemeral) obj.data.flags = 64;
-//         }
-
-//         return obj;
-//     }
-// }
-
-// export class APIInteractionInitialResponse extends APIInteractionMessage {
-//     public ephemeral: boolean;
-//     public type: InteractionResponseTypeString;
-
-//     constructor(content?: string | MessageEmbed, options: InteractionInitialResponseOptions = {}) {
-//         super(content, options);
-
-//         this.type = options.type ?? 'ChannelMessageWithSource';
-//         this.ephemeral = Boolean(options.ephemeral);
-//     }
-// }
-
-export class InteractionInitialResponse implements InteractionInitialResponseOptions {
-    public content?: string | MessageEmbed;
-    public tts: boolean;
-    public embeds: MessageEmbed[];
-    public allowedMentions: AllowedMentions;
-    public ephemeral: boolean;
-    public type: InteractionResponseTypeString;
-
-    public appID: string;
-    public token: string;
-
-    private client: Client;
-
-    constructor(client: Client, appID: string, token: string, content?: string | MessageEmbed, options: InteractionInitialResponseOptions = {}) {
-        if (content) this.content = content;
-
-        this.client = client;
-        this.appID = appID;
-        this.token = token;
-
-        const { tts, embeds, allowedMentions, type, ephemeral } = options;
-
-        this.tts = Boolean(tts);
-        this.embeds = embeds ?? [];
-        this.allowedMentions = allowedMentions ?? {};
-        this.type = type ?? 'ChannelMessageWithSource';
-        this.ephemeral = Boolean(ephemeral);
-    }
-
-    public async delete() {
-        await this.client.discord.webhooks(this.appID, this.token).messages('@original').delete();
-        return this;
-    }
-
-    public async edit(content?: string | MessageEmbed, options: Omit<InteractionInitialResponseOptions, 'type' | 'tts'> = {}) {
-        const message = new APIInteractionResponse({ content, ...options }).resolve();
-
-        console.log(await this.client.discord.webhooks(this.appID, this.token).messages('@original').patch({ body: message }));
-    }
-}
 
 export class Interaction {
     private hasReplied = false;
@@ -145,7 +39,7 @@ export class Interaction {
         this.author = member.user;
     }
 
-    public async reply(content?: string | MessageEmbed, options?: InteractionInitialResponseOptions) {
+    public async reply(content?: string | MessageEmbed, options?: InteractionResponseOptions) {
         if (this.hasReplied) throw new Error('You can only reply to a slash command once; to send followup messages, use \'interaction.channel.send();\'');
 
         this.hasReplied = true;

@@ -1,4 +1,13 @@
 import { MessageEmbed } from 'discord.js';
+export declare enum InteractionMessageFlags {
+    CROSSPOSTED = 1,
+    IS_CROSSPOST = 2,
+    SUPPRESS_EMBEDS = 4,
+    SOURCE_MESSAGE_DELETED = 8,
+    URGENT = 16,
+    EPHEMERAL = 64
+}
+export declare type InteractionMessageFlagsString = keyof typeof InteractionMessageFlags;
 export interface AllowedMentions {
     parse?: ('users' | 'everyone' | 'roles')[];
     roles?: string[];
@@ -6,13 +15,14 @@ export interface AllowedMentions {
 }
 export declare type InteractionMessageContent = string | MessageEmbed;
 export interface InteractionMessageOptions {
+    flags?: InteractionMessageFlagsString | number | null;
     content?: InteractionMessageContent;
     embeds?: MessageEmbed[];
     tts?: boolean;
     allowedMentions?: AllowedMentions;
 }
 export interface ResolvedInteractionMessage {
-    flags?: number | null;
+    flags: InteractionMessageFlags | number | null;
     content: string | null;
     embeds: object[];
     tts: boolean;

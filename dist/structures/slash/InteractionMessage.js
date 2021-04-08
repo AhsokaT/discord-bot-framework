@@ -25,15 +25,12 @@ class InteractionMessage {
             await this.client.discord.webhooks(this.applicationID, this.token).messages('@original').delete();
         if (res.status === 204)
             return this;
-        console.log(await res.json());
     }
     async edit(content, options = {}) {
         const message = new APIInteractionMessage_js_1.APIInteractionMessage({ content, ...options });
         const res = this.id ?
             await this.client.discord.webhooks(this.applicationID, this.token).messages(this.id).patch({ body: message.resolve() }) :
             await this.client.discord.webhooks(this.applicationID, this.token).messages('@original').patch({ body: message.resolve() });
-        console.log(res.status);
-        console.log(await res.json());
         return this;
     }
 }

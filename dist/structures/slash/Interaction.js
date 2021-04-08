@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InteractionOptions = exports.InteractionOption = exports.Interaction = exports.InteractionInitialResponse = exports.InteractionResponseType = void 0;
+exports.InteractionOptions = exports.InteractionOption = exports.Interaction = exports.InteractionResponseType = void 0;
 const SlashTypes_js_1 = require("./SlashTypes.js");
 const InteractionMessage_js_1 = require("./InteractionMessage.js");
 const APIInteractionMessage_js_1 = require("./APIInteractionMessage.js");
@@ -11,68 +11,6 @@ var InteractionResponseType;
     InteractionResponseType[InteractionResponseType["ChannelMessageWithSource"] = 4] = "ChannelMessageWithSource";
     InteractionResponseType[InteractionResponseType["DefferedChannelMessageWithSource"] = 5] = "DefferedChannelMessageWithSource";
 })(InteractionResponseType = exports.InteractionResponseType || (exports.InteractionResponseType = {}));
-// export class APIInteractionMessage {
-//     public content?: string | MessageEmbed;
-//     public tts: boolean;
-//     public embeds: MessageEmbed[];
-//     public allowedMentions: AllowedMentions;
-//     constructor(content?: string | MessageEmbed, options: InteractionMessageOptions = {}) {
-//         if (content) this.content = content;
-//         const { tts, embeds, allowedMentions } = options;
-//         this.tts = Boolean(tts);
-//         this.embeds = embeds ?? [];
-//         this.allowedMentions = allowedMentions ?? {};
-//     }
-//     public construct(): any {
-//         let obj: any = {
-//             data: {
-//                 tts: this.tts,
-//                 embeds: this.embeds.map(embed => embed.toJSON()),
-//                 allowed_mentions: this.allowedMentions
-//             }
-//         };
-//         if (typeof this.content === 'string') obj.data.content = this.content;
-//         if (this.content instanceof MessageEmbed) obj.data.embeds.push(this.content.toJSON());
-//         if (this instanceof APIInteractionInitialResponse) {
-//             obj.type = InteractionResponseType[this.type];
-//             if (this.ephemeral) obj.data.flags = 64;
-//         }
-//         return obj;
-//     }
-// }
-// export class APIInteractionInitialResponse extends APIInteractionMessage {
-//     public ephemeral: boolean;
-//     public type: InteractionResponseTypeString;
-//     constructor(content?: string | MessageEmbed, options: InteractionInitialResponseOptions = {}) {
-//         super(content, options);
-//         this.type = options.type ?? 'ChannelMessageWithSource';
-//         this.ephemeral = Boolean(options.ephemeral);
-//     }
-// }
-class InteractionInitialResponse {
-    constructor(client, appID, token, content, options = {}) {
-        if (content)
-            this.content = content;
-        this.client = client;
-        this.appID = appID;
-        this.token = token;
-        const { tts, embeds, allowedMentions, type, ephemeral } = options;
-        this.tts = Boolean(tts);
-        this.embeds = embeds ?? [];
-        this.allowedMentions = allowedMentions ?? {};
-        this.type = type ?? 'ChannelMessageWithSource';
-        this.ephemeral = Boolean(ephemeral);
-    }
-    async delete() {
-        await this.client.discord.webhooks(this.appID, this.token).messages('@original').delete();
-        return this;
-    }
-    async edit(content, options = {}) {
-        const message = new APIInteractionMessage_js_1.APIInteractionResponse({ content, ...options }).resolve();
-        console.log(await this.client.discord.webhooks(this.appID, this.token).messages('@original').patch({ body: message }));
-    }
-}
-exports.InteractionInitialResponse = InteractionInitialResponse;
 class Interaction {
     constructor(client, channel, member, id, token, appID, options) {
         this.hasReplied = false;

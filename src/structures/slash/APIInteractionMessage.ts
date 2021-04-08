@@ -1,5 +1,16 @@
 import { MessageEmbed, MessageEmbedOptions } from 'discord.js';
 
+export enum InteractionMessageFlags {
+    CROSSPOSTED = 1 << 0,
+    IS_CROSSPOST = 1 << 1,
+    SUPPRESS_EMBEDS = 1 << 2,
+    SOURCE_MESSAGE_DELETED = 1 << 3,
+    URGENT = 1 << 4,
+    EPHEMERAL = 64
+}
+
+export type InteractionMessageFlagsString = keyof typeof InteractionMessageFlags;
+
 export interface AllowedMentions {
     parse?: ('users' | 'everyone' | 'roles')[],
     roles?: string[];
@@ -13,6 +24,7 @@ type ResolvedEmbed = {
 export type InteractionMessageContent = string | MessageEmbed;
 
 export interface InteractionMessageOptions {
+    flags?: InteractionMessageFlagsString | number | null;
     content?: InteractionMessageContent;
     embeds?: MessageEmbed[];
     tts?: boolean;
@@ -20,7 +32,7 @@ export interface InteractionMessageOptions {
 }
 
 export interface ResolvedInteractionMessage {
-    flags?: number | null;
+    flags: InteractionMessageFlags | number | null;
     content: string | null;
     embeds: object[];
     tts: boolean;
@@ -54,7 +66,7 @@ export class APIInteractionMessage {
     }
 
     public resolve(): ResolvedInteractionMessage {
-        let { content, embeds = [], tts, allowedMentions = {} } = this.options;
+        let { content, embeds = [], tts, allowedMentions = {}, flags } = this.options;
 
         if (content instanceof MessageEmbed || typeof content === 'object') embeds.push(content);
 
@@ -62,6 +74,7 @@ export class APIInteractionMessage {
             content: typeof content === 'string' ? content : null,
             embeds: embeds.map(embed => new MessageEmbed(embed).toJSON()),
             tts: Boolean(tts),
+            flags: InteractionMessageFlags[flags ?? ''] ?? 0,
             allowed_mentions: allowedMentions
         };
     }
@@ -79,10 +92,7 @@ export class APIInteractionResponse {
 
         return {
             type: InteractionResponseType[this.options.type ?? 'ChannelMessageWithSource'],
-            data: {
-                flags: this.options.ephemeral ? 64 : 0,
-                ...data
-            }
+            data
         }
     }
 }
