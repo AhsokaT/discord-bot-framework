@@ -1,6 +1,6 @@
 import APIRequest from './APIRequest.js';
 
-class RESTClient {
+export default class RESTClient {
     public baseURL: string;
 
     constructor(baseURL: string) {
