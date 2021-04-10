@@ -76,7 +76,7 @@ export class APIInteractionMessage {
             tts: Boolean(tts),
             flags: InteractionMessageFlags[flags ?? ''] ?? 0,
             allowed_mentions: allowedMentions
-        };
+        }
     }
 }
 
