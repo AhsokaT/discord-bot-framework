@@ -114,17 +114,18 @@ class CommandManager {
                 if (!input && param.required) {
                     return message.channel.send(`❌ You did not provide an input for ${toList(command.parameters.slice(command.parameters.indexOf(param), command.parameters.length).filter(i => i.required).map(i => `\`${i.name}\``), 'or')}`).catch(console.error);
                 }
-                if (typeof param.wordCount === 'number' && input.split(' ').length < param.wordCount) {
-                    return message.channel.send(`❌ Your input for \`${param.name}\` must be ${param.wordCount} words long`).catch(console.error);
-                }
-                if (param.choices && param.choices?.length > 0 && !param.choices.includes(input)) {
-                    return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
-                }
-                if (param.type === 'number' && !parseInt(input, 10)) {
-                    return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
-                }
-                if (input)
+                if (input) {
+                    if (typeof param.wordCount === 'number' && input.split(' ').length < param.wordCount) {
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be ${param.wordCount} words long`).catch(console.error);
+                    }
+                    if (param.choices && param.choices?.length > 0 && !param.choices.includes(input)) {
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
+                    }
+                    if (param.type === 'number' && !parseInt(input, 10)) {
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
+                    }
                     args.push({ name: param.name, value: input });
+                }
             }
             if (command.callback)
                 command.callback(message, this.#client, new Arguments(args));

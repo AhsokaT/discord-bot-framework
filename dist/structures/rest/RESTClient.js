@@ -32,3 +32,4 @@ class RESTClient {
         return this.endpoint();
     }
 }
+exports.default = RESTClient;
