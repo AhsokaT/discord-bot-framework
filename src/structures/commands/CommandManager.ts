@@ -174,7 +174,7 @@ export class CommandManager {
                     if (param.choices && param.choices.length > 0) {
                         if (!param.caseSensitive && !param.choices.map(i => i.toLowerCase()).includes(input.toLowerCase())) {
                             return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
-                        } else if (!param.choices.includes(input)) {
+                        } else if (param.caseSensitive && !param.choices.includes(input)) {
                             return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
                         }
                     }
