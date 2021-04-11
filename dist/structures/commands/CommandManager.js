@@ -88,7 +88,7 @@ class CommandManager {
             ],
             callback: helpCommand.bind(this)
         });
-        this.#client.on('message', message => {
+        this.#client.on('message', async (message) => {
             if (message.channel.type === 'dm')
                 return;
             if (message.author.bot && !this.#allowBots)
@@ -112,14 +112,22 @@ class CommandManager {
             for (const param of command.parameters) {
                 let input = messageComponents.splice(0, param.wordCount === 'unlimited' ? messageComponents.length : param.wordCount ?? 1).join(' ');
                 if (!input && param.required) {
-                    return message.channel.send(`❌ You did not provide an input for ${toList(command.parameters.slice(command.parameters.indexOf(param), command.parameters.length).filter(i => i.required).map(i => `\`${i.name}\``), 'or')}`).catch(console.error);
+                    message.channel.send(`Please type your input for \`${param.name}\`\n\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices ? `**Choices** ${toList(param.choices?.map(i => `\`${i}\``) ?? [], 'or')}` : ''}`);
+                    input = (await message.channel.awaitMessages(res => res.author.id === message.author.id, { time: 15000, max: 1 })).first()?.content;
+                    if (!input)
+                        return message.channel.send(`⏱️ **15s timeout** ❌ You did not provide an input for ${toList(command.parameters.slice(command.parameters.indexOf(param), command.parameters.length).filter(i => i.required).map(i => `\`${i.name}\``), 'or')}`).catch(console.error);
                 }
                 if (input) {
                     if (typeof param.wordCount === 'number' && input.split(' ').length < param.wordCount) {
                         return message.channel.send(`❌ Your input for \`${param.name}\` must be ${param.wordCount} words long`).catch(console.error);
                     }
-                    if (param.choices && param.choices?.length > 0 && !param.choices.includes(input)) {
-                        return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
+                    if (param.choices && param.choices.length > 0) {
+                        if (!param.caseSensitive && !param.choices.map(i => i.toLowerCase()).includes(input.toLowerCase())) {
+                            return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
+                        }
+                        else if (!param.choices.includes(input)) {
+                            return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
+                        }
                     }
                     if (param.type === 'number' && !parseInt(input, 10)) {
                         return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);

@@ -1,7 +1,7 @@
 import APIRequest from './APIRequest.js';
 
 export default class RESTClient {
-    public baseURL: string;
+    private baseURL: string;
 
     constructor(baseURL: string) {
         this.baseURL = baseURL;

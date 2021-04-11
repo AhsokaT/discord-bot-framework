@@ -14,7 +14,7 @@ class APIRequest {
         if (body)
             this.send(body);
         if (query)
-            this.query(query.field, query.value);
+            Object.keys(query).forEach(key => this.query(key, query[key]));
         for (const index in headers)
             this.set(index, headers[index]);
     }
@@ -32,13 +32,13 @@ class APIRequest {
         this.body = data;
         return this;
     }
-    async make() {
+    make() {
         if (this.body) {
             if (typeof this.body !== 'string')
                 this.body = JSON.stringify(this.body);
             this.headers['Content-Type'] = 'application/json';
         }
-        return await node_fetch_1.default(this.url, {
+        return node_fetch_1.default(this.url, {
             method: this.method,
             headers: this.headers,
             body: this.body

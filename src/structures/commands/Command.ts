@@ -9,6 +9,7 @@ export interface Parameter {
     description?: string;
     type?: 'string' | 'number';
     wordCount?: number | 'unlimited';
+    caseSensitive?: boolean;
     required?: boolean;
     choices?: string[];
 }

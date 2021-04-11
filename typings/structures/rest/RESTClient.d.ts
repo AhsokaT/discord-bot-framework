@@ -1,5 +1,5 @@
 export default class RESTClient {
-    baseURL: string;
+    private baseURL;
     constructor(baseURL: string);
     private endpoint;
     protected get api(): any;

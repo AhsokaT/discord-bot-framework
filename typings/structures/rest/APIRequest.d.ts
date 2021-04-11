@@ -4,10 +4,7 @@ declare type APIObject = {
 declare type APIRequestMethod = 'get' | 'post' | 'delete' | 'patch';
 interface APIRequestOptions {
     headers?: APIObject;
-    query?: {
-        field: string;
-        value: string;
-    };
+    query?: APIObject;
     body?: any;
 }
 export default class APIRequest {

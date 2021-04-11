@@ -6,7 +6,7 @@ type APIRequestMethod = 'get' | 'post' | 'delete' | 'patch';
 
 interface APIRequestOptions {
     headers?: APIObject;
-    query?: { field: string, value: string };
+    query?: APIObject;
     body?: any;
 }
 
@@ -26,7 +26,7 @@ export default class APIRequest {
         const { query, headers = {}, body } = options;
 
         if (body) this.send(body);
-        if (query) this.query(query.field, query.value);
+        if (query) Object.keys(query).forEach(key => this.query(key, query[key]));
         for (const index in headers) this.set(index, headers[index]);
     }
 
@@ -48,14 +48,14 @@ export default class APIRequest {
         return this;
     }
 
-    public async make() {
+    public make() {
         if (this.body) {
             if (typeof this.body !== 'string') this.body = JSON.stringify(this.body);
 
             this.headers['Content-Type'] = 'application/json';
         }
 
-        return await fetch(this.url, {
+        return fetch(this.url, {
             method: this.method,
             headers: this.headers,
             body: this.body
