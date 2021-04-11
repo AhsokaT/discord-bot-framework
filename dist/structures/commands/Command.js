@@ -114,7 +114,7 @@ class Command {
             parameters.forEach(parameter => {
                 if (typeof parameter !== 'object')
                     throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
-                const { name, description, choices, wordCount, type, required } = parameter;
+                const { name, description, choices, wordCount, type, required, caseSensitive } = parameter;
                 if (typeof name !== 'string')
                     throw new TypeError('Property \'name\' of \'parameter\' must be a string.');
                 if (description && typeof description !== 'string')
@@ -127,6 +127,7 @@ class Command {
                     throw new TypeError('Property \'choices\' of \'parameter\' must be an array.');
                 parameter.choices?.filter(choice => typeof choice === 'string');
                 parameter.required = typeof required === 'boolean' ? required : true;
+                parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
                 this.#parameters.push(parameter);
                 this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
             });
