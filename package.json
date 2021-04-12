@@ -19,7 +19,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "discord.js": "github:discordjs/discord.js",
+    "discord.js": "^12.5.3",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {

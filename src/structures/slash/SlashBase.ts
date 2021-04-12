@@ -5,7 +5,7 @@ import { Interaction, InteractionOptions, InteractionOption } from './Interactio
 
 export class SlashBase {
     #client: Client;
-    #applicationID?: string;
+    #applicationID: string;
     #commands: SlashCommand[] = [];
     #guildID: string | undefined;
 
@@ -49,7 +49,7 @@ export class SlashBase {
      * @returns an array of your slash commands.
      */
     public async all(): Promise<SlashCommand[]> {
-        if (!this.#applicationID) this.#applicationID = (await this.#client.application?.fetch())?.id;
+        if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
 
         const commands = this.#guildID ?
         await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands.get() :
@@ -63,7 +63,7 @@ export class SlashBase {
      * @param command An instance of the SlashCommand class.
      */
     public async post(command: SlashCommand): Promise<SlashCommand | undefined> {
-        if (!this.#applicationID) this.#applicationID = (await this.#client.application?.fetch())?.id;
+        if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
 
         if (!(command instanceof SlashCommand)) return;
 
@@ -99,7 +99,7 @@ export class SlashBase {
      * @param command The name or ID of a slash command.
      */
     public async delete(command: string): Promise<SlashCommand | undefined> {
-        if (!this.#applicationID) this.#applicationID = (await this.#client.application?.fetch())?.id;
+        if (!this.#applicationID) this.#applicationID = (await this.#client.fetchApplication()).id;
 
         if (!command) throw new Error('You must provide the name or ID of a slash command.');
 
