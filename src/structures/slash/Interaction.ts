@@ -63,7 +63,7 @@ export class InteractionOption {
         this.name = name;
         this.value = value;
         this.type = ApplicationCommandOptionType[type];
-        if (opts) this.options = opts.map(opt => new InteractionOption(opt));
+        if (Array.isArray(opts)) this.options = opts.map(opt => new InteractionOption(opt));
     }
 }
 

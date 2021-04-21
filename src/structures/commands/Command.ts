@@ -128,7 +128,7 @@ export class Command {
      * @param category The category of commands this command belongs to
      */
     public setCategory(category: string): this {
-        if (category && typeof category === 'string') this.#category = category.toLowerCase();
+        if (typeof category === 'string') this.#category = category.toLowerCase();
         return this;
     }
 
@@ -144,32 +144,12 @@ export class Command {
     }
 
     /**
-     * @param name 
-     * @param description 
-     * @param type 
-     * @param wordCount 
-     * @param required 
-     * @param choices 
-     * @example
-     * addParameter('id', 'The ID of a member');
-     */
-    public addParameter(name: string, description?: string, type?: 'string' | 'number', wordCount?: number | 'unlimited', required?: boolean, choices?: string[]): this {
-        this.addParameters({
-            name,
-            description,
-            type,
-            wordCount,
-            required,
-            choices
-        });
-
-        return this;
-    }
-
-    /**
      * @param parameters Parameter(s) this command accepts
      * @example
-     * addParameters({ name: 'id', description: 'The ID of a member' }, { name: 'role', description: 'The ID of a role' });
+     * addParameters(
+     *    { name: 'id', description: 'The ID of a member', wordCount: 1 },
+     *    { name: 'role', description: 'The ID of a role', required: false }
+     * );
      */
     public addParameters(...parameters: Parameter[]): this {
         if (Array.isArray(parameters)) parameters.forEach(parameter => {

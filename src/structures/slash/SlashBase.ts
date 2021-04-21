@@ -22,7 +22,11 @@ export class SlashBase {
 
             const command = this.#commands.find(command => command.name === i.data.name);
 
-            if (command && command.callback) command.callback(new Interaction(this.#client, channel, member, i.id, i.token, i.application_id, new InteractionOptions(i.data.options?.map(i => new InteractionOption(i)))), this.#client);
+            if (command && command.callback) command.callback(new Interaction(
+                this.#client, channel, member, i.id, i.token, i.application_id,
+                new InteractionOptions(Array.isArray(i.data?.options) ? i.data.options?.map(i => new InteractionOption(i)) : [])),
+                this.#client
+            );
         });
     }
 
@@ -105,12 +109,15 @@ export class SlashBase {
 
         const existing = (await this.all()).find(i => i.name === command || i.id === command);
 
+        console.log(existing);
+
         if (!existing) return;
 
         const deleted = this.#guildID ?
         await this.#client.discord.applications(this.#applicationID).guilds(this.#guildID).commands(existing.id).delete() :
         await this.#client.discord.applications(this.#applicationID).commands(existing.id).delete();
 
+        console.log(deleted.status);
         if (deleted && deleted.status === 204) return existing;
     }
 }

@@ -62,7 +62,7 @@ export class Client extends DJSClient {
                     return new Proxy(() => {}, handler);
                 }
             };
-        
+
             return new Proxy(() => {}, handler);
         }('Bot ' + this.token);
     }
