@@ -1,12 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RESTClient = exports.DiscordJS = exports.SlashCommand = exports.Command = exports.Client = void 0;
-const RESTClient_js_1 = require("./structures/rest/RESTClient.js");
-var Client_js_1 = require("./structures/client/Client.js");
-Object.defineProperty(exports, "Client", { enumerable: true, get: function () { return Client_js_1.Client; } });
-var Command_js_1 = require("./structures/commands/Command.js");
-Object.defineProperty(exports, "Command", { enumerable: true, get: function () { return Command_js_1.Command; } });
-var Slash_js_1 = require("./structures/slash/Slash.js");
-Object.defineProperty(exports, "SlashCommand", { enumerable: true, get: function () { return Slash_js_1.SlashCommand; } });
-exports.DiscordJS = require("discord.js");
-exports.RESTClient = RESTClient_js_1.default;
+exports.Command = exports.Client = void 0;
+const Client_js_1 = require("./client/Client.js");
+exports.Client = Client_js_1.default;
+const Command_js_1 = require("./structs/Commands/Command.js");
+exports.Command = Command_js_1.default;
