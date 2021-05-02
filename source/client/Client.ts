@@ -1,5 +1,7 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message } from 'discord.js';
 import CommandIndex, { CommandIndexOptions } from '../structs/Commands/CommandIndex.js';
+import SlashCommandIndex from '../structs/SlashCommands/SlashCommandIndex.js';
+import APIRequest from '../util/APIRequest.js';
 import { Index } from '../util/extensions.js';
 import * as util from '../util/util.js';
 
@@ -9,6 +11,7 @@ export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
 
 export default class Client extends DJSClient {
     public commands: CommandIndex;
+    public slashCommands: SlashCommandIndex;
 
     /**
      * @param {ClientOptions} options
@@ -19,6 +22,7 @@ export default class Client extends DJSClient {
         if (options.token) super.token = options.token;
 
         this.commands = new CommandIndex(this, options);
+        this.slashCommands = new SlashCommandIndex(this);
     }
 
     /**
@@ -40,12 +44,14 @@ export default class Client extends DJSClient {
         if (!command) return;
 
         if (!message.channel.nsfw && command.nsfw) return message.channel.send('❌ This command must be run in an **NSFW** channel');
-        if (!message.member?.permissions.has(command.permissions)) return message.channel.send(`❌ You require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
-        if (!message.guild?.me?.permissions.has(command.permissions)) return message.channel.send(`❌ I require the ${command.permissions.length > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+        if (!message.member?.permissions.has(command.permissions.array())) return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+        if (!message.guild?.me?.permissions.has(command.permissions.array())) return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
         let args: any = [];
 
-        for (const param of command.parameters) {
+        const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
+
+        for (const param of parameters) {
             let input: string | undefined = messageComponents.splice(0, param.wordCount === 'unlimited' ? messageComponents.length : param.wordCount ?? 1).join(' ');
 
             if (!input && param.required) {
@@ -53,7 +59,7 @@ export default class Client extends DJSClient {
 
                 input = (await message.channel.awaitMessages(res => res.author.id === message.author.id, { time: 15000, max: 1 })).first()?.content;
 
-                if (!input) return message.channel.send(`⏱️ **15s timeout** ❌ You did not provide an input for ${util.toList(command.parameters.slice(command.parameters.indexOf(param), command.parameters.length).filter(i => i.required).map(i => `\`${i.name}\``), 'or')}`).catch(console.error);
+                if (!input) return message.channel.send(`⏱️ **15s timeout** ❌ You did not provide an input for ${util.toList(parameters.slice(parameters.indexOf(param), parameters.length).filter(i => i.required).map(i => `\`${i.name}\``), 'or')}`).catch(console.error);
             }
 
             if (input) {
@@ -79,4 +85,40 @@ export default class Client extends DJSClient {
 
         if (command.callback) command.callback(message, this, new Index(...args));
     }
+
+    get discord() {
+        return function (auth: string) {
+            const endpoint = [ 'https://discord.com/api/v8' ];
+
+            const handler = {
+                get(target, name) {
+                    if (name === 'toString') return () => endpoint.join('/');
+
+                    if (['get', 'post', 'patch', 'delete'].includes(name)) return async (options: any = {}) => {
+                        if (!options.headers) options.headers = {};
+
+                        if (auth && !name.endsWith('callback')) options.headers['Authorization'] = auth;
+        
+                        return new APIRequest(name, endpoint.join('/'), options).make();
+                    };
+
+                    endpoint.push(name);
+
+                    return new Proxy(() => {}, handler);
+                },
+                apply(target, that, args) {
+                    endpoint.push(...args);
+
+                    return new Proxy(() => {}, handler);
+                }
+            };
+
+            return new Proxy(() => {}, handler);
+        }('Bot ' + this.token);
+    }
 }
+
+new Client().slashCommands
+    .on('commandUpdate', (previous, updated) => {
+        previous.client
+    });

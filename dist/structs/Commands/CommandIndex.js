@@ -6,12 +6,14 @@ const extensions_js_1 = require("../../util/extensions.js");
 class CommandIndex {
     constructor(client, options = {}) {
         this.client = client;
-        const { prefix, permissions, groups, allowBots, automaticMessageParsing } = options;
+        const { prefix, permissions, allowBots, automaticMessageParsing } = options;
         this.index = new extensions_js_1.Index();
+        this.groups = new extensions_js_1.Group();
+        this.permissions = new extensions_js_1.Group();
         this.allowBots = Boolean(allowBots);
-        this.groups = Array.isArray(groups) ? new extensions_js_1.Group(groups) : new extensions_js_1.Group();
-        this.permissions = Array.isArray(permissions) ? permissions : [];
         this.prefix = typeof prefix === 'string' ? prefix : '';
+        if (Array.isArray(permissions))
+            this.permissions.array().filter(perm => typeof perm === 'string').forEach(this.permissions.add);
         if (automaticMessageParsing ?? true)
             this.client.on('message', this.client.parseMessage);
     }
@@ -40,13 +42,11 @@ class CommandIndex {
                 return this.indexCommands(new Command_js_1.default(command));
             if (!command.name)
                 throw new Error('A command must have a name set.');
-            if (!command.callback)
-                throw new Error('A commands must have a callback set.');
             if (command.group && !this.groups.has(command.group))
                 throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroup(\'${command.group}\')`);
             command.aliases.forEach(alias => {
                 this.index.forEach(existing => {
-                    if (existing.aliases.includes(alias))
+                    if (existing.aliases.has(alias))
                         throw new Error(`Alias \'${alias}\' already exists on command \'${existing.name}\'`);
                 });
             });
@@ -58,8 +58,8 @@ class CommandIndex {
         this.indexCommand(helpCommand_js_1.default);
         return this;
     }
-    indexGroup(group) {
-        return this.indexGroups(group);
+    indexGroup(name) {
+        return this.indexGroups(name);
     }
     indexGroups(...groups) {
         groups.forEach(group => {
@@ -68,6 +68,15 @@ class CommandIndex {
         });
         return this;
     }
+    // public indexGroup(name: string, description = 'No description'): this {
+    //     return this.indexGroups([ name, description ]);
+    // }
+    // public indexGroups(...groups: [string, string][]): this {
+    //     groups.forEach(group => {
+    //         if (typeof group === 'string') this.groups
+    //     });
+    //     return this;
+    // }
     removeCommands(...commands) {
         commands.forEach(command => this.index.delete(command instanceof Command_js_1.default ? command.name : command));
         return this;

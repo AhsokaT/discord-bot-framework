@@ -11,6 +11,9 @@ class Index extends Map {
     array() {
         return [...this.values()];
     }
+    keyArray() {
+        return [...this.keys()];
+    }
 }
 exports.Index = Index;
 class Group extends Set {

@@ -1,6 +1,5 @@
-import { ApplicationCommandOptionType } from './SlashTypes.js';
-import { Guild, GuildMember, MessageEmbed, NewsChannel, TextChannel, User } from 'discord.js';
-import { Client } from '../client/Client.js';
+import { MessageEmbed } from 'discord.js';
+import Client from '../../client/Client.js';
 import { InteractionResponseTypeString } from './Interaction.js';
 
 import { APIInteractionMessage, InteractionMessageOptions, AllowedMentions } from './APIInteractionMessage.js';

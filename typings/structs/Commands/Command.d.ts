@@ -1,6 +1,6 @@
 import { Message, PermissionString } from 'discord.js';
 import Client from '../../client/Client.js';
-import { Index } from '../../util/extensions.js';
+import { Group, Index } from '../../util/extensions.js';
 export declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
 export interface Parameter {
     name: string;
@@ -29,11 +29,11 @@ export default class Command {
     constructor(details?: CommandDetails);
     get name(): string;
     get description(): string;
-    get aliases(): string[];
-    get permissions(): PermissionString[];
+    get aliases(): Group<string>;
+    get permissions(): Group<PermissionString>;
     get callback(): CommandCallback;
     get group(): string;
-    get parameters(): Parameter[];
+    get parameters(): Group<Parameter>;
     get nsfw(): boolean;
     /**
      * @param name The name of your command
@@ -52,9 +52,13 @@ export default class Command {
      */
     setGroup(group: string): this;
     /**
-     * @param callback The function to be executed when this command is invoked
+     * @param callback The function to be called when this command is invoked
      * @example
      * setCallback((message, client, args) => message.reply('pong!'));
+     *
+     * setCallback(function(message, client, args) {
+     *      message.channel.send(this.name, this.description);
+     * });
      */
     setCallback(callback: CommandCallback): this;
     /**
@@ -69,6 +73,7 @@ export default class Command {
     /**
      * @param permissions Permission(s) this command requires to run
      * @example
+     * addPermissions('MANAGE_CHANNELS');
      * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
     addPermissions(...permissions: PermissionString[]): this;

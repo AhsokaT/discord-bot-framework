@@ -10,6 +10,10 @@ export class Index<K, V> extends Map<K, V> {
     public array(): V[] {
         return [ ...this.values() ];
     }
+
+    public keyArray(): K[] {
+        return [ ...this.keys() ];
+    }
 }
 
 export class Group<T> extends Set<T> {

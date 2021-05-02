@@ -1,18 +1,18 @@
-import { Message, EmbedFieldData, MessageEmbed } from 'discord.js';
-import Client from '../client/Client.js';
+import { EmbedFieldData, MessageEmbed } from 'discord.js';
 import Command from '../structs/Commands/Command.js';
+import { toString } from './util.js';
 
 export default new Command()
     .setName('help')
     .setDescription('Display information about my commands')
-    .setCallback(async function (message: Message, client: Client, args: any) {
-        const input = args.first();
-        const group = client.commands.groups.has(input?.toLowerCase()) ? input?.toLowerCase() : null;
-        const command = input ? client.commands.index.get(input.toLowerCase()) : null;
+    .setCallback(async function (message, client, args) {
+        const input = toString(args.first()).toLowerCase();
+        const group = client.commands.groups.has(input) ? input : null;
+        const command = client.commands.index.get(input);
 
         if (group) {
             const commands = client.commands.index.array().filter(command => command.group === group).map(command => {
-                const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.length > 0 ? command.parameters.map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
+                const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
 
                 return field;
             });
@@ -41,16 +41,16 @@ export default new Command()
                 embed.addField('Description', command.description, false);
             }
 
-            if (command.parameters.length > 0) {
-                embed.addField('Parameters', command.parameters.map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
+            if (command.parameters.array().length > 0) {
+                embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
             }
 
-            if (command.permissions.length > 0) {
-                embed.addField('Permissions', command.permissions.map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
+            if (command.permissions.array().length > 0) {
+                embed.addField('Permissions', command.permissions.array().map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
             }
 
-            if (command.aliases.length > 0) {
-                embed.addField('Aliases', command.aliases.map(i => `\`${i}\``).join(' '), false);
+            if (command.aliases.array().length > 0) {
+                embed.addField('Aliases', command.aliases.array().map(i => `\`${i}\``).join(' '), false);
             }
 
             if (command.nsfw) {
@@ -63,7 +63,7 @@ export default new Command()
         }
 
         const ungrouped = client.commands.index.array().filter(i => !i.group).map(command => {
-            const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.length > 0 ? command.parameters.map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
+            const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
     
             return field;
         });
@@ -74,7 +74,7 @@ export default new Command()
             return field;
         });
 
-        const invite = await client.generateInvite({ permissions: this.permissions });
+        const invite = await client.generateInvite({ permissions: this.permissions.array() });
 
         const embed = new MessageEmbed({
             color: '#2F3136',

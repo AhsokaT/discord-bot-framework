@@ -1,6 +1,6 @@
 import { Message, PermissionString } from 'discord.js';
 import Client from '../../client/Client.js';
-import { Index } from '../../util/extensions.js';
+import { Group, Index } from '../../util/extensions.js';
 
 export type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
 
@@ -23,19 +23,17 @@ export interface CommandDetails {
     permissions?: PermissionString[];
     parameters?: Parameter[];
     callback?: CommandCallback;
-} 
+}
 
 export default class Command {
-    #details: Required<CommandDetails> = {
-        name: '',
-        description: '',
-        group: '',
-        nsfw: false,
-        aliases: [],
-        permissions: [],
-        parameters: [],
-        callback: () => {}
-    };
+    #name = '';
+    #description = '';
+    #group = '';
+    #nsfw = false;
+    #aliases = new Group<string>();
+    #permissions = new Group<PermissionString>();
+    #parameters = new Group<Parameter>();
+    #callback: CommandCallback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
 
     /**
      * @param {CommandDetails} details
@@ -45,42 +43,42 @@ export default class Command {
     }
 
     get name() {
-        return this.#details.name;
+        return this.#name;
     }
 
     get description() {
-        return this.#details.description;
+        return this.#description;
     }
 
     get aliases() {
-        return this.#details.aliases;
+        return this.#aliases;
     }
 
     get permissions() {
-        return this.#details.permissions;
+        return this.#permissions;
     }
 
     get callback() {
-        return this.#details.callback;
+        return this.#callback;
     }
 
     get group() {
-        return this.#details.group;
+        return this.#group;
     }
 
     get parameters() {
-        return this.#details.parameters;
+        return this.#parameters;
     }
 
     get nsfw() {
-        return this.#details.nsfw;
+        return this.#nsfw;
     }
 
     /**
      * @param name The name of your command
      */
     public setName(name: string): this {
-        if (typeof name === 'string') this.#details.name = name;
+        if (typeof name === 'string') this.#name = name;
 
         return this;
     }
@@ -89,7 +87,7 @@ export default class Command {
      * @param description A short description of your command
      */
     public setDescription(description: string): this {
-        if (typeof description === 'string') this.#details.description = description;
+        if (typeof description === 'string') this.#description = description;
 
         return this;
     }
@@ -98,7 +96,7 @@ export default class Command {
      * @param nsfw Whether the command should only be usable in NSFW channels; true by default
      */
     public setNSFW(nsfw = true): this {
-        this.#details.nsfw = Boolean(nsfw);
+        this.#nsfw = Boolean(nsfw);
 
         return this;
     }
@@ -106,19 +104,23 @@ export default class Command {
     /**
      * @param group The group of commands this command belongs to
      */
-    public setGroup(group: string): this {
-        if (typeof group === 'string') this.#details.group = group;
+    public setGroup(group: string): this { 
+        if (typeof group === 'string') this.#group = group;
 
         return this;
     }
 
     /**
-     * @param callback The function to be executed when this command is invoked
+     * @param callback The function to be called when this command is invoked
      * @example
      * setCallback((message, client, args) => message.reply('pong!'));
+     * 
+     * setCallback(function(message, client, args) {
+     *      message.channel.send(this.name, this.description);
+     * });
      */
     public setCallback(callback: CommandCallback): this {
-        if (typeof callback === 'function') this.#details.callback = callback;
+        if (typeof callback === 'function') this.#callback = callback;
 
         return this;
     }
@@ -147,8 +149,7 @@ export default class Command {
             parameter.required = typeof required === 'boolean' ? required : true;
             parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
 
-            this.#details.parameters.push(parameter);
-            this.#details.parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+            this.#parameters.add(parameter);
         });
 
         return this;
@@ -157,10 +158,11 @@ export default class Command {
     /**
      * @param permissions Permission(s) this command requires to run
      * @example
+     * addPermissions('MANAGE_CHANNELS');
      * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
     public addPermissions(...permissions: PermissionString[]): this {
-        this.#details.permissions.push(...permissions.filter(perm => typeof perm === 'string'));
+        permissions.filter(perm => typeof perm === 'string').forEach(this.#permissions.add);
 
         return this;
     }
@@ -172,7 +174,7 @@ export default class Command {
      * addAliases('purge', 'bulkdelete');
      */
     public addAliases(...aliases: string[]): this {
-        this.#details.aliases.push(...aliases.filter(alias => typeof alias === 'string'));
+        aliases.filter(alias => typeof alias === 'string').forEach(this.#aliases.add);
 
         return this;
     }

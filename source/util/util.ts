@@ -1,8 +1,24 @@
-import {} from 'discord.js';
-import Client from '../client/Client.js';
-import Command from '../structs/Commands/Command.js';
-import CommandIndex from '../structs/commands/CommandIndex.js';
+/**
+ * Convert an array of strings to a list
+ * @param items An array of strings
+ * @param trailingConnective The connective to precede the final item of the array; default 'and'
+ * @returns 
+ */
+export function toList(items: string[], trailingConnective = 'and') {
+    return `${items.length > 1 ? `${items.slice(0, items.length - 1).join(', ')} ${trailingConnective} ${items[items.length - 1]}` : items }`;
+}
 
-export function toList(i: string[], trailingConnective = 'and') {
-    return `${i.length > 1 ? `${i.slice(0, i.length - 1).join(', ')} ${trailingConnective} ${i[i.length - 1]}` : i }`;
+/**
+ * Convert any value to a string
+ * @param value
+ */
+export function toString(value: any) {
+    return `${value}`;
+}
+
+/**
+ * ...WIP
+ */
+export function api(auth: string) {
+    
 }

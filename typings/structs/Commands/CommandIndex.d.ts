@@ -3,7 +3,6 @@ import Client from '../../client/Client.js';
 import Command, { CommandDetails } from './Command.js';
 import { Group, Index } from '../../util/extensions.js';
 export interface CommandIndexOptions {
-    groups?: string[];
     prefix?: string;
     allowBots?: boolean;
     permissions?: PermissionString[];
@@ -16,7 +15,7 @@ export default class CommandIndex {
     allowBots: boolean;
     groups: Group<string>;
     index: Index<string, Command>;
-    permissions: PermissionString[];
+    permissions: Group<PermissionString>;
     constructor(client: Client, options?: CommandIndexOptions);
     /**
      * @param prefix A command prefix the bot should look for
@@ -33,7 +32,7 @@ export default class CommandIndex {
      */
     indexCommands(...commands: CommandResolvable[]): this;
     indexDefaults(): this;
-    indexGroup(group: string): this;
+    indexGroup(name: string): this;
     indexGroups(...groups: string[]): this;
     removeCommands(...commands: (Command | string)[]): this;
     removeGroup(group: string): this;

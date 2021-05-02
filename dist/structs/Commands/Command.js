@@ -1,54 +1,60 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const extensions_js_1 = require("../../util/extensions.js");
 class Command {
     /**
      * @param {CommandDetails} details
      */
     constructor(details) {
-        this.#details = {
-            name: '',
-            description: '',
-            group: '',
-            nsfw: false,
-            aliases: [],
-            permissions: [],
-            parameters: [],
-            callback: () => { }
-        };
+        this.#name = '';
+        this.#description = '';
+        this.#group = '';
+        this.#nsfw = false;
+        this.#aliases = new extensions_js_1.Group();
+        this.#permissions = new extensions_js_1.Group();
+        this.#parameters = new extensions_js_1.Group();
+        this.#callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
         if (details)
             this.edit(details);
     }
-    #details;
+    #name;
+    #description;
+    #group;
+    #nsfw;
+    #aliases;
+    #permissions;
+    #parameters;
+    #callback;
     get name() {
-        return this.#details.name;
+        return this.#name;
     }
     get description() {
-        return this.#details.description;
+        return this.#description;
     }
     get aliases() {
-        return this.#details.aliases;
+        return this.#aliases;
     }
     get permissions() {
-        return this.#details.permissions;
+        return this.#permissions;
     }
     get callback() {
-        return this.#details.callback;
+        return this.#callback;
     }
     get group() {
-        return this.#details.group;
+        return this.#group;
     }
     get parameters() {
-        return this.#details.parameters;
+        return this.#parameters;
     }
     get nsfw() {
-        return this.#details.nsfw;
+        return this.#nsfw;
     }
     /**
      * @param name The name of your command
      */
     setName(name) {
         if (typeof name === 'string')
-            this.#details.name = name;
+            this.#name = name;
         return this;
     }
     /**
@@ -56,14 +62,14 @@ class Command {
      */
     setDescription(description) {
         if (typeof description === 'string')
-            this.#details.description = description;
+            this.#description = description;
         return this;
     }
     /**
      * @param nsfw Whether the command should only be usable in NSFW channels; true by default
      */
     setNSFW(nsfw = true) {
-        this.#details.nsfw = Boolean(nsfw);
+        this.#nsfw = Boolean(nsfw);
         return this;
     }
     /**
@@ -71,17 +77,21 @@ class Command {
      */
     setGroup(group) {
         if (typeof group === 'string')
-            this.#details.group = group;
+            this.#group = group;
         return this;
     }
     /**
-     * @param callback The function to be executed when this command is invoked
+     * @param callback The function to be called when this command is invoked
      * @example
      * setCallback((message, client, args) => message.reply('pong!'));
+     *
+     * setCallback(function(message, client, args) {
+     *      message.channel.send(this.name, this.description);
+     * });
      */
     setCallback(callback) {
         if (typeof callback === 'function')
-            this.#details.callback = callback;
+            this.#callback = callback;
         return this;
     }
     /**
@@ -110,18 +120,18 @@ class Command {
             parameter.choices?.filter(choice => typeof choice === 'string');
             parameter.required = typeof required === 'boolean' ? required : true;
             parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
-            this.#details.parameters.push(parameter);
-            this.#details.parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+            this.#parameters.add(parameter);
         });
         return this;
     }
     /**
      * @param permissions Permission(s) this command requires to run
      * @example
+     * addPermissions('MANAGE_CHANNELS');
      * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
     addPermissions(...permissions) {
-        this.#details.permissions.push(...permissions.filter(perm => typeof perm === 'string'));
+        permissions.filter(perm => typeof perm === 'string').forEach(this.#permissions.add);
         return this;
     }
     /**
@@ -131,7 +141,7 @@ class Command {
      * addAliases('purge', 'bulkdelete');
      */
     addAliases(...aliases) {
-        this.#details.aliases.push(...aliases.filter(alias => typeof alias === 'string'));
+        aliases.filter(alias => typeof alias === 'string').forEach(this.#aliases.add);
         return this;
     }
     /**
