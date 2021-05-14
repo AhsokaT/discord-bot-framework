@@ -1,5 +1,5 @@
 import Client from '../../client/Client.js';
-import { Group } from '../../util/extensions.js';
+import { Collection } from '../../util/extensions.js';
 import { Interaction } from './Interaction.js';
 export declare enum ApplicationCommandOptionType {
     SUB_COMMAND = 1,
@@ -53,7 +53,7 @@ export declare type SlashCallback = (interaction: Interaction, client: Client) =
 export default class APISlashCommand {
     name: string;
     description: string;
-    options: Group<ApplicationCommandOption>;
+    options: Collection<ApplicationCommandOption>;
     guildID: string | undefined;
     constructor(details?: Partial<APIApplicationCommandDetails>);
     /**
@@ -91,5 +91,5 @@ export declare class SlashCommand {
     options: ApplicationCommandOption[];
     constructor(client: Client, details: ApplicationCommandDetails);
     delete(): Promise<SlashCommand | undefined>;
-    edit(details: Omit<APIApplicationCommandDetails, 'guildID'>): Promise<SlashCommand | undefined>;
+    edit(details: Partial<Omit<APIApplicationCommandDetails, 'guildID'>>): Promise<SlashCommand | undefined>;
 }

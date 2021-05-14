@@ -70,7 +70,7 @@ class Client extends discord_js_1.Client {
             }
         }
         if (command.callback)
-            command.callback(message, this, new extensions_js_1.Index(...args));
+            command.callback(message, this, new extensions_js_1.Index(args));
     }
     get discord() {
         return function (auth) {
@@ -100,7 +100,4 @@ class Client extends discord_js_1.Client {
     }
 }
 exports.default = Client;
-new Client().slashCommands
-    .on('commandUpdate', (previous, updated) => {
-    previous.client;
-});
+new Client().commands;

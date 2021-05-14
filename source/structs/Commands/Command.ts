@@ -1,6 +1,6 @@
 import { Message, PermissionString } from 'discord.js';
 import Client from '../../client/Client.js';
-import { Group, Index } from '../../util/extensions.js';
+import { Collection, Index } from '../../util/extensions.js';
 
 export type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
 
@@ -30,9 +30,9 @@ export default class Command {
     #description = '';
     #group = '';
     #nsfw = false;
-    #aliases = new Group<string>();
-    #permissions = new Group<PermissionString>();
-    #parameters = new Group<Parameter>();
+    #aliases = new Collection<string>();
+    #parameters = new Collection<Parameter>();
+    #permissions = new Collection<PermissionString>();
     #callback: CommandCallback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
 
     /**
@@ -133,8 +133,8 @@ export default class Command {
      *    { name: 'role', description: 'The ID of a role', required: false }
      * );
      */
-    public addParameters(...parameters: Parameter[]): this {
-        parameters.forEach(parameter => {
+    public addParameters(...parameters: Parameter[] | Parameter[][]): this {
+        parameters.flat().forEach(parameter => {
             if (typeof parameter !== 'object') throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
 
             const { name, description, choices, wordCount, type, required, caseSensitive } = parameter;
@@ -150,6 +150,7 @@ export default class Command {
             parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
 
             this.#parameters.add(parameter);
+            this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
         });
 
         return this;

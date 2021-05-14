@@ -1,6 +1,6 @@
 import { Message, PermissionString } from 'discord.js';
 import Client from '../../client/Client.js';
-import { Group, Index } from '../../util/extensions.js';
+import { Collection, Index } from '../../util/extensions.js';
 export declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
 export interface Parameter {
     name: string;
@@ -29,11 +29,11 @@ export default class Command {
     constructor(details?: CommandDetails);
     get name(): string;
     get description(): string;
-    get aliases(): Group<string>;
-    get permissions(): Group<PermissionString>;
+    get aliases(): Collection<string>;
+    get permissions(): Collection<PermissionString>;
     get callback(): CommandCallback;
     get group(): string;
-    get parameters(): Group<Parameter>;
+    get parameters(): Collection<Parameter>;
     get nsfw(): boolean;
     /**
      * @param name The name of your command
@@ -69,7 +69,7 @@ export default class Command {
      *    { name: 'role', description: 'The ID of a role', required: false }
      * );
      */
-    addParameters(...parameters: Parameter[]): this;
+    addParameters(...parameters: Parameter[] | Parameter[][]): this;
     /**
      * @param permissions Permission(s) this command requires to run
      * @example

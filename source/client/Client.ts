@@ -83,7 +83,7 @@ export default class Client extends DJSClient {
             }
         }
 
-        if (command.callback) command.callback(message, this, new Index(...args));
+        if (command.callback) command.callback(message, this, new Index(args));
     }
 
     get discord() {
@@ -118,7 +118,4 @@ export default class Client extends DJSClient {
     }
 }
 
-new Client().slashCommands
-    .on('commandUpdate', (previous, updated) => {
-        previous.client
-    });
+new Client().commands

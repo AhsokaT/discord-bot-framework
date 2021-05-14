@@ -16,7 +16,7 @@ var ApplicationCommandOptionType;
 class APISlashCommand {
     constructor(details = {}) {
         const { name, description, options, guildID } = details;
-        this.options = new extensions_js_1.Group();
+        this.options = new extensions_js_1.Collection();
         if (name)
             this.setName(name);
         if (description)

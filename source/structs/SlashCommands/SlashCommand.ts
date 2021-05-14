@@ -1,5 +1,5 @@
 import Client from '../../client/Client.js';
-import { Group } from '../../util/extensions.js';
+import { Collection } from '../../util/extensions.js';
 import { Interaction } from './Interaction.js';
 
 export enum ApplicationCommandOptionType {
@@ -63,13 +63,13 @@ export type SlashCallback = (interaction: Interaction, client: Client) => void;
 export default class APISlashCommand {
     public name: string;
     public description: string;
-    public options: Group<ApplicationCommandOption>;
+    public options: Collection<ApplicationCommandOption>;
     public guildID: string | undefined;
 
     constructor(details: Partial<APIApplicationCommandDetails> = {}) {
         const { name, description, options, guildID } = details;
 
-        this.options = new Group();
+        this.options = new Collection();
 
         if (name) this.setName(name);
         if (description) this.setDescription(description);
@@ -149,7 +149,7 @@ export class SlashCommand {
         return this.client.slashCommands.delete(this);
     }
 
-    public async edit(details: Omit<APIApplicationCommandDetails, 'guildID'>) {
+    public async edit(details: Partial<Omit<APIApplicationCommandDetails, 'guildID'>>) {
         return this.client.slashCommands.edit(this, details);
     }
 }

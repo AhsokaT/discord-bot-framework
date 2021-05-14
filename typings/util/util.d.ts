@@ -2,7 +2,6 @@
  * Convert an array of strings to a list
  * @param items An array of strings
  * @param trailingConnective The connective to precede the final item of the array; default 'and'
- * @returns
  */
 export declare function toList(items: string[], trailingConnective?: string): string;
 /**

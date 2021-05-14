@@ -2,7 +2,7 @@ import { PermissionString } from 'discord.js';
 import Client from '../../client/Client.js';
 import Command, { CommandDetails } from './Command.js';
 import helpCommand from '../../util/helpCommand.js';
-import { Group, Index } from '../../util/extensions.js';
+import { Collection, Index } from '../../util/extensions.js';
 
 export interface CommandIndexOptions {
     prefix?: string;
@@ -11,15 +11,15 @@ export interface CommandIndexOptions {
     automaticMessageParsing?: boolean;
 }
 
-export type CommandResolvable = Command | CommandDetails;
+export type CommandResolvable = Command | CommandDetails | Command[] | CommandDetails[];
 
 export default class CommandIndex {
     public client: Client;
     public prefix: string;
     public allowBots: boolean;
-    public groups: Group<string>;
+    public groups: Collection<string>;
     public index: Index<string, Command>;
-    public permissions: Group<PermissionString>;
+    public permissions: Collection<PermissionString>;
 
     constructor(client: Client, options: CommandIndexOptions = {}) {
         this.client = client;
@@ -27,10 +27,10 @@ export default class CommandIndex {
         const { prefix, permissions, allowBots, automaticMessageParsing } = options;
 
         this.index = new Index();
-        this.groups = new Group();
-        this.permissions = new Group();
+        this.groups = new Collection();
+        this.permissions = new Collection();
         this.allowBots = Boolean(allowBots);
-        this.prefix = typeof prefix === 'string' ? prefix : '';
+        this.setPrefix(typeof prefix === 'string' ? prefix : '');
 
         if (Array.isArray(permissions)) this.permissions.array().filter(perm => typeof perm === 'string').forEach(this.permissions.add);
 
@@ -38,7 +38,9 @@ export default class CommandIndex {
     }
 
     /**
-     * @param prefix A command prefix the bot should look for
+     * @param prefix A command prefix the bot should discriminate messages with
+     * @example
+     * setPrefix('$');
      */
     public setPrefix(prefix: string) {
         if (typeof prefix === 'string') this.prefix = prefix;
@@ -49,6 +51,12 @@ export default class CommandIndex {
     /**
      * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
      * @param command An instance of the Command class or an object conforming to type CommandDetails
+     * @example
+     * const command = new Command()
+     *      .setName('name')
+     *      .setDescription('description')
+     * 
+     * indexCommand(command);
      */
     public indexCommand(command: CommandResolvable): this {
         return this.indexCommands(command);
@@ -57,14 +65,24 @@ export default class CommandIndex {
     /**
      * Add new commands to the bot; if provided commands match existing commands, the existing commands will be overwritten
      * @param commands Instances of the Command class or objects conforming to type CommandDetails
+     * @example
+     * const ping = new Command()
+     *      .setName('ping')
+     *      .setDescription('Ping pong');
+     * 
+     * const purge = new Command()
+     *      .setName('purge')
+     *      .setDescription('Delete messages');
+     * 
+     * indexCommands(ping, purge);
      */
     public indexCommands(...commands: CommandResolvable[]): this {
-        commands.forEach(command => {
+        commands.flat().forEach(command => {
             if (!(command instanceof Command)) return this.indexCommands(new Command(command));
 
             if (!command.name) throw new Error('A command must have a name set.');
 
-            if (command.group && !this.groups.has(command.group)) throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroup(\'${command.group}\')`);
+            if (command.group && !this.groups.has(command.group)) throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
 
             command.aliases.forEach(alias => {
                 this.index.forEach(existing => {
@@ -88,37 +106,27 @@ export default class CommandIndex {
         return this.indexGroups(name);
     }
 
-    public indexGroups(...groups: string[]): this {
-        groups.forEach(group => {
-            if (typeof group === 'string') this.groups.add(group);
+    public indexGroups(...groups: string[] | string[][]): this {
+        groups.flat().filter(group => typeof group === 'string').forEach(group => this.groups.add(group.toLowerCase()));
+
+        return this;
+    }
+
+    public deleteCommands(...commands: Command[] | string[]): this {
+        commands.forEach(command => {
+            const toDelete = command instanceof Command ? command : this.index.get(command);
+
+            if (toDelete) this.index.delete(toDelete.name);
         });
 
         return this;
     }
 
-    // public indexGroup(name: string, description = 'No description'): this {
-    //     return this.indexGroups([ name, description ]);
-    // }
-
-    // public indexGroups(...groups: [string, string][]): this {
-    //     groups.forEach(group => {
-    //         if (typeof group === 'string') this.groups
-    //     });
-
-    //     return this;
-    // }
-
-    public removeCommands(...commands: (Command | string)[]): this {
-        commands.forEach(command => this.index.delete(command instanceof Command ? command.name : command));
-
-        return this;
+    public deleteGroup(group: string): this {
+        return this.deleteGroups(group);
     }
 
-    public removeGroup(group: string): this {
-        return this.removeGroups(group);
-    }
-
-    public removeGroups(...groups: string[]): this {
+    public deleteGroups(...groups: string[]): this {
         groups.forEach(group => this.groups.delete(group));
 
         return this;

@@ -10,9 +10,9 @@ class Command {
         this.#description = '';
         this.#group = '';
         this.#nsfw = false;
-        this.#aliases = new extensions_js_1.Group();
-        this.#permissions = new extensions_js_1.Group();
-        this.#parameters = new extensions_js_1.Group();
+        this.#aliases = new extensions_js_1.Collection();
+        this.#parameters = new extensions_js_1.Collection();
+        this.#permissions = new extensions_js_1.Collection();
         this.#callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
         if (details)
             this.edit(details);
@@ -22,8 +22,8 @@ class Command {
     #group;
     #nsfw;
     #aliases;
-    #permissions;
     #parameters;
+    #permissions;
     #callback;
     get name() {
         return this.#name;
@@ -103,7 +103,7 @@ class Command {
      * );
      */
     addParameters(...parameters) {
-        parameters.forEach(parameter => {
+        parameters.flat().forEach(parameter => {
             if (typeof parameter !== 'object')
                 throw new TypeError('\'parameter\' must be an object of type \'ParameterType\'.');
             const { name, description, choices, wordCount, type, required, caseSensitive } = parameter;
@@ -121,6 +121,7 @@ class Command {
             parameter.required = typeof required === 'boolean' ? required : true;
             parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
             this.#parameters.add(parameter);
+            this.#parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
         });
         return this;
     }

@@ -5,6 +5,11 @@ import { toString } from './util.js';
 export default new Command()
     .setName('help')
     .setDescription('Display information about my commands')
+    .addParameters({
+        name: 'command',
+        description: 'Name of a command or category',
+        required: false
+    })
     .setCallback(async function (message, client, args) {
         const input = toString(args.first()).toLowerCase();
         const group = client.commands.groups.has(input) ? input : null;

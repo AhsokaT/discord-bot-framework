@@ -8,17 +8,19 @@ class CommandIndex {
         this.client = client;
         const { prefix, permissions, allowBots, automaticMessageParsing } = options;
         this.index = new extensions_js_1.Index();
-        this.groups = new extensions_js_1.Group();
-        this.permissions = new extensions_js_1.Group();
+        this.groups = new extensions_js_1.Collection();
+        this.permissions = new extensions_js_1.Collection();
         this.allowBots = Boolean(allowBots);
-        this.prefix = typeof prefix === 'string' ? prefix : '';
+        this.setPrefix(typeof prefix === 'string' ? prefix : '');
         if (Array.isArray(permissions))
             this.permissions.array().filter(perm => typeof perm === 'string').forEach(this.permissions.add);
         if (automaticMessageParsing ?? true)
             this.client.on('message', this.client.parseMessage);
     }
     /**
-     * @param prefix A command prefix the bot should look for
+     * @param prefix A command prefix the bot should discriminate messages with
+     * @example
+     * setPrefix('$');
      */
     setPrefix(prefix) {
         if (typeof prefix === 'string')
@@ -28,6 +30,12 @@ class CommandIndex {
     /**
      * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
      * @param command An instance of the Command class or an object conforming to type CommandDetails
+     * @example
+     * const command = new Command()
+     *      .setName('name')
+     *      .setDescription('description')
+     *
+     * indexCommand(command);
      */
     indexCommand(command) {
         return this.indexCommands(command);
@@ -35,15 +43,25 @@ class CommandIndex {
     /**
      * Add new commands to the bot; if provided commands match existing commands, the existing commands will be overwritten
      * @param commands Instances of the Command class or objects conforming to type CommandDetails
+     * @example
+     * const ping = new Command()
+     *      .setName('ping')
+     *      .setDescription('Ping pong');
+     *
+     * const purge = new Command()
+     *      .setName('purge')
+     *      .setDescription('Delete messages');
+     *
+     * indexCommands(ping, purge);
      */
     indexCommands(...commands) {
-        commands.forEach(command => {
+        commands.flat().forEach(command => {
             if (!(command instanceof Command_js_1.default))
                 return this.indexCommands(new Command_js_1.default(command));
             if (!command.name)
                 throw new Error('A command must have a name set.');
             if (command.group && !this.groups.has(command.group))
-                throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroup(\'${command.group}\')`);
+                throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
             command.aliases.forEach(alias => {
                 this.index.forEach(existing => {
                     if (existing.aliases.has(alias))
@@ -62,29 +80,21 @@ class CommandIndex {
         return this.indexGroups(name);
     }
     indexGroups(...groups) {
-        groups.forEach(group => {
-            if (typeof group === 'string')
-                this.groups.add(group);
+        groups.flat().filter(group => typeof group === 'string').forEach(group => this.groups.add(group.toLowerCase()));
+        return this;
+    }
+    deleteCommands(...commands) {
+        commands.forEach(command => {
+            const toDelete = command instanceof Command_js_1.default ? command : this.index.get(command);
+            if (toDelete)
+                this.index.delete(toDelete.name);
         });
         return this;
     }
-    // public indexGroup(name: string, description = 'No description'): this {
-    //     return this.indexGroups([ name, description ]);
-    // }
-    // public indexGroups(...groups: [string, string][]): this {
-    //     groups.forEach(group => {
-    //         if (typeof group === 'string') this.groups
-    //     });
-    //     return this;
-    // }
-    removeCommands(...commands) {
-        commands.forEach(command => this.index.delete(command instanceof Command_js_1.default ? command.name : command));
-        return this;
+    deleteGroup(group) {
+        return this.deleteGroups(group);
     }
-    removeGroup(group) {
-        return this.removeGroups(group);
-    }
-    removeGroups(...groups) {
+    deleteGroups(...groups) {
         groups.forEach(group => this.groups.delete(group));
         return this;
     }

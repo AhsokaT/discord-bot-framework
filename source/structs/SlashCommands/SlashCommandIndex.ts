@@ -8,7 +8,6 @@ import { Interaction } from './Interaction.js';
 export default class SlashCommandIndex extends EventEmitter {
     public client: Client;
     public cache: Index<string, SlashCommand>;
-    public callbacks: Index<string, SlashCallback>;
     public application: ClientApplication | null;
 
     constructor(client: Client) {
@@ -16,30 +15,26 @@ export default class SlashCommandIndex extends EventEmitter {
 
         this.client = client;
         this.cache = new Index();
-        this.callbacks = new Index();
         this.application = null;
 
         // @ts-expect-error
         this.client.ws.on('INTERACTION_CREATE', async interaction => {
             if (!this.application) this.application = await this.client.fetchApplication();
 
-            const channel = await this.client.channels.fetch(interaction.channel_id).catch(() => undefined);
+            const { id, token, guild_id: guildID, channel_id, member: { id: userID }, data: { options, id: commandID } } = interaction;
+            const { client, application } = this;
+
+            const channel = await client.channels.fetch(channel_id).catch(() => undefined);
             if (!(channel instanceof TextChannel || channel instanceof NewsChannel) && channel !== undefined) return;
-            const member = await channel?.guild.members.fetch(interaction.member.user.id).catch(() => undefined) ?? undefined;
-            const command = await this.fetch(interaction.data.id, interaction.guild_id);
+
+            const member = await channel?.guild.members.fetch(userID).catch(() => undefined);
+            const command = await this.fetch(commandID) ?? await this.fetch(commandID, guildID);
 
             if (!command) return;
 
             const ResolvedInteraction = new Interaction({
-                member,
-                channel,
-                client: this.client,
-                id: interaction.id,
-                token: interaction.token,
-                guildID: interaction.guild_id,
-                options: Array.isArray(interaction.data.options) ? new Index(...interaction.data.options.map(opt => [ opt.name, opt.value ])) : new Index(),
-                application: this.application,
-                command: command
+                member, channel, command, id, token, guildID, client, application,
+                options: Array.isArray(options) ? new Index(options.map(opt => [ opt.name, opt.value ])) : new Index()
             });
 
             this.emit('commandCall', ResolvedInteraction, this.client);
@@ -100,20 +95,22 @@ export default class SlashCommandIndex extends EventEmitter {
      * @param {string} guildID The ID of a Discord server
      * @returns {Promise<SlashCommand | null>}
      */
-    async fetch(id: string, guildID?: string): Promise<SlashCommand | null> {
+    async fetch(id: string, guildID?: string): Promise<SlashCommand | undefined> {
         if (!this.application) this.application = await this.client.fetchApplication();
 
-        if (this.cache.has(id)) return this.cache.get(id) ?? null;
+        if (this.cache.has(id)) return this.cache.get(id);
 
         const res = guildID ?
         await this.client.discord.applications(this.application.id).guilds(guildID).commands(id).get() :
         await this.client.discord.applications(this.application.id).commands(id).get();
 
-        const command = res ? new SlashCommand(this.client, await res.json()) : null;
+        const command = await res.json();
 
-        if (command) this.updateCache(command);
+        if (typeof command.code === 'number') throw new Error(`${command.code} ${command.message}`);
 
-        return command;
+        const resolved = new SlashCommand(this.client, command);
+
+        return this.updateCache(resolved).get(resolved.id);
     }
 
     /**
@@ -127,7 +124,7 @@ export default class SlashCommandIndex extends EventEmitter {
     async post(command: APISlashCommand | APIApplicationCommandDetails): Promise<SlashCommand | undefined> {
         if (!this.application) this.application = await this.client.fetchApplication();
 
-        if (!(command instanceof APISlashCommand)) return await this.post(new APISlashCommand(command));
+        if (!(command instanceof APISlashCommand)) return this.post(new APISlashCommand(command));
 
         await this.fetchAll(command.guildID);
 
@@ -136,11 +133,7 @@ export default class SlashCommandIndex extends EventEmitter {
 
         const existing = this.cache.array().find(existing => existing.name === command.name && existing.guildID === command.guildID);
 
-        if (existing) {
-            this.emit('commandCreate', existing);
-
-            return existing;
-        }
+        if (existing) return existing;
 
         let res = command.guildID ?
         await this.client.discord.applications(this.application.id).guilds(command.guildID).commands.post({ body: command.toJSON() }) :
@@ -155,10 +148,10 @@ export default class SlashCommandIndex extends EventEmitter {
         return this.updateCache(posted).get(posted.id);
     }
 
-    async edit(command: SlashCommand, details: Omit<APIApplicationCommandDetails, 'guildID'>) {
+    async edit(command: SlashCommand, details: Partial<Omit<APIApplicationCommandDetails, 'guildID'>>) {
         if (!this.application) this.application = await this.client.fetchApplication();
 
-        if (!(command instanceof SlashCommand)) return;
+        if (!(command instanceof SlashCommand)) throw new Error('Argument for \'command\' must be an instance of SlashCommand.');
 
         const res = command.guildID ?
         await this.client.discord.applications(this.application.id).guilds(command.guildID).commands(command.id).patch({ body: details }) :
@@ -176,32 +169,18 @@ export default class SlashCommandIndex extends EventEmitter {
     async delete(command: SlashCommand): Promise<SlashCommand | undefined> {
         if (!this.application) this.application = await this.client.fetchApplication();
 
-        if (!(command instanceof SlashCommand)) return;
+        if (!(command instanceof SlashCommand)) throw new Error('Argument for \'command\' must be an instance of SlashCommand.');
 
         const deleted = command.guildID ?
         await this.client.discord.applications(this.application.id).guilds(command.guildID).commands(command.id).delete() :
         await this.client.discord.applications(this.application.id).commands(command.id).delete();
 
-        if (deleted.status !== 204) return;
+        if (deleted.status !== 204) throw new Error(`${deleted.code} ${deleted.message}`);
 
         this.cache.delete(command.id);
 
         this.emit('commandDelete', command);
 
         return command;
-    }
-
-    /**
-     * @param command An instance of SlashCommand or the ID of a slash command
-     * @param callback The function to be called when the command is used
-     */
-    setCallback(command: SlashCommand | string, callback: SlashCallback) {
-        const id = command instanceof SlashCommand ? command.id : command;
-
-        if (typeof callback !== 'function') return this;
-
-        this.callbacks.set(id, callback);
-
-        return this;
     }
 }

@@ -6,6 +6,11 @@ const util_js_1 = require("./util.js");
 exports.default = new Command_js_1.default()
     .setName('help')
     .setDescription('Display information about my commands')
+    .addParameters({
+    name: 'command',
+    description: 'Name of a command or category',
+    required: false
+})
     .setCallback(async function (message, client, args) {
     const input = util_js_1.toString(args.first()).toLowerCase();
     const group = client.commands.groups.has(input) ? input : null;
