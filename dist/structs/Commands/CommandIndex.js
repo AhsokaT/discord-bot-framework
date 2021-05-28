@@ -80,7 +80,8 @@ class CommandIndex {
         return this.indexGroups(name);
     }
     indexGroups(...groups) {
-        groups.flat().filter(group => typeof group === 'string').forEach(group => this.groups.add(group.toLowerCase()));
+        const entries = groups.flat().filter(group => typeof group === 'string').map(group => group.toLowerCase());
+        entries.forEach(group => this.groups.add(group));
         return this;
     }
     deleteCommands(...commands) {
@@ -95,7 +96,7 @@ class CommandIndex {
         return this.deleteGroups(group);
     }
     deleteGroups(...groups) {
-        groups.forEach(group => this.groups.delete(group));
+        groups.flat().forEach(group => this.groups.delete(group));
         return this;
     }
 }

@@ -13,3 +13,7 @@ export declare function toString(value: any): string;
  * ...WIP
  */
 export declare function api(auth: string): void;
+/**
+ * No-operation
+ */
+export declare function noop(): void;

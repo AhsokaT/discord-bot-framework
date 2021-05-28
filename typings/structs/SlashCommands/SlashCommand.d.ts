@@ -90,6 +90,6 @@ export declare class SlashCommand {
     guildID: string | undefined;
     options: ApplicationCommandOption[];
     constructor(client: Client, details: ApplicationCommandDetails);
-    delete(): Promise<SlashCommand | undefined>;
-    edit(details: Partial<Omit<APIApplicationCommandDetails, 'guildID'>>): Promise<SlashCommand | undefined>;
+    delete(): Promise<any>;
+    edit(details: Partial<Omit<APIApplicationCommandDetails, 'guildID'>>): Promise<any>;
 }

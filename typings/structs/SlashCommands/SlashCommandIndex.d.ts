@@ -5,6 +5,10 @@ import { Index } from '../../util/extensions.js';
 import APISlashCommand, { APIApplicationCommandDetails, SlashCallback, SlashCommand } from './SlashCommand.js';
 import { EventEmitter } from 'events';
 import { Interaction } from './Interaction.js';
+export declare type SlashCommandResolvable = string | SlashCommand | {
+    id: string;
+    guildID?: string;
+};
 export default class SlashCommandIndex extends EventEmitter {
     client: Client;
     cache: Index<string, SlashCommand>;
@@ -34,7 +38,12 @@ export default class SlashCommandIndex extends EventEmitter {
      * @param {string} guildID The ID of a Discord server
      * @returns {Promise<SlashCommand | null>}
      */
-    fetch(id: string, guildID?: string): Promise<SlashCommand | undefined>;
+    fetch(id: string, options: {
+        guildID: string;
+        omitCache: boolean;
+    }): Promise<SlashCommand | undefined>;
+    fetch2(): Promise<SlashCommand | undefined>;
+    fetch2(command: SlashCommandResolvable): Promise<SlashCommand | undefined>;
     /**
      * Post a new slash command to Discord.
      *

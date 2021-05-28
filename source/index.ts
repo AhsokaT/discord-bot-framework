@@ -1,7 +1,7 @@
 import Client, { ClientOptions } from './client/Client.js';
 import Command, { CommandDetails, CommandCallback } from './structs/Commands/Command.js';
 import { CommandIndexOptions, CommandResolvable } from './structs/Commands/CommandIndex.js';
-import APISlashCommand from './structs/SlashCommands/SlashCommand.js';
+import { ApplicationCommandConstructorOptions, ApplicationCommandCallback, ApplicationCommandConstructor, ApplicationCommandResolvable } from './structs/SlashCommands/ApplicationCommands.js';
 import { Index, Collection } from './util/extensions.js';
 
 export {
@@ -13,6 +13,9 @@ export {
     CommandDetails,
     CommandResolvable,
     CommandCallback,
-    APISlashCommand,
-    CommandIndexOptions
+    CommandIndexOptions,
+    ApplicationCommandConstructorOptions,
+    ApplicationCommandCallback,
+    ApplicationCommandConstructor,
+    ApplicationCommandResolvable
 }

@@ -1,6 +1,6 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message } from 'discord.js';
 import CommandIndex, { CommandIndexOptions } from '../structs/Commands/CommandIndex.js';
-import SlashCommandIndex from '../structs/SlashCommands/SlashCommandIndex.js';
+import SlashCommandIndex from '../structs/SlashCommands/ApplicationCommands';
 import APIRequest from '../util/APIRequest.js';
 import { Index } from '../util/extensions.js';
 import * as util from '../util/util.js';
@@ -11,18 +11,18 @@ export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
 
 export default class Client extends DJSClient {
     public commands: CommandIndex;
-    public slashCommands: SlashCommandIndex;
+    public applicationCommands: SlashCommandIndex;
 
     /**
      * @param {ClientOptions} options
      */
-    constructor(options: ClientOptions = {}) {
+    constructor(options: ClientOptions) {
         super(options);
 
         if (options.token) super.token = options.token;
 
         this.commands = new CommandIndex(this, options);
-        this.slashCommands = new SlashCommandIndex(this);
+        this.applicationCommands = new SlashCommandIndex(this);
     }
 
     /**
@@ -104,18 +104,16 @@ export default class Client extends DJSClient {
 
                     endpoint.push(name);
 
-                    return new Proxy(() => {}, handler);
+                    return new Proxy(util.noop, handler);
                 },
                 apply(target, that, args) {
                     endpoint.push(...args);
 
-                    return new Proxy(() => {}, handler);
+                    return new Proxy(util.noop, handler);
                 }
             };
 
-            return new Proxy(() => {}, handler);
+            return new Proxy(util.noop, handler);
         }('Bot ' + this.token);
     }
 }
-
-new Client().commands

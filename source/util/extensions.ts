@@ -1,11 +1,119 @@
 /**
- * An extension of the JavaScript Map that provides multiple additional utility methods.
+ * An extension of the JavaScript Map that provides additional utility methods.
  * @class
  * @extends {Map}
  */
 export class Index<K, V> extends Map<K, V> {
     constructor(entries?: readonly [K, V][]) {
         super(entries);
+    }
+
+    /**
+     * Creates a new Index with all the elements of this Index and returns it.
+     */
+    public clone(): Index<K, V> {
+        return new this.constructor[Symbol.species]([ ...this ]);
+    }
+
+    /**
+     * Returns the index of the last occurrence of a specified value in an Index, or undefined if it is not present.
+     * @param searchElement The value to locate in the Index.
+     */
+    public lastKeyOf(searchElement: V): K | undefined {
+        return this.clone().reverse().keyOf(searchElement);
+    }
+
+    /**
+     * Identical in behaviour to [Array.unshift();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse)
+     * 
+     * Reverses the elements in an Index in place. This method mutates the Index and returns a reference to the same Index.
+     */
+    public reverse() {
+        const reversed = this.entryArray().reverse();
+
+        this.clear();
+
+        this.push(...reversed);
+
+        return this;
+    }
+
+    /**
+     * Identical in behaviour to [Array.push();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
+     * 
+     * Appends new elements to the end of an Index, and returns the new length of the Index.
+     * @param items New elements to add to the Index.
+     */
+    public push(...items: [K, V][]) {
+        items.forEach(item => this.set(item[0], item[1]));
+
+        return this.size;
+    }
+
+    /**
+     * Identical in behaviour to [Array.unshift();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)
+     * 
+     * Inserts new elements at the start of an Index, and returns the new length of the Index.
+     * @param items Elements to insert at the start of the Index.
+     */
+    public unshift(...items: [K, V][]) {
+        const entries = [ ...items, ...this ];
+
+        this.clear();
+
+        this.push(...entries);
+
+        return this.size;
+    }
+
+    /**
+     * Identical in behaviour to [Array.shift();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)
+     * 
+     * Removes the first element from an Index and returns it. If the Index is empty, undefined is returned and the Index is not modified.
+     */
+    public shift(): V | undefined {
+        const entry = this.entryArray().shift();
+
+        if (!entry) return;
+
+        this.delete(entry[0]);
+
+        return entry[1];
+    }
+
+    /**
+     * Identical in behaviour to [Array.pop();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
+     * 
+     * Removes the last element from an Index and returns it. If the Index is empty, undefined is returned and the Index is not modified.
+     */
+    public pop(): V | undefined {
+        const entry = this.entryArray().pop();
+
+        if (!entry) return;
+
+        this.delete(entry[0]);
+
+        return entry[1];
+    }
+
+    /**
+     * Identical in behaviour to [Array.join();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join)
+     * 
+     * Adds all the elements of an array into a string, separated by the specified separator string.
+     * @param separator A string used to separate one element of the Index from the next in the resulting string. If omitted, the Index elements are separated with a comma.
+     */
+    public join(separator = ',') {
+        return this.array().join(separator);
+    }
+
+    /**
+     * Similar in behaviour to [Array.indexOf();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf)
+     * 
+     * Returns the index of the first occurrence of a value in an Index, or undefined if it is not present.
+     * @param searchElement The value to locate in the Index.
+     */
+    public keyOf(searchElement: V): K | undefined {
+        return this.findKey(val => val === searchElement);
     }
 
     /**
@@ -16,19 +124,16 @@ export class Index<K, V> extends Map<K, V> {
      * @param thisArg An object to which the this keyword can refer in the predicate function. If thisArg is omitted, undefined is used as the this value.
      */
     public every(predicate: (value: V, key: K, index: this) => boolean, thisArg?: any): boolean;
-    public every<T extends V>(predicate: (value: V, key: K, index: this) => value is T, thisArg?: any): this is Index<K, T>;
     public every<T extends V>(predicate: (value: V, key: K, index: this) => value is T, thisArg?: any): this is Index<K, T> {
         if (typeof predicate !== 'function') throw new TypeError(`${typeof predicate} is not a function`);
 
         if (thisArg) predicate.bind(thisArg);
 
-        let thisIs = true;
+        for (const [key, val] of this) {
+            if (!predicate(val, key, this)) return false;
+        }
 
-        this.forEach((val, key, index) => {
-            if (!predicate(val, key, index)) thisIs = false;
-        });
-
-        return thisIs;
+        return true;
     }
 
     /**
@@ -81,7 +186,7 @@ export class Index<K, V> extends Map<K, V> {
     public concat(...indexes: ConcatIndex<K, V>[]): Index<K, V> {
         const entries = indexes.flat().filter(i => i instanceof Index).map(i => [ ...i ]).flat();
 
-        return new Index([ ...this, ...entries ]);
+        return new this.constructor[Symbol.species]([ ...this, ...entries ]);
     }
 
     /**
@@ -100,13 +205,28 @@ export class Index<K, V> extends Map<K, V> {
     }
 
     /**
+     * Identical in behaviour to [Array.find();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
+     * @param predicate find calls predicate once for each element of the Index, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element key. Otherwise, find returns undefined.
+     * @param thisArg If provided, it will be used as the this value for each invocation of predicate. If it is not provided, undefined is used instead.
+     */
+    public findKey(predicate: (value: V, key: K, index: this) => boolean, thisArg?: any): K | undefined {
+        if (typeof predicate !== 'function') throw new TypeError(`${typeof predicate} is not a function`);
+
+        if (thisArg) predicate.bind(thisArg);
+
+        for (const [key, val] of this) {
+            if (predicate(val, key, this)) return key;
+        }
+    }
+
+    /**
      * Identical in behaviour to [Array.sort();](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
      * @param compareFn Function used to determine the order of the elements. It is expected to return a negative value if first argument is less than second argument, zero if they're equal and a positive value otherwise. If omitted, the elements are sorted in ascending, ASCII character order.
      * @example
      * sort((a, b) => a - b);
      */
     public sort(compareFn: (firstVal: V, secondVal: V, firstKey: K, secondKey: K) => number = (a, b) => Number(a) - Number(b)): this {
-        if (typeof compareFn !== 'function') throw new TypeError(`${typeof compareFn} is not a function`);        
+        if (typeof compareFn !== 'function') throw new TypeError(`${typeof compareFn} is not a function`);  
 
         const entries = this.entryArray();
 
@@ -143,7 +263,30 @@ export class Index<K, V> extends Map<K, V> {
         return this.keyArray().slice(0, amount);
     }
 
-    public lastKey(): K;
+    public firstEntry(): [K, V] | undefined;
+    public firstEntry(amount: number): [K, V][];
+    public firstEntry(amount?: number) {
+        if (typeof amount === 'undefined') return this.entries().next().value;
+
+        if (amount < 0) return this.lastEntry(amount * -1);
+
+        return this.entryArray().slice(0, amount);
+    }
+
+    public lastEntry(): [K, V] | undefined;
+    public lastEntry(amount: number): [K, V][];
+    public lastEntry(amount?: number) {
+        const array = this.entryArray();
+
+        if (typeof amount === 'undefined') return array[array.length - 1];
+
+        if (amount < 0) return this.firstEntry(amount * -1);
+        if (amount > 0) return array.slice(-amount);
+
+        return;
+    }
+
+    public lastKey(): K | undefined;
     public lastKey(amount: number): K[];
     public lastKey(amount?: number) {
         const array = this.keyArray();

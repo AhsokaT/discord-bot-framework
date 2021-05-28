@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const CommandIndex_js_1 = require("../structs/Commands/CommandIndex.js");
-const SlashCommandIndex_js_1 = require("../structs/SlashCommands/SlashCommandIndex.js");
+const ApplicationCommands_1 = require("../structs/SlashCommands/ApplicationCommands");
 const APIRequest_js_1 = require("../util/APIRequest.js");
 const extensions_js_1 = require("../util/extensions.js");
 const util = require("../util/util.js");
@@ -10,12 +10,12 @@ class Client extends discord_js_1.Client {
     /**
      * @param {ClientOptions} options
      */
-    constructor(options = {}) {
+    constructor(options) {
         super(options);
         if (options.token)
             super.token = options.token;
         this.commands = new CommandIndex_js_1.default(this, options);
-        this.slashCommands = new SlashCommandIndex_js_1.default(this);
+        this.applicationCommands = new ApplicationCommands_1.default(this);
     }
     /**
      * Reads a message from Discord and executes a command if called
@@ -88,16 +88,15 @@ class Client extends discord_js_1.Client {
                             return new APIRequest_js_1.default(name, endpoint.join('/'), options).make();
                         };
                     endpoint.push(name);
-                    return new Proxy(() => { }, handler);
+                    return new Proxy(util.noop, handler);
                 },
                 apply(target, that, args) {
                     endpoint.push(...args);
-                    return new Proxy(() => { }, handler);
+                    return new Proxy(util.noop, handler);
                 }
             };
-            return new Proxy(() => { }, handler);
+            return new Proxy(util.noop, handler);
         }('Bot ' + this.token);
     }
 }
 exports.default = Client;
-new Client().commands;

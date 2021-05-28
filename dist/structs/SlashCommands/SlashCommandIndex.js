@@ -1,35 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const discord_js_1 = require("discord.js");
 const extensions_js_1 = require("../../util/extensions.js");
 const SlashCommand_js_1 = require("./SlashCommand.js");
 const events_1 = require("events");
-const Interaction_js_1 = require("./Interaction.js");
 class SlashCommandIndex extends events_1.EventEmitter {
     constructor(client) {
         super();
         this.client = client;
+        this.client = client;
         this.cache = new extensions_js_1.Index();
         this.application = null;
-        // @ts-expect-error
-        this.client.ws.on('INTERACTION_CREATE', async (interaction) => {
-            if (!this.application)
-                this.application = await this.client.fetchApplication();
-            const { id, token, guild_id: guildID, channel_id, member: { id: userID }, data: { options, id: commandID } } = interaction;
-            const { client, application } = this;
-            const channel = await client.channels.fetch(channel_id).catch(() => undefined);
-            if (!(channel instanceof discord_js_1.TextChannel || channel instanceof discord_js_1.NewsChannel) && channel !== undefined)
-                return;
-            const member = await channel?.guild.members.fetch(userID).catch(() => undefined);
-            const command = await this.fetch(commandID) ?? await this.fetch(commandID, guildID);
-            if (!command)
-                return;
-            const ResolvedInteraction = new Interaction_js_1.Interaction({
-                member, channel, command, id, token, guildID, client, application,
-                options: Array.isArray(options) ? new extensions_js_1.Index(options.map(opt => [opt.name, opt.value])) : new extensions_js_1.Index()
-            });
-            this.emit('commandCall', ResolvedInteraction, this.client);
-        });
+        // // @ts-expect-error
+        // this.client.ws.on('INTERACTION_CREATE', async interaction => {
+        //     if (interaction.type !== 2) return;
+        //     if (!this.application) this.application = await this.client.fetchApplication();
+        //     const { id, token, guild_id: guildID, channel_id, member: { id: userID }, data: { options, id: commandID } } = interaction;
+        //     const { client, application } = this;
+        //     const channel = await client.channels.fetch(channel_id).catch(() => undefined);
+        //     if (!(channel instanceof TextChannel || channel instanceof NewsChannel) && channel !== undefined) return;
+        //     const member = await channel?.guild.members.fetch(userID).catch(() => undefined);
+        //     const command = await this.fetch(commandID) ?? await this.fetch(commandID, guildID);
+        //     if (!command) return;
+        //     const ResolvedInteraction = new Interaction({
+        //         member, channel, command, id, token, guildID, client, application,
+        //         options: Array.isArray(options) ? new Index(options.map(opt => [ opt.name, opt.value ])) : new Index()
+        //     });
+        //     this.emit('commandCall', ResolvedInteraction, this.client);
+        // });
     }
     on(event, listener) {
         return super.on(event, listener);
@@ -41,7 +38,7 @@ class SlashCommandIndex extends events_1.EventEmitter {
         return super.emit(event, ...args);
     }
     updateCache(...commands) {
-        commands.forEach(command => this.cache.set(command.id, command));
+        commands.flat().forEach(command => this.cache.set(command.id, command));
         return this.cache;
     }
     /**
@@ -55,19 +52,13 @@ class SlashCommandIndex extends events_1.EventEmitter {
             await this.client.discord.applications(this.application.id).guilds(guildID).commands.get() :
             await this.client.discord.applications(this.application.id).commands.get();
         const commands = res ? [...await res.json()].map(command => new SlashCommand_js_1.SlashCommand(this.client, { guildID, ...command })) : [];
-        this.updateCache(...commands);
+        this.updateCache(commands);
         return commands;
     }
-    /**
-     *
-     * @param {string} id The ID of a slash command
-     * @param {string} guildID The ID of a Discord server
-     * @returns {Promise<SlashCommand | null>}
-     */
-    async fetch(id, guildID) {
+    async fetch(id, { guildID, omitCache = false }) {
         if (!this.application)
             this.application = await this.client.fetchApplication();
-        if (this.cache.has(id))
+        if (!omitCache && this.cache.has(id))
             return this.cache.get(id);
         const res = guildID ?
             await this.client.discord.applications(this.application.id).guilds(guildID).commands(id).get() :
@@ -77,6 +68,11 @@ class SlashCommandIndex extends events_1.EventEmitter {
             throw new Error(`${command.code} ${command.message}`);
         const resolved = new SlashCommand_js_1.SlashCommand(this.client, command);
         return this.updateCache(resolved).get(resolved.id);
+    }
+    async fetch2(command = {}, omitCache = false) {
+        if (!this.application)
+            this.application = await this.client.fetchApplication();
+        return undefined;
     }
     /**
      * Post a new slash command to Discord.

@@ -54,5 +54,5 @@ export default class CommandIndex {
     indexGroups(...groups: string[] | string[][]): this;
     deleteCommands(...commands: Command[] | string[]): this;
     deleteGroup(group: string): this;
-    deleteGroups(...groups: string[]): this;
+    deleteGroups(...groups: string[] | string[][]): this;
 }

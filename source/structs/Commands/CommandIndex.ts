@@ -107,7 +107,9 @@ export default class CommandIndex {
     }
 
     public indexGroups(...groups: string[] | string[][]): this {
-        groups.flat().filter(group => typeof group === 'string').forEach(group => this.groups.add(group.toLowerCase()));
+        const entries = groups.flat().filter(group => typeof group === 'string').map(group => group.toLowerCase());
+
+        entries.forEach(group => this.groups.add(group));
 
         return this;
     }
@@ -126,8 +128,8 @@ export default class CommandIndex {
         return this.deleteGroups(group);
     }
 
-    public deleteGroups(...groups: string[]): this {
-        groups.forEach(group => this.groups.delete(group));
+    public deleteGroups(...groups: string[] | string[][]): this {
+        groups.flat().forEach(group => this.groups.delete(group));
 
         return this;
     }
