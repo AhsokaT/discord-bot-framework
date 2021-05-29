@@ -1,8 +1,8 @@
 import { PermissionString } from 'discord.js';
-import Client from '../../client/Client.js';
+import Client from '../client/Client.js';
 import Command, { CommandDetails } from './Command.js';
-import helpCommand from '../../util/helpCommand.js';
-import { Collection, Index } from '../../util/extensions.js';
+import helpCommand from '../util/helpCommand.js';
+import { Collection, Index } from '../util/extensions.js';
 
 export interface CommandIndexOptions {
     prefix?: string;

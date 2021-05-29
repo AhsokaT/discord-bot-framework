@@ -1,60 +1,57 @@
-import { ApplicationCommandData, ApplicationCommand, CommandInteraction, ApplicationCommandOption, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Invite, Role } from 'discord.js';
-import Client from '../../client/Client.js';
-import { Index } from '../../util/extensions.js';
-import { noop } from '../../util/util.js';
+import { Structures, GuildApplicationCommandManager as BaseGuildApplicationCommandManager, ApplicationCommandData, ApplicationCommand, CommandInteraction, ApplicationCommandOption, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Invite, Role, ClientApplication } from 'discord.js';
+import Client from '../client/Client.js';
+import { Index } from '../util/extensions.js';
+import { noop } from '../util/util.js';
 
 export type ApplicationCommandCallback = (interaction: CommandInteraction, client: Client) => void;
 
 export type ApplicationCommandResolvable = ApplicationCommandConstructor | ApplicationCommandConstructorOptions;
 
-export interface FetchOptions {
-    id?: string;
-    guild?: GuildResolvable;
-    omitCache?: boolean
-}
-
-export default class SlashCommandIndex {
-    // public cache: Index<string, ApplicationCommand>;
+export default class ApplicationCommandManager {
     public callbacks: Index<string, ApplicationCommandCallback>;
 
     constructor(public client: Client) {
         this.client = client;
         this.callbacks = new Index();
-        // this.cache = new Index();
 
-        // client.on('applicationCommandCreate', command => this.cache.set(command.id, command));
-        // client.on('applicationCommandDelete', command => this.cache.delete(command.id));
-        // client.on('applicationCommandUpdate', (oldCommand, newCommand) => this.cache.set(newCommand.id, newCommand));
         client.on('interaction', interaction => {
             if (!interaction.isCommand()) return;
 
-            const callback = this.callbacks.get(interaction.id);
+            const callback = this.callbacks.get(interaction.commandID);
 
             if (callback) callback(interaction, client);
         });
     }
 
     public async create(command: ApplicationCommandResolvable, guild?: GuildResolvable): Promise<ApplicationCommand | undefined> {
-        let posted: ApplicationCommand | null = null;
+        if (!this.client.application) throw new Error('This method must be used inside the ready event');
+
+        let posted: ApplicationCommand | undefined = undefined;
 
         if (guild) {
-            const resolvedGuild = await resolveGuild(guild, this.client);
+            const resolved = await resolveGuild(guild, this.client);
 
-            if (!resolvedGuild) return;
+            if (!resolved) return;
 
-            posted = await resolvedGuild.commands.create(command instanceof ApplicationCommandConstructor ? command.normalise() : command);
-        } else {
-            if (!this.client.readyAt) {
-                this.client.on('ready', async () => {
-                    if (!this.client.application) return;
+            const existing = await resolved.commands.fetch();
 
-                    posted = await this.client.application?.commands.create(command instanceof ApplicationCommandConstructor ? command.normalise() : command);
-                });
-            } else {
-                if (!this.client.application) return;
+            if (existing.find(item => item.name === command.name)) {
+                console.log('returned existing');
 
-                posted = await this.client.application?.commands.create(command instanceof ApplicationCommandConstructor ? command.normalise() : command);
+                return existing.find(item => item.name === command.name);
             }
+
+            posted = await resolved.commands.create(command instanceof ApplicationCommandConstructor ? command.normalise() : command);
+        } else {
+            const existing = await this.client.application.commands.fetch();
+
+            if (existing.find(item => item.name === command.name)) {
+                console.log('returned existing');
+
+                return existing.find(item => item.name === command.name);
+            }
+
+            posted = await this.client.application?.commands.create(command instanceof ApplicationCommandConstructor ? command.normalise() : command);
         }
 
         if (!posted) return;
@@ -62,18 +59,6 @@ export default class SlashCommandIndex {
         if (command.callback) this.callbacks.set(posted.id, command.callback);
 
         return posted;
-    }
-
-    public async fetch(options: FetchOptions) {
-        if (!options) return this.client.application?.commands.fetch();
-
-        if (options.guild) {
-            const guild = await resolveGuild(options.guild, this.client);
-
-            if (guild) return guild.commands.fetch(options.id, true, Boolean(options.omitCache ?? true));
-        } else if (options.id) {
-            return this.client.application?.commands.fetch(options.id, true, Boolean(options.omitCache ?? true));
-        }
     }
 }
 
@@ -127,11 +112,17 @@ export class ApplicationCommandConstructor implements ApplicationCommandData {
     }
 
     public setCallback(callback: ApplicationCommandCallback) {
+        if (typeof callback !== 'function') throw new TypeError(`${typeof callback} is not a function`);       
+
         this.callback = callback;
+
+        return this;
     }
 
     public normalise(): ApplicationCommandData {
-        return { ...this };
+        const { callback, ...self } = this;
+
+        return self;
     }
 
     public toJSON() {
@@ -154,3 +145,31 @@ function resolveGuild(guild: GuildResolvable, client: Client): Guild | undefined
 
     return client.guilds.fetch(guild);
 }
+
+class GuildApplicationCommandManager extends BaseGuildApplicationCommandManager {
+    constructor(guild: Guild, iterable?: Iterable<any>) {
+        super(guild, iterable);
+    }
+
+    public async create(command: ApplicationCommandData, callback: ApplicationCommandCallback = noop) {
+        if (typeof callback !== 'function') throw new TypeError(`${typeof callback} is not a function`);       
+
+        const posted = await super.create(command);
+
+        if (posted && this.client instanceof Client) this.client.applicationCommands.callbacks.set(posted.id, callback);
+
+        return posted;
+    }
+}
+
+export class GuildExtension extends Guild {
+    public commands: GuildApplicationCommandManager;
+
+    constructor(client: Client, data: object) {
+        super(client, data);
+
+        this.commands = new GuildApplicationCommandManager(this);
+    }
+}
+
+Structures.extend('Guild', BaseGuild => GuildExtension);

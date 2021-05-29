@@ -1,6 +1,6 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message } from 'discord.js';
-import CommandIndex, { CommandIndexOptions } from '../structs/Commands/CommandIndex.js';
-import SlashCommandIndex from '../structs/SlashCommands/ApplicationCommands';
+import { BaseManager, Client as DJSClient, ClientOptions as DJSClientOptions, Snowflake, GuildResolvable, Message, GuildCreateOptions } from 'discord.js';
+import CommandIndex, { CommandIndexOptions } from '../structs/CommandIndex.js';
+import ApplicationCommandManager, { GuildExtension as Guild } from '../structs/ApplicationCommands';
 import APIRequest from '../util/APIRequest.js';
 import { Index } from '../util/extensions.js';
 import * as util from '../util/util.js';
@@ -9,9 +9,15 @@ export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
     token?: string;
 }
 
+interface GuildManager extends BaseManager<Snowflake, Guild, GuildResolvable> {
+    create(name: string, options?: GuildCreateOptions): Promise<Guild>;
+    fetch(id: Snowflake, cache?: boolean, force?: boolean): Promise<Guild>;
+}
+
 export default class Client extends DJSClient {
+    public guilds: GuildManager;
     public commands: CommandIndex;
-    public applicationCommands: SlashCommandIndex;
+    public applicationCommands: ApplicationCommandManager;
 
     /**
      * @param {ClientOptions} options
@@ -22,7 +28,7 @@ export default class Client extends DJSClient {
         if (options.token) super.token = options.token;
 
         this.commands = new CommandIndex(this, options);
-        this.applicationCommands = new SlashCommandIndex(this);
+        this.applicationCommands = new ApplicationCommandManager(this);
     }
 
     /**

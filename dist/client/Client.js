@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const CommandIndex_js_1 = require("../structs/Commands/CommandIndex.js");
-const ApplicationCommands_1 = require("../structs/SlashCommands/ApplicationCommands");
+const CommandIndex_js_1 = require("../structs/CommandIndex.js");
+const ApplicationCommands_1 = require("../structs/ApplicationCommands");
 const APIRequest_js_1 = require("../util/APIRequest.js");
 const extensions_js_1 = require("../util/extensions.js");
 const util = require("../util/util.js");
