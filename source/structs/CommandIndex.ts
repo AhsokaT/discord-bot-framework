@@ -107,7 +107,7 @@ export default class CommandIndex {
     }
 
     public indexGroups(...groups: string[] | string[][]): this {
-        const entries = groups.flat().filter(group => typeof group === 'string').map(group => group.toLowerCase());
+        const entries = groups.flat().filter(group => typeof group === 'string');
 
         entries.forEach(group => this.groups.add(group));
 
