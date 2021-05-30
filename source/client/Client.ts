@@ -15,7 +15,6 @@ interface GuildManager extends BaseManager<Snowflake, Guild, GuildResolvable> {
 }
 
 export default class Client extends DJSClient {
-    public guilds: GuildManager;
     public commands: CommandIndex;
     public applicationCommands: ApplicationCommandManager;
 

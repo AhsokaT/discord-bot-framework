@@ -1,15 +1,10 @@
-import { BaseManager, Client as DJSClient, ClientOptions as DJSClientOptions, Snowflake, GuildResolvable, Message, GuildCreateOptions } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message } from 'discord.js';
 import CommandIndex, { CommandIndexOptions } from '../structs/CommandIndex.js';
-import ApplicationCommandManager, { GuildExtension as Guild } from '../structs/ApplicationCommands';
+import ApplicationCommandManager from '../structs/ApplicationCommands';
 export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
     token?: string;
 }
-interface GuildManager extends BaseManager<Snowflake, Guild, GuildResolvable> {
-    create(name: string, options?: GuildCreateOptions): Promise<Guild>;
-    fetch(id: Snowflake, cache?: boolean, force?: boolean): Promise<Guild>;
-}
 export default class Client extends DJSClient {
-    guilds: GuildManager;
     commands: CommandIndex;
     applicationCommands: ApplicationCommandManager;
     /**
@@ -23,4 +18,3 @@ export default class Client extends DJSClient {
     parseMessage(message: Message): Promise<any>;
     get discord(): any;
 }
-export {};
