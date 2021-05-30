@@ -163,7 +163,7 @@ export default class Command {
      * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
     public addPermissions(...permissions: PermissionString[]): this {
-        permissions.filter(perm => typeof perm === 'string').forEach(this.#permissions.add);
+        permissions.filter(perm => typeof perm === 'string').forEach(perm => this.#permissions.add(perm));
 
         return this;
     }
@@ -175,7 +175,7 @@ export default class Command {
      * addAliases('purge', 'bulkdelete');
      */
     public addAliases(...aliases: string[]): this {
-        aliases.filter(alias => typeof alias === 'string').forEach(this.#aliases.add);
+        aliases.filter(alias => typeof alias === 'string').forEach(alias => this.#aliases.add(alias));
 
         return this;
     }
