@@ -132,7 +132,7 @@ class Command {
      * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      */
     addPermissions(...permissions) {
-        permissions.filter(perm => typeof perm === 'string').forEach(this.#permissions.add);
+        permissions.filter(perm => typeof perm === 'string').forEach(perm => this.#permissions.add(perm));
         return this;
     }
     /**
@@ -142,7 +142,7 @@ class Command {
      * addAliases('purge', 'bulkdelete');
      */
     addAliases(...aliases) {
-        aliases.filter(alias => typeof alias === 'string').forEach(this.#aliases.add);
+        aliases.filter(alias => typeof alias === 'string').forEach(alias => this.#aliases.add(alias));
         return this;
     }
     /**
