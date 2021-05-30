@@ -80,7 +80,7 @@ class CommandIndex {
         return this.indexGroups(name);
     }
     indexGroups(...groups) {
-        const entries = groups.flat().filter(group => typeof group === 'string').map(group => group.toLowerCase());
+        const entries = groups.flat().filter(group => typeof group === 'string');
         entries.forEach(group => this.groups.add(group));
         return this;
     }
