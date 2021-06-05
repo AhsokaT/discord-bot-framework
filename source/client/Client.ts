@@ -1,17 +1,12 @@
-import { BaseManager, Client as DJSClient, ClientOptions as DJSClientOptions, Snowflake, GuildResolvable, Message, GuildCreateOptions } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, ClientApplication as ClientApplicationBase } from 'discord.js';
 import CommandIndex, { CommandIndexOptions } from '../structs/CommandIndex.js';
-import ApplicationCommandManager, { GuildExtension as Guild } from '../structs/ApplicationCommands';
-import APIRequest from '../util/APIRequest.js';
-import { Index } from '../util/extensions.js';
+import ApplicationCommandManager from '../structs/ApplicationCommands';
+import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
+import Command from '../structs/Command.js';
 
 export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
     token?: string;
-}
-
-interface GuildManager extends BaseManager<Snowflake, Guild, GuildResolvable> {
-    create(name: string, options?: GuildCreateOptions): Promise<Guild>;
-    fetch(id: Snowflake, cache?: boolean, force?: boolean): Promise<Guild>;
 }
 
 export default class Client extends DJSClient {
@@ -28,6 +23,13 @@ export default class Client extends DJSClient {
 
         this.commands = new CommandIndex(this, options);
         this.applicationCommands = new ApplicationCommandManager(this);
+    }
+
+    public on(event: 'commandDelete', listener: (command: Command) => void): this;
+    public on(event: 'commandCall', listener: (command: Command, message: Message) => void): this;
+    public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
+    public on(event: string | symbol, listener: (...args: any[]) => void) {
+        return super.on(event, listener);
     }
 
     /**
@@ -88,37 +90,7 @@ export default class Client extends DJSClient {
             }
         }
 
-        if (command.callback) command.callback(message, this, new Index(args));
-    }
-
-    get discord() {
-        return function (auth: string) {
-            const endpoint = [ 'https://discord.com/api/v8' ];
-
-            const handler = {
-                get(target, name) {
-                    if (name === 'toString') return () => endpoint.join('/');
-
-                    if (['get', 'post', 'patch', 'delete'].includes(name)) return async (options: any = {}) => {
-                        if (!options.headers) options.headers = {};
-
-                        if (auth && !name.endsWith('callback')) options.headers['Authorization'] = auth;
-        
-                        return new APIRequest(name, endpoint.join('/'), options).make();
-                    };
-
-                    endpoint.push(name);
-
-                    return new Proxy(util.noop, handler);
-                },
-                apply(target, that, args) {
-                    endpoint.push(...args);
-
-                    return new Proxy(util.noop, handler);
-                }
-            };
-
-            return new Proxy(util.noop, handler);
-        }('Bot ' + this.token);
+        if (command.callback)
+            command.callback(message, this, new Index(args));
     }
 }

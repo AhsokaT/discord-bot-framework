@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const CommandIndex_js_1 = require("../structs/CommandIndex.js");
 const ApplicationCommands_1 = require("../structs/ApplicationCommands");
-const APIRequest_js_1 = require("../util/APIRequest.js");
-const extensions_js_1 = require("../util/extensions.js");
+const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
     /**
@@ -16,6 +15,9 @@ class Client extends discord_js_1.Client {
             super.token = options.token;
         this.commands = new CommandIndex_js_1.default(this, options);
         this.applicationCommands = new ApplicationCommands_1.default(this);
+    }
+    on(event, listener) {
+        return super.on(event, listener);
     }
     /**
      * Reads a message from Discord and executes a command if called
@@ -70,33 +72,7 @@ class Client extends discord_js_1.Client {
             }
         }
         if (command.callback)
-            command.callback(message, this, new extensions_js_1.Index(args));
-    }
-    get discord() {
-        return function (auth) {
-            const endpoint = ['https://discord.com/api/v8'];
-            const handler = {
-                get(target, name) {
-                    if (name === 'toString')
-                        return () => endpoint.join('/');
-                    if (['get', 'post', 'patch', 'delete'].includes(name))
-                        return async (options = {}) => {
-                            if (!options.headers)
-                                options.headers = {};
-                            if (auth && !name.endsWith('callback'))
-                                options.headers['Authorization'] = auth;
-                            return new APIRequest_js_1.default(name, endpoint.join('/'), options).make();
-                        };
-                    endpoint.push(name);
-                    return new Proxy(util.noop, handler);
-                },
-                apply(target, that, args) {
-                    endpoint.push(...args);
-                    return new Proxy(util.noop, handler);
-                }
-            };
-            return new Proxy(util.noop, handler);
-        }('Bot ' + this.token);
+            command.callback(message, this, new js_augmentations_1.Index(args));
     }
 }
 exports.default = Client;

@@ -11,10 +11,10 @@ exports.default = new Command_js_1.default()
     description: 'Name of a command or category',
     required: false
 })
-    .setCallback(async function (message, client, args) {
+    .setCallback(function (message, client, args) {
     const input = util_js_1.toString(args.first()).toLowerCase();
-    const group = client.commands.groups.has(input) ? input : null;
-    const command = client.commands.index.get(input);
+    const group = client.commands.groups.find(i => i.toLowerCase() === input) ?? null;
+    const command = client.commands.index.get(input) ?? client.commands.index.find(cmd => cmd.name.toLowerCase() === input);
     if (group) {
         const commands = client.commands.index.array().filter(command => command.group === group).map(command => {
             const field = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
@@ -62,7 +62,7 @@ exports.default = new Command_js_1.default()
         const field = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `\`${client.commands.prefix}help ${group.toLowerCase()}\``, inline: true };
         return field;
     });
-    const invite = await client.generateInvite({ permissions: this.permissions.array() });
+    const invite = client.generateInvite({ permissions: this.permissions.array() });
     const embed = new discord_js_1.MessageEmbed({
         color: '#2F3136',
         author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },

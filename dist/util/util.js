@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.noop = exports.api = exports.toString = exports.toList = void 0;
+exports.noop = exports.toString = exports.toList = void 0;
 /**
  * Convert an array of strings to a list
  * @param items An array of strings
@@ -18,13 +18,6 @@ function toString(value) {
     return `${value}`;
 }
 exports.toString = toString;
-/**
- * ...WIP
- */
-function api(auth) {
-    // WIP
-}
-exports.api = api;
 /**
  * No-operation
  */

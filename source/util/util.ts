@@ -16,13 +16,6 @@ export function toString(value: any) {
 }
 
 /**
- * ...WIP
- */
-export function api(auth: string) {
-    // WIP
-}
-
-/**
  * No-operation
  */
 export function noop() {

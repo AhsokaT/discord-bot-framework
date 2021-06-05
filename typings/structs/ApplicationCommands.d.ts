@@ -1,6 +1,6 @@
-import { GuildApplicationCommandManager as BaseGuildApplicationCommandManager, ApplicationCommandData, ApplicationCommand, CommandInteraction, ApplicationCommandOption, GuildResolvable, Guild } from 'discord.js';
+import { ApplicationCommandData, ApplicationCommand, CommandInteraction, ApplicationCommandOption, GuildResolvable } from 'discord.js';
 import Client from '../client/Client.js';
-import { Index } from '../util/extensions.js';
+import { Index } from 'js-augmentations';
 export declare type ApplicationCommandCallback = (interaction: CommandInteraction, client: Client) => void;
 export declare type ApplicationCommandResolvable = ApplicationCommandConstructor | ApplicationCommandConstructorOptions;
 export default class ApplicationCommandManager {
@@ -27,12 +27,3 @@ export declare class ApplicationCommandConstructor implements ApplicationCommand
     normalise(): ApplicationCommandData;
     toJSON(): string;
 }
-declare class GuildApplicationCommandManager extends BaseGuildApplicationCommandManager {
-    constructor(guild: Guild, iterable?: Iterable<any>);
-    create(command: ApplicationCommandData, callback?: ApplicationCommandCallback): Promise<ApplicationCommand>;
-}
-export declare class GuildExtension extends Guild {
-    commands: GuildApplicationCommandManager;
-    constructor(client: Client, data: object);
-}
-export {};

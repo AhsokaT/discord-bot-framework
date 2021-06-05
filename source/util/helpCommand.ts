@@ -10,10 +10,10 @@ export default new Command()
         description: 'Name of a command or category',
         required: false
     })
-    .setCallback(async function (message, client, args) {
+    .setCallback(function (message, client, args) {
         const input = toString(args.first()).toLowerCase();
-        const group = client.commands.groups.has(input) ? input : null;
-        const command = client.commands.index.get(input);
+        const group = client.commands.groups.find(i => i.toLowerCase() === input) ?? null;
+        const command = client.commands.index.get(input) ?? client.commands.index.find(cmd => cmd.name.toLowerCase() === input);
 
         if (group) {
             const commands = client.commands.index.array().filter(command => command.group === group).map(command => {
@@ -79,7 +79,7 @@ export default new Command()
             return field;
         });
 
-        const invite = await client.generateInvite({ permissions: this.permissions.array() });
+        const invite = client.generateInvite({ permissions: this.permissions.array() });
 
         const embed = new MessageEmbed({
             color: '#2F3136',

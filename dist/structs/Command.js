@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const extensions_js_1 = require("../util/extensions.js");
+const js_augmentations_1 = require("js-augmentations");
 class Command {
     /**
      * @param {CommandDetails} details
@@ -10,9 +10,9 @@ class Command {
         this.#description = '';
         this.#group = '';
         this.#nsfw = false;
-        this.#aliases = new extensions_js_1.Collection();
-        this.#parameters = new extensions_js_1.Collection();
-        this.#permissions = new extensions_js_1.Collection();
+        this.#aliases = new js_augmentations_1.Collection();
+        this.#parameters = new js_augmentations_1.Collection();
+        this.#permissions = new js_augmentations_1.Collection();
         this.#callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
         if (details)
             this.edit(details);

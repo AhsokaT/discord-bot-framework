@@ -1,6 +1,6 @@
 import { Message, PermissionString } from 'discord.js';
 import Client from '../client/Client.js';
-import { Collection, Index } from '../util/extensions.js';
+import { Collection, Index } from 'js-augmentations';
 export declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
 export interface Parameter {
     name: string;

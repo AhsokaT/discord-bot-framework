@@ -1,15 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GuildExtension = exports.ApplicationCommandConstructor = void 0;
+exports.ApplicationCommandConstructor = void 0;
 const discord_js_1 = require("discord.js");
-const Client_js_1 = require("../client/Client.js");
-const extensions_js_1 = require("../util/extensions.js");
+const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
 class ApplicationCommandManager {
     constructor(client) {
         this.client = client;
         this.client = client;
-        this.callbacks = new extensions_js_1.Index();
+        this.callbacks = new js_augmentations_1.Index();
         client.on('interaction', interaction => {
             if (!interaction.isCommand())
                 return;
@@ -101,28 +100,8 @@ function resolveGuild(guild, client) {
     if (guild instanceof discord_js_1.Invite) {
         if (guild.guild)
             return guild.guild;
-        return;
+        else
+            return;
     }
     return client.guilds.fetch(guild);
 }
-class GuildApplicationCommandManager extends discord_js_1.GuildApplicationCommandManager {
-    constructor(guild, iterable) {
-        super(guild, iterable);
-    }
-    async create(command, callback = util_js_1.noop) {
-        if (typeof callback !== 'function')
-            throw new TypeError(`${typeof callback} is not a function`);
-        const posted = await super.create(command);
-        if (posted && this.client instanceof Client_js_1.default)
-            this.client.applicationCommands.callbacks.set(posted.id, callback);
-        return posted;
-    }
-}
-class GuildExtension extends discord_js_1.Guild {
-    constructor(client, data) {
-        super(client, data);
-        this.commands = new GuildApplicationCommandManager(this);
-    }
-}
-exports.GuildExtension = GuildExtension;
-discord_js_1.Structures.extend('Guild', BaseGuild => GuildExtension);

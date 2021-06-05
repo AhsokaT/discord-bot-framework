@@ -2,14 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Command_js_1 = require("./Command.js");
 const helpCommand_js_1 = require("../util/helpCommand.js");
-const extensions_js_1 = require("../util/extensions.js");
+const js_augmentations_1 = require("js-augmentations");
 class CommandIndex {
     constructor(client, options = {}) {
         this.client = client;
         const { prefix, permissions, allowBots, automaticMessageParsing } = options;
-        this.index = new extensions_js_1.Index();
-        this.groups = new extensions_js_1.Collection();
-        this.permissions = new extensions_js_1.Collection();
+        this.index = new js_augmentations_1.Index();
+        this.groups = new js_augmentations_1.Collection();
+        this.permissions = new js_augmentations_1.Collection();
         this.allowBots = Boolean(allowBots);
         this.setPrefix(typeof prefix === 'string' ? prefix : '');
         if (Array.isArray(permissions))
