@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@types/events": "^3.0.0",
-    "discord.js": "github:monbrey/discord.js#message-components",
+    "discord.js": "github:discordjs/discord.js",
     "events": "^3.3.0",
     "js-augmentations": "*",
     "node-fetch": "^2.6.1",
