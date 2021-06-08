@@ -4,7 +4,7 @@ import helpCommand from '../util/helpCommand.js';
 import { Collection, Index } from 'js-augmentations';
 import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
 import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
-import Command from './commands/BaseCommand.js';
+import Command from './commands/Command.js';
 import { isIterable } from '../util/util.js';
 
 interface CommandManagerOptions {

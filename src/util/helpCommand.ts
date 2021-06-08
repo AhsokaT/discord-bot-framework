@@ -1,5 +1,5 @@
 import { EmbedFieldData, MessageEmbed } from 'discord.js';
-import Command from '../structs/commands/BaseCommand.js';
+import Command from '../structs/commands/Command.js';
 import GuildCommand from '../structs/commands/GuildCommand.js';
 import { toString } from './util.js';
 
@@ -52,7 +52,7 @@ export default new Command()
             }
 
             if (command instanceof GuildCommand && command.permissions.array().length > 0) {
-                embed.addField('Permissions', command.permissions.array().map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
+                embed.addField('Permissions', command.permissions.array().map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
             }
 
             if (command.aliases.array().length > 0) {
@@ -80,7 +80,7 @@ export default new Command()
             return field;
         });
 
-        const invite = client.generateInvite({ permissions: this.permissions.array() });
+        const invite = client.generateInvite({ permissions: client.commands.permissions.array() });
 
         const embed = new MessageEmbed({
             color: '#2F3136',

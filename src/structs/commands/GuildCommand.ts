@@ -1,7 +1,7 @@
 import { Message as BaseMessage, NewsChannel, PermissionResolvable, TextChannel } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../../client/Client.js';
-import Command, { CommandProperties } from './BaseCommand.js';
+import Command, { CommandProperties } from './Command.js';
 
 interface Message extends BaseMessage {
     channel: TextChannel | NewsChannel;

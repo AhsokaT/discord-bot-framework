@@ -1,7 +1,7 @@
 import { DMChannel, Message as BaseMessage } from 'discord.js';
 import { Index } from 'js-augmentations';
 import Client from '../../client/Client.js';
-import Command, { CommandProperties } from './BaseCommand.js';
+import Command, { CommandProperties } from './Command.js';
 
 interface Message extends BaseMessage {
     channel: DMChannel;

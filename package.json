@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@types/events": "^3.0.0",
-    "discord.js": "github:discordjs/discord.js",
+    "discord.js": "github:vaporox/discord.js#fix-await-interaction",
     "events": "^3.3.0",
     "js-augmentations": "*",
     "node-fetch": "^2.6.1",
