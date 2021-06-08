@@ -7,7 +7,7 @@ interface Message extends BaseMessage {
     channel: TextChannel | NewsChannel;
 }
 
-type GuildCommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
+type GuildCommandCallback = (this: GuildCommand, message: Message, client: Client, args: Index<string, string>) => void;
 
 interface GuildCommandProperties extends CommandProperties {
     callback: GuildCommandCallback;

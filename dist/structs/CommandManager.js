@@ -1,8 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Command_js_1 = require("./Command.js");
+exports.CommandManager = void 0;
 const helpCommand_js_1 = require("../util/helpCommand.js");
 const js_augmentations_1 = require("js-augmentations");
+const GuildCommand_js_1 = require("./commands/GuildCommand.js");
+const DMCommand_js_1 = require("./commands/DMCommand.js");
+const BaseCommand_js_1 = require("./commands/BaseCommand.js");
+const util_js_1 = require("../util/util.js");
 class CommandManager {
     constructor(client, options = {}) {
         this.client = client;
@@ -56,9 +60,12 @@ class CommandManager {
      * indexCommands(ping, purge);
      */
     indexCommands(...commands) {
-        commands.flat().forEach(command => {
-            if (!(command instanceof Command_js_1.default))
-                return this.indexCommands(new Command_js_1.default(command));
+        commands.map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
+            if (!(command instanceof DMCommand_js_1.default) || !(command instanceof GuildCommand_js_1.default)) {
+                if ('permissions' in command)
+                    return this.indexCommands(new GuildCommand_js_1.default(command));
+                return this.indexCommands(new DMCommand_js_1.default(command));
+            }
             if (!command.name)
                 throw new Error('A command must have a name set.');
             if (command.group && !this.groups.has(command.group))
@@ -86,8 +93,12 @@ class CommandManager {
         return this;
     }
     deleteCommands(...commands) {
-        commands.forEach(command => {
-            const toDelete = command instanceof Command_js_1.default ? command : this.index.get(command);
+        commands.flat().map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
+            let toDelete;
+            if (command instanceof BaseCommand_js_1.default)
+                toDelete = command;
+            else
+                toDelete = this.index.get(typeof command === 'string' ? command : command.name);
             if (toDelete)
                 this.index.delete(toDelete.name);
         });
@@ -102,3 +113,4 @@ class CommandManager {
     }
 }
 exports.default = CommandManager;
+exports.CommandManager = CommandManager;

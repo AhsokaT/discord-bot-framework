@@ -1,9 +1,8 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, PermissionResolvable } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
-import Command from '../structs/Command.js';
 
 export interface ClientOptions extends DJSClientOptions, CommandManagerOptions {
     token?: string;
@@ -26,8 +25,6 @@ export default class Client extends DJSClient {
         this.applicationCommands = new ApplicationCommandManager(this);
     }
 
-    public on(event: 'commandDelete', listener: (command: Command) => void): this;
-    public on(event: 'commandCall', listener: (command: Command, message: Message) => void): this;
     public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
     public on(event: string | symbol, listener: (...args: any[]) => void) {
         return super.on(event, listener);
@@ -38,29 +35,38 @@ export default class Client extends DJSClient {
      * @param message A Discord message
      */
     public async parseMessage(message: Message): Promise<any> {
-        if (message.channel.type === 'dm') return;
-        if (message.author.bot && !this.commands.allowBots) return;
-        if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase())) return;
+        if (message.author.bot && !this.commands.allowBots)
+            return;
 
-        const messageComponents = message.content.split(' ');
-        const name = messageComponents.shift()?.slice(this.commands.prefix.length).toLowerCase();
+        if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
+            return;
 
-        if (!name) return;
+        const messageSegments = message.content.split(' ');
+        const name = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
+
+        if (!name)
+            return;
 
         const command = this.commands.index.get(name);
 
-        if (!command) return;
+        if (!command)
+            return;
 
-        if (command.nsfw && !message.channel.nsfw) return message.channel.send('❌ This command must be run in an **NSFW** channel');
-        if (!message.member?.permissions.has(command.permissions.array())) return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
-        if (!message.guild?.me?.permissions.has(command.permissions.array())) return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+        if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
+            return message.channel.send('❌ This command must be run in an **NSFW** channel');
+
+        if (command.isGuildCommand() && !message.member?.permissions.has(command.permissions.array()))
+            return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+
+        if (command.isGuildCommand() && !message.guild?.me?.permissions.has(command.permissions.array()))
+            return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
         let args: any = [];
 
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
 
         for (const param of parameters) {
-            let input: string | undefined = messageComponents.splice(0, param.wordCount === 'unlimited' ? messageComponents.length : param.wordCount ?? 1).join(' ');
+            let input: string | undefined = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
 
             if (!input && param.required) {
                 message.channel.send(`Please type your input for \`${param.name}\`\n\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``) ?? [], 'or')}` : ''}`);
@@ -91,11 +97,13 @@ export default class Client extends DJSClient {
             }
         }
 
-        if (command.callback)
+        if (command.isGuildCommand() && message.guild)
+            // @ts-expect-error
             command.callback(message, this, new Index(args));
+
+        if (command.isDMCommand())
+            if (message.channel.type === 'dm')
+                // @ts-expect-error
+                command.callback(message, this, new Index(args));
     }
 }
-
-// Message parsing
-
-function isMessage()

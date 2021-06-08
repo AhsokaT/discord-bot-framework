@@ -5,9 +5,11 @@ import Command, { CommandProperties } from './BaseCommand.js';
 
 interface Message extends BaseMessage {
     channel: DMChannel;
+    member: null;
+    guild: null;
 }
 
-type DMCommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
+type DMCommandCallback = (this: DMCommand, message: Message, client: Client, args: Index<string, string>) => void;
 
 interface DMCommandProperties extends CommandProperties {
     callback: DMCommandCallback;

@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const Command_js_1 = require("../structs/Command.js");
+const BaseCommand_js_1 = require("../structs/commands/BaseCommand.js");
+const GuildCommand_js_1 = require("../structs/commands/GuildCommand.js");
 const util_js_1 = require("./util.js");
-exports.default = new Command_js_1.default()
+exports.default = new BaseCommand_js_1.default()
     .setName('help')
     .setDescription('Display information about my commands')
     .addParameters({
@@ -42,7 +43,7 @@ exports.default = new Command_js_1.default()
         if (command.parameters.array().length > 0) {
             embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
         }
-        if (command.permissions.array().length > 0) {
+        if (command instanceof GuildCommand_js_1.default && command.permissions.array().length > 0) {
             embed.addField('Permissions', command.permissions.array().map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
         }
         if (command.aliases.array().length > 0) {

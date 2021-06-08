@@ -13,3 +13,4 @@ export declare function toString(value: any): string;
  * No-operation
  */
 export declare function noop(): void;
+export declare function isIterable(obj: any): obj is Iterable<any>;

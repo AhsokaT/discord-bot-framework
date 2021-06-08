@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.noop = exports.toString = exports.toList = void 0;
+exports.isIterable = exports.noop = exports.toString = exports.toList = void 0;
 /**
  * Convert an array of strings to a list
  * @param items An array of strings
@@ -25,3 +25,7 @@ function noop() {
     // noop
 }
 exports.noop = noop;
+function isIterable(obj) {
+    return typeof obj[Symbol.iterator] === 'function';
+}
+exports.isIterable = isIterable;

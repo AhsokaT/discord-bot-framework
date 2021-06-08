@@ -1,20 +1,23 @@
 import { PermissionString } from 'discord.js';
 import Client from '../client/Client.js';
-import Command, { CommandDetails } from './Command.js';
 import { Collection, Index } from 'js-augmentations';
-export interface CommandManagerOptions {
+import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
+import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
+import Command from './commands/BaseCommand.js';
+interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
     permissions?: PermissionString[];
     automaticMessageParsing?: boolean;
 }
-export declare type CommandResolvable = Command | CommandDetails | Command[] | CommandDetails[];
+declare type Resolvable<T> = T | Iterable<T>;
+declare type CommandResolvable = Resolvable<GuildCommand> | Resolvable<GuildCommandProperties> | Resolvable<DMCommand> | Resolvable<DMCommandProperties>;
 export default class CommandManager {
     client: Client;
     prefix: string;
     allowBots: boolean;
     groups: Collection<string>;
-    index: Index<string, Command>;
+    index: Index<string, GuildCommand | DMCommand | Command>;
     permissions: Collection<PermissionString>;
     constructor(client: Client, options?: CommandManagerOptions);
     /**
@@ -52,7 +55,8 @@ export default class CommandManager {
     indexDefaults(): this;
     indexGroup(name: string): this;
     indexGroups(...groups: string[] | string[][]): this;
-    deleteCommands(...commands: Command[] | string[]): this;
+    deleteCommands(...commands: CommandResolvable[] | string[]): this;
     deleteGroup(group: string): this;
     deleteGroups(...groups: string[] | string[][]): this;
 }
+export { CommandManagerOptions, CommandResolvable, CommandManager };

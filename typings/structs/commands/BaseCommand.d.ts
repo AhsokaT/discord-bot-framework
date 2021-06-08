@@ -1,40 +1,38 @@
-import { Message, PermissionString } from 'discord.js';
-import Client from '../client/Client.js';
+import { Message } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
-export declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
-export interface Parameter {
+import Client from '../../client/Client.js';
+import DMCommand from './DMCommand.js';
+import GuildCommand from './GuildCommand.js';
+declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
+interface CommandParameter {
     name: string;
     description?: string;
-    type?: 'string' | 'number';
+    type?: 'string' | 'number' | 'boolean' | 'user' | 'channel' | 'role' | 'mentionable';
     wordCount?: number | 'unlimited';
     caseSensitive?: boolean;
     required?: boolean;
     choices?: string[];
 }
-export interface CommandDetails {
-    name?: string;
-    description?: string;
-    group?: string;
-    nsfw?: boolean;
-    aliases?: string[];
-    permissions?: PermissionString[];
-    parameters?: Parameter[];
-    callback?: CommandCallback;
+interface CommandProperties {
+    name: string;
+    nsfw: boolean;
+    group: string;
+    description: string;
+    parameters: Iterable<CommandParameter>;
+    aliases: Iterable<string>;
+    callback: CommandCallback;
 }
-export default class Command {
-    #private;
-    /**
-     * @param {CommandDetails} details
-     */
-    constructor(details?: CommandDetails);
-    get name(): string;
-    get description(): string;
-    get aliases(): Collection<string>;
-    get permissions(): Collection<PermissionString>;
-    get callback(): CommandCallback;
-    get group(): string;
-    get parameters(): Collection<Parameter>;
-    get nsfw(): boolean;
+declare class Command implements CommandProperties {
+    name: string;
+    description: string;
+    group: string;
+    nsfw: boolean;
+    aliases: Collection<string>;
+    parameters: Collection<CommandParameter>;
+    callback: CommandCallback;
+    constructor(properties?: Partial<CommandProperties>);
+    isGuildCommand(): this is GuildCommand;
+    isDMCommand(): this is DMCommand;
     /**
      * @param name The name of your command
      */
@@ -69,14 +67,7 @@ export default class Command {
      *    { name: 'role', description: 'The ID of a role', required: false }
      * );
      */
-    addParameters(...parameters: Parameter[] | Parameter[][]): this;
-    /**
-     * @param permissions Permission(s) this command requires to run
-     * @example
-     * addPermissions('MANAGE_CHANNELS');
-     * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
-     */
-    addPermissions(...permissions: PermissionString[]): this;
+    addParameters(...parameters: CommandParameter[] | CommandParameter[][]): this;
     /**
      * @param aliases Alternative name(s) this command can be called by
      * @example
@@ -86,9 +77,11 @@ export default class Command {
     addAliases(...aliases: string[]): this;
     /**
      * Edit the properties of this command
-     * @param details Object containing new properties
+     * @param properties Object containing new properties
      * @example
-     * edit({ name: 'purge', description: 'Deletes messages' });
+     * edit({ name: 'purge', description: 'Delete messages' });
      */
-    edit(details: CommandDetails): this;
+    edit(properties: Partial<CommandProperties>): this;
 }
+export { CommandProperties, CommandParameter, CommandCallback };
+export default Command;

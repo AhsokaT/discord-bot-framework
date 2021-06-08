@@ -1,5 +1,6 @@
 import { EmbedFieldData, MessageEmbed } from 'discord.js';
-import Command from '../structs/Command.js';
+import Command from '../structs/commands/BaseCommand.js';
+import GuildCommand from '../structs/commands/GuildCommand.js';
 import { toString } from './util.js';
 
 export default new Command()
@@ -50,7 +51,7 @@ export default new Command()
                 embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
             }
 
-            if (command.permissions.array().length > 0) {
+            if (command instanceof GuildCommand && command.permissions.array().length > 0) {
                 embed.addField('Permissions', command.permissions.array().map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
             }
 

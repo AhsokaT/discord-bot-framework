@@ -21,3 +21,7 @@ export function toString(value: any) {
 export function noop() {
     // noop
 }
+
+export function isIterable(obj: any): obj is Iterable<any> {
+    return typeof obj[Symbol.iterator] === 'function';
+}

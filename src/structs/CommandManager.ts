@@ -4,6 +4,8 @@ import helpCommand from '../util/helpCommand.js';
 import { Collection, Index } from 'js-augmentations';
 import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
 import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
+import Command from './commands/BaseCommand.js';
+import { isIterable } from '../util/util.js';
 
 interface CommandManagerOptions {
     prefix?: string;
@@ -12,7 +14,7 @@ interface CommandManagerOptions {
     automaticMessageParsing?: boolean;
 }
 
-type Resolvable<T> = T | T[];
+type Resolvable<T> = T | Iterable<T>;
 
 type CommandResolvable =
     | Resolvable<GuildCommand>
@@ -24,7 +26,7 @@ export default class CommandManager {
     public prefix: string;
     public allowBots: boolean;
     public groups: Collection<string>;
-    public index: Index<string, GuildCommand | DMCommand>;
+    public index: Index<string, GuildCommand | DMCommand | Command>;
     public permissions: Collection<PermissionString>;
 
     constructor(public client: Client, options: CommandManagerOptions = {}) {
@@ -85,7 +87,7 @@ export default class CommandManager {
      * indexCommands(ping, purge);
      */
     public indexCommands(...commands: CommandResolvable[]): this {
-        commands.flat().forEach(command => {
+        commands.map(item => isIterable(item) ? [ ...item ] : item).flat().forEach(command => {
             if (!(command instanceof DMCommand) || !(command instanceof GuildCommand)) {
                 if ('permissions' in command)
                     return this.indexCommands(new GuildCommand(command));
@@ -93,9 +95,8 @@ export default class CommandManager {
                 return this.indexCommands(new DMCommand(command));
             }
 
-            if (!(command instanceof Command)) return this.indexCommands(new Command(command));
-
-            if (!command.name) throw new Error('A command must have a name set.');
+            if (!command.name)
+                throw new Error('A command must have a name set.');
 
             if (command.group && !this.groups.has(command.group)) throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
 
@@ -129,11 +130,17 @@ export default class CommandManager {
         return this;
     }
 
-    public deleteCommands(...commands: Command[] | string[]): this {
-        commands.forEach(command => {
-            const toDelete = command instanceof Command ? command : this.index.get(command);
+    public deleteCommands(...commands: CommandResolvable[] | string[]): this {
+        commands.flat().map(item => isIterable(item) ? [ ...item ] : item).flat().forEach(command => {
+            let toDelete: Command | undefined;
 
-            if (toDelete) this.index.delete(toDelete.name);
+            if (command instanceof Command)
+                toDelete = command;
+            else
+                toDelete = this.index.get(typeof command === 'string' ? command : command.name);
+
+            if (toDelete)
+                this.index.delete(toDelete.name);
         });
 
         return this;

@@ -24,29 +24,27 @@ class Client extends discord_js_1.Client {
      * @param message A Discord message
      */
     async parseMessage(message) {
-        if (message.channel.type === 'dm')
-            return;
         if (message.author.bot && !this.commands.allowBots)
             return;
         if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
             return;
-        const messageComponents = message.content.split(' ');
-        const name = messageComponents.shift()?.slice(this.commands.prefix.length).toLowerCase();
+        const messageSegments = message.content.split(' ');
+        const name = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
         if (!name)
             return;
         const command = this.commands.index.get(name);
         if (!command)
             return;
-        if (!message.channel.nsfw && command.nsfw)
+        if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
             return message.channel.send('❌ This command must be run in an **NSFW** channel');
-        if (!message.member?.permissions.has(command.permissions.array()))
-            return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
-        if (!message.guild?.me?.permissions.has(command.permissions.array()))
-            return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+        if (command.isGuildCommand() && !message.member?.permissions.has(command.permissions.array()))
+            return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+        if (command.isGuildCommand() && !message.guild?.me?.permissions.has(command.permissions.array()))
+            return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
         let args = [];
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
         for (const param of parameters) {
-            let input = messageComponents.splice(0, param.wordCount === 'unlimited' ? messageComponents.length : param.wordCount ?? 1).join(' ');
+            let input = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
             if (!input && param.required) {
                 message.channel.send(`Please type your input for \`${param.name}\`\n\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``) ?? [], 'or')}` : ''}`);
                 input = (await message.channel.awaitMessages(res => res.author.id === message.author.id, { time: 15000, max: 1 })).first()?.content;
@@ -71,8 +69,13 @@ class Client extends discord_js_1.Client {
                 args.push([param.name, input]);
             }
         }
-        if (command.callback)
+        if (command.isGuildCommand() && message.guild)
+            // @ts-expect-error
             command.callback(message, this, new js_augmentations_1.Index(args));
+        if (command.isDMCommand())
+            if (message.channel.type === 'dm')
+                // @ts-expect-error
+                command.callback(message, this, new js_augmentations_1.Index(args));
     }
 }
 exports.default = Client;
