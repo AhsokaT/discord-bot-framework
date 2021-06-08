@@ -14,7 +14,7 @@ exports.default = new Command_js_1.default()
     .setCallback(function (message, client, args) {
     const input = util_js_1.toString(args.first()).toLowerCase();
     const group = client.commands.groups.find(i => i.toLowerCase() === input) ?? null;
-    const command = client.commands.index.get(input) ?? client.commands.index.find(cmd => cmd.name.toLowerCase() === input);
+    const command = client.commands.index.get(input) ?? client.commands.index.find(cmd => cmd.name.toLowerCase() === input) ?? client.commands.index.find(cmd => cmd.aliases.map(alias => alias.toLowerCase()).has(input));
     if (group) {
         const commands = client.commands.index.array().filter(command => command.group === group).map(command => {
             const field = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };

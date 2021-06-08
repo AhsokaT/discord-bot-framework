@@ -1,9 +1,15 @@
-import { ApplicationCommandData, ApplicationCommand, CommandInteraction, ApplicationCommandOption, GuildResolvable } from 'discord.js';
+/// <reference types="node" />
+import { ApplicationCommandData, ApplicationCommand, CommandInteraction, GuildResolvable, ApplicationCommandOptionData } from 'discord.js';
 import Client from '../client/Client.js';
 import { Index } from 'js-augmentations';
-export declare type ApplicationCommandCallback = (interaction: CommandInteraction, client: Client) => void;
-export declare type ApplicationCommandResolvable = ApplicationCommandConstructor | ApplicationCommandConstructorOptions;
-export default class ApplicationCommandManager {
+import { EventEmitter } from 'events';
+declare type ApplicationCommandCallback = (interaction: CommandInteraction, client: Client) => void;
+declare type ApplicationCommandResolvable = ApplicationCommandConstructor | ApplicationCommandConstructorOptions;
+export { ApplicationCommandCallback, ApplicationCommandResolvable, ApplicationCommandManager };
+declare class ApplicationCommandManager extends EventEmitter {
+    constructor();
+}
+export default class ApplicationCommandManagerOld {
     client: Client;
     callbacks: Index<string, ApplicationCommandCallback>;
     constructor(client: Client);
@@ -15,14 +21,14 @@ export interface ApplicationCommandConstructorOptions extends ApplicationCommand
 export declare class ApplicationCommandConstructor implements ApplicationCommandData {
     name: string;
     description: string;
-    options: ApplicationCommandOption[];
+    options: ApplicationCommandOptionData[];
     defaultPermission: boolean;
     callback?: ApplicationCommandCallback;
     constructor(options?: ApplicationCommandConstructorOptions);
     setName(name: string): this;
     setDescription(description: string): this;
     setDefaultPermission(defaultPermission?: boolean): this;
-    addOptions(...options: ApplicationCommandOption[]): this;
+    addOptions(...options: ApplicationCommandOptionData[]): this;
     setCallback(callback: ApplicationCommandCallback): this;
     normalise(): ApplicationCommandData;
     toJSON(): string;

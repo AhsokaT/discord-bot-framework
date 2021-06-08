@@ -1,16 +1,20 @@
 import Client, { ClientOptions } from './client/Client.js';
-import Command, { CommandDetails, CommandCallback } from './structs/Command.js';
-import { CommandIndexOptions, CommandResolvable } from './structs/CommandIndex.js';
-import { ApplicationCommandConstructorOptions, ApplicationCommandCallback, ApplicationCommandConstructor, ApplicationCommandResolvable } from './structs/ApplicationCommands.js';
+import GuildCommand, { GuildCommandCallback, GuildCommandProperties } from './structs/commands/GuildCommand.js';
+import DMCommand, { DMCommandCallback, DMCommandProperties } from './structs/commands/DMCommand';
+import { CommandManagerOptions, CommandResolvable } from './structs/CommandManager.js';
+import { ApplicationCommandConstructorOptions, ApplicationCommandCallback, ApplicationCommandConstructor, ApplicationCommandResolvable } from './structs/ApplicationCommandManager.js';
 
 export {
     Client,
     ClientOptions,
-    Command,
-    CommandDetails,
+    GuildCommand,
+    GuildCommandCallback,
+    GuildCommandProperties,
     CommandResolvable,
-    CommandCallback,
-    CommandIndexOptions,
+    DMCommand,
+    DMCommandCallback,
+    DMCommandProperties,
+    CommandManagerOptions,
     ApplicationCommandConstructorOptions,
     ApplicationCommandCallback,
     ApplicationCommandConstructor,

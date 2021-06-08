@@ -1,27 +1,33 @@
 import { PermissionString } from 'discord.js';
 import Client from '../client/Client.js';
-import Command, { CommandDetails } from './Command.js';
 import helpCommand from '../util/helpCommand.js';
 import { Collection, Index } from 'js-augmentations';
+import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
+import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
 
-export interface CommandIndexOptions {
+interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
     permissions?: PermissionString[];
     automaticMessageParsing?: boolean;
 }
 
-export type CommandResolvable = Command | CommandDetails | Command[] | CommandDetails[];
+type Resolvable<T> = T | T[];
 
-export default class CommandIndex {
-    public client: Client;
+type CommandResolvable =
+    | Resolvable<GuildCommand>
+    | Resolvable<GuildCommandProperties>
+    | Resolvable<DMCommand>
+    | Resolvable<DMCommandProperties>;
+
+export default class CommandManager {
     public prefix: string;
     public allowBots: boolean;
     public groups: Collection<string>;
-    public index: Index<string, Command>;
+    public index: Index<string, GuildCommand | DMCommand>;
     public permissions: Collection<PermissionString>;
 
-    constructor(client: Client, options: CommandIndexOptions = {}) {
+    constructor(public client: Client, options: CommandManagerOptions = {}) {
         this.client = client;
 
         const { prefix, permissions, allowBots, automaticMessageParsing } = options;
@@ -32,9 +38,11 @@ export default class CommandIndex {
         this.allowBots = Boolean(allowBots);
         this.setPrefix(typeof prefix === 'string' ? prefix : '');
 
-        if (Array.isArray(permissions)) this.permissions.array().filter(perm => typeof perm === 'string').forEach(this.permissions.add);
+        if (Array.isArray(permissions))
+            this.permissions.array().filter(perm => typeof perm === 'string').forEach(this.permissions.add);
 
-        if (automaticMessageParsing ?? true) this.client.on('message', this.client.parseMessage);
+        if (automaticMessageParsing ?? true)
+            this.client.on('message', this.client.parseMessage);
     }
 
     /**
@@ -78,6 +86,13 @@ export default class CommandIndex {
      */
     public indexCommands(...commands: CommandResolvable[]): this {
         commands.flat().forEach(command => {
+            if (!(command instanceof DMCommand) || !(command instanceof GuildCommand)) {
+                if ('permissions' in command)
+                    return this.indexCommands(new GuildCommand(command));
+
+                return this.indexCommands(new DMCommand(command));
+            }
+
             if (!(command instanceof Command)) return this.indexCommands(new Command(command));
 
             if (!command.name) throw new Error('A command must have a name set.');
@@ -133,4 +148,10 @@ export default class CommandIndex {
 
         return this;
     }
+}
+
+export {
+    CommandManagerOptions,
+    CommandResolvable,
+    CommandManager
 }

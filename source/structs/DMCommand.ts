@@ -1,49 +1,30 @@
-import { Message as MessageBase, NewsChannel, PermissionString, TextChannel } from 'discord.js';
+import { DMChannel, Message as MessageBase } from 'discord.js';
 import Client from '../client/Client.js';
 import { Collection, Index } from 'js-augmentations';
+import { CommandParameter, CommandDetails as BaseCommandDetails } from './Command.js';
 
 interface Message extends MessageBase {
-    channel: TextChannel | NewsChannel;
+    channel: DMChannel;
 }
 
-type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
+type DMCommandCallback = (this: DMCommand, message: Message, client: Client, args: Index<string, string>) => void;
 
-interface CommandParameter {
-    name: string;
-    description?: string;
-    type?: 'string' | 'number';
-    wordCount?: number | 'unlimited';
-    caseSensitive?: boolean;
-    required?: boolean;
-    choices?: string[];
+interface DMCommandDetails extends Omit<BaseCommandDetails, 'permissions' | 'callback'> {
+    callback?: DMCommandCallback;
 }
 
-interface CommandDetails {
-    name?: string;
-    description?: string;
-    group?: string;
-    nsfw?: boolean;
-    aliases?: string[];
-    permissions?: PermissionString[];
-    parameters?: CommandParameter[];
-    callback?: CommandCallback;
-}
-
-export default class Command {
+export default class DMCommand {
     #name = '';
     #description = '';
     #group = '';
     #nsfw = false;
     #aliases = new Collection<string>();
     #parameters = new Collection<CommandParameter>();
-    #permissions = new Collection<PermissionString>();
-    #callback: CommandCallback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
+    #callback: DMCommandCallback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
 
-    /**
-     * @param {CommandDetails} details
-     */
-    constructor(details?: CommandDetails) {
-        if (details) this.edit(details);
+    constructor(details?: DMCommandDetails) {
+        if (details)
+            this.edit(details);
     }
 
     get name() {
@@ -56,10 +37,6 @@ export default class Command {
 
     get aliases() {
         return this.#aliases;
-    }
-
-    get permissions() {
-        return this.#permissions;
     }
 
     get callback() {
@@ -82,7 +59,8 @@ export default class Command {
      * @param name The name of your command
      */
     public setName(name: string): this {
-        if (typeof name === 'string') this.#name = name;
+        if (typeof name === 'string')
+            this.#name = name;
 
         return this;
     }
@@ -91,13 +69,14 @@ export default class Command {
      * @param description A short description of your command
      */
     public setDescription(description: string): this {
-        if (typeof description === 'string') this.#description = description;
+        if (typeof description === 'string')
+            this.#description = description;
 
         return this;
     }
 
     /**
-     * @param nsfw Whether the command should only be usable in NSFW channels; true by default
+     * @param nsfw Whether the command contains NSFW content; true by default
      */
     public setNSFW(nsfw = true): this {
         this.#nsfw = Boolean(nsfw);
@@ -109,7 +88,8 @@ export default class Command {
      * @param group The group of commands this command belongs to
      */
     public setGroup(group: string): this { 
-        if (typeof group === 'string') this.#group = group;
+        if (typeof group === 'string')
+            this.#group = group;
 
         return this;
     }
@@ -123,8 +103,9 @@ export default class Command {
      *      message.channel.send(this.name, this.description);
      * });
      */
-    public setCallback(callback: CommandCallback): this {
-        if (typeof callback === 'function') this.#callback = callback;
+    public setCallback(callback: DMCommandCallback): this {
+        if (typeof callback === 'function')
+            this.#callback = callback;
 
         return this;
     }
@@ -161,18 +142,6 @@ export default class Command {
     }
 
     /**
-     * @param permissions Permission(s) this command requires to run
-     * @example
-     * addPermissions('MANAGE_CHANNELS');
-     * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
-     */
-    public addPermissions(...permissions: PermissionString[]): this {
-        permissions.filter(perm => typeof perm === 'string').forEach(perm => this.#permissions.add(perm));
-
-        return this;
-    }
-
-    /**
      * @param aliases Alternative name(s) this command can be called by
      * @example
      * addAliases('prune');
@@ -190,8 +159,8 @@ export default class Command {
      * @example
      * edit({ name: 'purge', description: 'Deletes messages' });
      */
-    public edit(details: CommandDetails): this {
-        const { name, nsfw, description, parameters, permissions, group, aliases, callback } = details;
+    public edit(details: DMCommandDetails): this {
+        const { name, nsfw, description, parameters, group, aliases, callback } = details;
 
         if (name) this.setName(name);
         if (group) this.setGroup(group);
@@ -199,7 +168,6 @@ export default class Command {
         if (description) this.setDescription(description);
         if (typeof nsfw === 'boolean') this.setNSFW(nsfw);
         if (Array.isArray(parameters)) this.addParameters(...parameters);
-        if (Array.isArray(permissions)) this.addPermissions(...permissions);
         if (Array.isArray(aliases)) this.addAliases(...aliases);
 
         return this;
@@ -207,8 +175,7 @@ export default class Command {
 }
 
 export {
-    Command,
-    CommandCallback,
-    CommandParameter,
-    CommandDetails
+    DMCommand,
+    DMCommandCallback,
+    DMCommandDetails
 }

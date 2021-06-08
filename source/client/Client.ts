@@ -1,16 +1,16 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, ClientApplication as ClientApplicationBase } from 'discord.js';
-import CommandIndex, { CommandIndexOptions } from '../structs/CommandIndex.js';
-import ApplicationCommandManager from '../structs/ApplicationCommands';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents } from 'discord.js';
+import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
+import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
 import Command from '../structs/Command.js';
 
-export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
+export interface ClientOptions extends DJSClientOptions, CommandManagerOptions {
     token?: string;
 }
 
 export default class Client extends DJSClient {
-    public commands: CommandIndex;
+    public commands: CommandManager;
     public applicationCommands: ApplicationCommandManager;
 
     /**
@@ -19,9 +19,10 @@ export default class Client extends DJSClient {
     constructor(options: ClientOptions) {
         super(options);
 
-        if (options.token) super.token = options.token;
+        if (options.token)
+            super.token = options.token;
 
-        this.commands = new CommandIndex(this, options);
+        this.commands = new CommandManager(this, options);
         this.applicationCommands = new ApplicationCommandManager(this);
     }
 
@@ -50,7 +51,7 @@ export default class Client extends DJSClient {
 
         if (!command) return;
 
-        if (!message.channel.nsfw && command.nsfw) return message.channel.send('❌ This command must be run in an **NSFW** channel');
+        if (command.nsfw && !message.channel.nsfw) return message.channel.send('❌ This command must be run in an **NSFW** channel');
         if (!message.member?.permissions.has(command.permissions.array())) return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
         if (!message.guild?.me?.permissions.has(command.permissions.array())) return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
@@ -94,3 +95,7 @@ export default class Client extends DJSClient {
             command.callback(message, this, new Index(args));
     }
 }
+
+// Message parsing
+
+function isMessage()

@@ -1,13 +1,28 @@
-import { ApplicationCommandData, ApplicationCommand, CommandInteraction, ApplicationCommandOption, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Invite, Role, ClientApplication, Snowflake } from 'discord.js';
+import { ApplicationCommandData, ApplicationCommand, CommandInteraction, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Invite, Role, Snowflake, ApplicationCommandOptionData } from 'discord.js';
 import Client from '../client/Client.js';
 import { Index } from 'js-augmentations';
 import { noop } from '../util/util.js';
+import { EventEmitter } from 'events';
 
-export type ApplicationCommandCallback = (interaction: CommandInteraction, client: Client) => void;
+declare type ApplicationCommandCallback = (interaction: CommandInteraction, client: Client) => void;
+declare type ApplicationCommandResolvable = ApplicationCommandConstructor | ApplicationCommandConstructorOptions;
 
-export type ApplicationCommandResolvable = ApplicationCommandConstructor | ApplicationCommandConstructorOptions;
+export {
+    ApplicationCommandCallback,
+    ApplicationCommandResolvable,
+    ApplicationCommandManager
+}
 
-export default class ApplicationCommandManager {
+class ApplicationCommandManager extends EventEmitter {
+    constructor() {
+        super();
+    }
+}
+
+
+
+
+export default class ApplicationCommandManagerOld {
     public callbacks: Index<string, ApplicationCommandCallback>;
 
     constructor(public client: Client) {
@@ -75,7 +90,7 @@ export interface ApplicationCommandConstructorOptions extends ApplicationCommand
 export class ApplicationCommandConstructor implements ApplicationCommandData {
     public name: string;
     public description: string;
-    public options: ApplicationCommandOption[];
+    public options: ApplicationCommandOptionData[];
     public defaultPermission: boolean;
     public callback?: ApplicationCommandCallback;
 
@@ -111,7 +126,7 @@ export class ApplicationCommandConstructor implements ApplicationCommandData {
         return this;
     }
 
-    public addOptions(...options: ApplicationCommandOption[]) {
+    public addOptions(...options: ApplicationCommandOptionData[]) {
         this.options.push(...options);
 
         return this;
@@ -127,9 +142,9 @@ export class ApplicationCommandConstructor implements ApplicationCommandData {
     }
 
     public normalise(): ApplicationCommandData {
-        const { callback, ...self } = this;
+        const { name, description, options, defaultPermission } = this;
 
-        return self;
+        return { name, description, options, defaultPermission };
     }
 
     public toJSON() {

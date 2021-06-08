@@ -2,21 +2,21 @@ import { PermissionString } from 'discord.js';
 import Client from '../client/Client.js';
 import Command, { CommandDetails } from './Command.js';
 import { Collection, Index } from 'js-augmentations';
-export interface CommandIndexOptions {
+export interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
     permissions?: PermissionString[];
     automaticMessageParsing?: boolean;
 }
 export declare type CommandResolvable = Command | CommandDetails | Command[] | CommandDetails[];
-export default class CommandIndex {
+export default class CommandManager {
     client: Client;
     prefix: string;
     allowBots: boolean;
     groups: Collection<string>;
     index: Index<string, Command>;
     permissions: Collection<PermissionString>;
-    constructor(client: Client, options?: CommandIndexOptions);
+    constructor(client: Client, options?: CommandManagerOptions);
     /**
      * @param prefix A command prefix the bot should discriminate messages with
      * @example

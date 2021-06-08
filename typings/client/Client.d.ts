@@ -1,12 +1,12 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents } from 'discord.js';
-import CommandIndex, { CommandIndexOptions } from '../structs/CommandIndex.js';
-import ApplicationCommandManager from '../structs/ApplicationCommands';
+import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
+import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import Command from '../structs/Command.js';
-export interface ClientOptions extends DJSClientOptions, CommandIndexOptions {
+export interface ClientOptions extends DJSClientOptions, CommandManagerOptions {
     token?: string;
 }
 export default class Client extends DJSClient {
-    commands: CommandIndex;
+    commands: CommandManager;
     applicationCommands: ApplicationCommandManager;
     /**
      * @param {ClientOptions} options

@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const CommandIndex_js_1 = require("../structs/CommandIndex.js");
-const ApplicationCommands_1 = require("../structs/ApplicationCommands");
+const CommandManager_js_1 = require("../structs/CommandManager.js");
+const ApplicationCommandManager_1 = require("../structs/ApplicationCommandManager");
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
@@ -13,8 +13,8 @@ class Client extends discord_js_1.Client {
         super(options);
         if (options.token)
             super.token = options.token;
-        this.commands = new CommandIndex_js_1.default(this, options);
-        this.applicationCommands = new ApplicationCommands_1.default(this);
+        this.commands = new CommandManager_js_1.default(this, options);
+        this.applicationCommands = new ApplicationCommandManager_1.default(this);
     }
     on(event, listener) {
         return super.on(event, listener);
