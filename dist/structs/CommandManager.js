@@ -5,8 +5,17 @@ const helpCommand_js_1 = require("../util/helpCommand.js");
 const js_augmentations_1 = require("js-augmentations");
 const GuildCommand_js_1 = require("./commands/GuildCommand.js");
 const DMCommand_js_1 = require("./commands/DMCommand.js");
-const BaseCommand_js_1 = require("./commands/BaseCommand.js");
+const Command_js_1 = require("./commands/Command.js");
 const util_js_1 = require("../util/util.js");
+function isDMCommandProperties(obj) {
+    return obj.type === 'DM';
+}
+function isGuildCommandProperties(obj) {
+    return obj.type === 'Guild';
+}
+function isUniversalCommandProperties(obj) {
+    return obj.type === 'Universal';
+}
 class CommandManager {
     constructor(client, options = {}) {
         this.client = client;
@@ -18,9 +27,12 @@ class CommandManager {
         this.allowBots = Boolean(allowBots);
         this.setPrefix(typeof prefix === 'string' ? prefix : '');
         if (Array.isArray(permissions))
-            this.permissions.array().filter(perm => typeof perm === 'string').forEach(this.permissions.add);
+            this.permissions.push(...permissions);
         if (automaticMessageParsing ?? true)
             this.client.on('message', this.client.parseMessage);
+    }
+    *[Symbol.iterator]() {
+        yield* this.index.array();
     }
     /**
      * @param prefix A command prefix the bot should discriminate messages with
@@ -61,10 +73,15 @@ class CommandManager {
      */
     indexCommands(...commands) {
         commands.map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
-            if (!(command instanceof DMCommand_js_1.default) || !(command instanceof GuildCommand_js_1.default)) {
-                if ('permissions' in command)
+            if (!(command instanceof Command_js_1.default)) {
+                if (!['DM', 'Guild', 'Universal'].includes(command.type))
+                    throw new TypeError(`CommandDetails must contain a type, either 'DM', 'Guild', or 'Universal'.`);
+                if (isDMCommandProperties(command))
+                    return this.indexCommands(new DMCommand_js_1.default(command));
+                if (isGuildCommandProperties(command))
                     return this.indexCommands(new GuildCommand_js_1.default(command));
-                return this.indexCommands(new DMCommand_js_1.default(command));
+                if (isUniversalCommandProperties(command))
+                    return this.indexCommands(new Command_js_1.default(command));
             }
             if (!command.name)
                 throw new Error('A command must have a name set.');
@@ -95,7 +112,7 @@ class CommandManager {
     deleteCommands(...commands) {
         commands.flat().map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
             let toDelete;
-            if (command instanceof BaseCommand_js_1.default)
+            if (command instanceof Command_js_1.default)
                 toDelete = command;
             else
                 toDelete = this.index.get(typeof command === 'string' ? command : command.name);
@@ -108,9 +125,9 @@ class CommandManager {
         return this.deleteGroups(group);
     }
     deleteGroups(...groups) {
-        groups.flat().forEach(group => this.groups.delete(group));
+        groups.flat().map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(group => this.groups.delete(group));
         return this;
     }
 }
-exports.default = CommandManager;
 exports.CommandManager = CommandManager;
+exports.default = CommandManager;

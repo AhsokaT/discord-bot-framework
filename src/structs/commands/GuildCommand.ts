@@ -12,15 +12,18 @@ type GuildCommandCallback = (this: GuildCommand, message: Message, client: Clien
 interface GuildCommandProperties extends CommandProperties {
     callback: GuildCommandCallback;
     permissions: Iterable<PermissionResolvable>;
+    type: 'Guild';
 }
 
 class GuildCommand extends Command implements GuildCommandProperties {
     public callback: GuildCommandCallback;
     public permissions: Collection<PermissionResolvable>;
+    public type: 'Guild';
 
-    constructor(properties?: GuildCommandProperties) {
+    constructor(properties?: Partial<GuildCommandProperties>) {
         super(properties);
 
+        this.type = 'Guild';
         this.permissions = new Collection();
     }
 

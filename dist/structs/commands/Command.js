@@ -6,6 +6,7 @@ function isCommandParameter(obj) {
 }
 class Command {
     constructor(properties) {
+        this.type = 'Universal';
         this.aliases = new js_augmentations_1.Collection();
         this.parameters = new js_augmentations_1.Collection();
         this.callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
@@ -18,9 +19,9 @@ class Command {
     isDMCommand() {
         return this.constructor.name === 'DMCommand';
     }
-    // public isUniversalCommand(): this is Command {
-    //     return this.constructor.name === 'Command';
-    // }
+    isUniversalCommand() {
+        return this.constructor.name === 'Command';
+    }
     /**
      * @param name The name of your command
      */

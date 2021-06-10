@@ -24,6 +24,7 @@ interface CommandProperties {
     parameters: Iterable<CommandParameter>;
     aliases: Iterable<string>;
     callback: CommandCallback;
+    type: 'DM' | 'Guild' | 'Universal';
 }
 
 function isCommandParameter(obj: any): obj is CommandParameter {
@@ -38,8 +39,10 @@ class Command implements CommandProperties {
     public aliases: Collection<string>;
     public parameters: Collection<CommandParameter>;
     public callback: CommandCallback;
+    public type: 'DM' | 'Guild' | 'Universal';
 
     constructor(properties?: Partial<CommandProperties>) {
+        this.type = 'Universal';
         this.aliases = new Collection();
         this.parameters = new Collection();
         this.callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
@@ -56,9 +59,9 @@ class Command implements CommandProperties {
         return this.constructor.name === 'DMCommand';
     }
 
-    // public isUniversalCommand(): this is Command {
-    //     return this.constructor.name === 'Command';
-    // }
+    public isUniversalCommand(): this is Command {
+        return this.constructor.name === 'Command';
+    }
 
     /**
      * @param name The name of your command

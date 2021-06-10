@@ -1,7 +1,7 @@
 import { Message as BaseMessage, NewsChannel, PermissionResolvable, TextChannel } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../../client/Client.js';
-import Command, { CommandProperties } from './BaseCommand.js';
+import Command, { CommandProperties } from './Command.js';
 interface Message extends BaseMessage {
     channel: TextChannel | NewsChannel;
 }
@@ -9,11 +9,13 @@ declare type GuildCommandCallback = (this: GuildCommand, message: Message, clien
 interface GuildCommandProperties extends CommandProperties {
     callback: GuildCommandCallback;
     permissions: Iterable<PermissionResolvable>;
+    type: 'Guild';
 }
 declare class GuildCommand extends Command implements GuildCommandProperties {
     callback: GuildCommandCallback;
     permissions: Collection<PermissionResolvable>;
-    constructor(properties?: GuildCommandProperties);
+    type: 'Guild';
+    constructor(properties?: Partial<GuildCommandProperties>);
     /**
      * @param permissions Permission(s) this command requires to run
      * @example

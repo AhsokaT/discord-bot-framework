@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const BaseCommand_js_1 = require("./BaseCommand.js");
-class DMCommand extends BaseCommand_js_1.default {
+const Command_js_1 = require("./Command.js");
+class DMCommand extends Command_js_1.default {
     constructor(properties) {
         super(properties);
+        this.type = 'DM';
     }
     setCallback(callback) {
         return super.setCallback(callback);

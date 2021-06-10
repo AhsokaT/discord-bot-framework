@@ -1,4 +1,4 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, PermissionResolvable } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import { Index } from 'js-augmentations';
@@ -12,9 +12,6 @@ export default class Client extends DJSClient {
     public commands: CommandManager;
     public applicationCommands: ApplicationCommandManager;
 
-    /**
-     * @param {ClientOptions} options
-     */
     constructor(options: ClientOptions) {
         super(options);
 
@@ -105,5 +102,8 @@ export default class Client extends DJSClient {
             if (message.channel.type === 'dm')
                 // @ts-expect-error
                 command.callback(message, this, new Index(args));
+
+        // @ts-expect-error
+        command.callback(message, this, new Index(args));
     }
 }

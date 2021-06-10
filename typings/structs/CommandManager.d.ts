@@ -1,25 +1,30 @@
-import { PermissionString } from 'discord.js';
+import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import { Collection, Index } from 'js-augmentations';
 import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
 import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
-import Command from './commands/BaseCommand.js';
+import Command, { CommandProperties } from './commands/Command.js';
 interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
-    permissions?: PermissionString[];
+    permissions?: PermissionResolvable[];
     automaticMessageParsing?: boolean;
 }
+declare type FormatCommandProperties<T extends CommandProperties> = Partial<T> & {
+    type: T['type'];
+    name: string;
+};
 declare type Resolvable<T> = T | Iterable<T>;
-declare type CommandResolvable = Resolvable<GuildCommand> | Resolvable<GuildCommandProperties> | Resolvable<DMCommand> | Resolvable<DMCommandProperties>;
-export default class CommandManager {
+declare type CommandResolvable = Resolvable<Command> | Resolvable<DMCommand> | Resolvable<GuildCommand> | Resolvable<FormatCommandProperties<CommandProperties>> | Resolvable<FormatCommandProperties<DMCommandProperties>> | Resolvable<FormatCommandProperties<GuildCommandProperties>>;
+declare class CommandManager {
     client: Client;
     prefix: string;
     allowBots: boolean;
     groups: Collection<string>;
     index: Index<string, GuildCommand | DMCommand | Command>;
-    permissions: Collection<PermissionString>;
+    permissions: Collection<PermissionResolvable>;
     constructor(client: Client, options?: CommandManagerOptions);
+    [Symbol.iterator](): Generator<DMCommand | Command | GuildCommand, void, undefined>;
     /**
      * @param prefix A command prefix the bot should discriminate messages with
      * @example
@@ -57,6 +62,7 @@ export default class CommandManager {
     indexGroups(...groups: string[] | string[][]): this;
     deleteCommands(...commands: CommandResolvable[] | string[]): this;
     deleteGroup(group: string): this;
-    deleteGroups(...groups: string[] | string[][]): this;
+    deleteGroups(...groups: Resolvable<string>[]): this;
 }
 export { CommandManagerOptions, CommandResolvable, CommandManager };
+export default CommandManager;

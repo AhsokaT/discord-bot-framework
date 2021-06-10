@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const BaseCommand_js_1 = require("../structs/commands/BaseCommand.js");
+const Command_js_1 = require("../structs/commands/Command.js");
 const GuildCommand_js_1 = require("../structs/commands/GuildCommand.js");
 const util_js_1 = require("./util.js");
-exports.default = new BaseCommand_js_1.default()
+exports.default = new Command_js_1.default()
     .setName('help')
     .setDescription('Display information about my commands')
     .addParameters({
@@ -44,7 +44,7 @@ exports.default = new BaseCommand_js_1.default()
             embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
         }
         if (command instanceof GuildCommand_js_1.default && command.permissions.array().length > 0) {
-            embed.addField('Permissions', command.permissions.array().map(i => `\`${i.replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
+            embed.addField('Permissions', command.permissions.array().map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
         }
         if (command.aliases.array().length > 0) {
             embed.addField('Aliases', command.aliases.array().map(i => `\`${i}\``).join(' '), false);
@@ -63,7 +63,7 @@ exports.default = new BaseCommand_js_1.default()
         const field = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `\`${client.commands.prefix}help ${group.toLowerCase()}\``, inline: true };
         return field;
     });
-    const invite = client.generateInvite({ permissions: this.permissions.array() });
+    const invite = client.generateInvite({ permissions: client.commands.permissions.array() });
     const embed = new discord_js_1.MessageEmbed({
         color: '#2F3136',
         author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },

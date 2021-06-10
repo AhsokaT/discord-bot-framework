@@ -25,3 +25,7 @@ export function noop() {
 export function isIterable(obj: any): obj is Iterable<any> {
     return typeof obj[Symbol.iterator] === 'function';
 }
+
+export function toArray<U>(obj: Iterable<U>): U[] {
+    return [ ...obj ];
+}

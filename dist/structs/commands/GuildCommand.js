@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const js_augmentations_1 = require("js-augmentations");
-const BaseCommand_js_1 = require("./BaseCommand.js");
-class GuildCommand extends BaseCommand_js_1.default {
+const Command_js_1 = require("./Command.js");
+class GuildCommand extends Command_js_1.default {
     constructor(properties) {
         super(properties);
+        this.type = 'Guild';
         this.permissions = new js_augmentations_1.Collection();
     }
     /**

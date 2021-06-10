@@ -21,6 +21,7 @@ interface CommandProperties {
     parameters: Iterable<CommandParameter>;
     aliases: Iterable<string>;
     callback: CommandCallback;
+    type: 'DM' | 'Guild' | 'Universal';
 }
 declare class Command implements CommandProperties {
     name: string;
@@ -30,9 +31,11 @@ declare class Command implements CommandProperties {
     aliases: Collection<string>;
     parameters: Collection<CommandParameter>;
     callback: CommandCallback;
+    type: 'DM' | 'Guild' | 'Universal';
     constructor(properties?: Partial<CommandProperties>);
     isGuildCommand(): this is GuildCommand;
     isDMCommand(): this is DMCommand;
+    isUniversalCommand(): this is Command;
     /**
      * @param name The name of your command
      */

@@ -6,9 +6,6 @@ const ApplicationCommandManager_1 = require("../structs/ApplicationCommandManage
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
-    /**
-     * @param {ClientOptions} options
-     */
     constructor(options) {
         super(options);
         if (options.token)
@@ -76,6 +73,8 @@ class Client extends discord_js_1.Client {
             if (message.channel.type === 'dm')
                 // @ts-expect-error
                 command.callback(message, this, new js_augmentations_1.Index(args));
+        // @ts-expect-error
+        command.callback(message, this, new js_augmentations_1.Index(args));
     }
 }
 exports.default = Client;

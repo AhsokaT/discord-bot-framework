@@ -13,20 +13,24 @@ type DMCommandCallback = (this: DMCommand, message: Message, client: Client, arg
 
 interface DMCommandProperties extends CommandProperties {
     callback: DMCommandCallback;
+    type: 'DM';
 }
 
 class DMCommand extends Command implements DMCommandProperties {
     public callback: DMCommandCallback;
+    public type: 'DM';
 
-    constructor(properties?: DMCommandProperties) {
+    constructor(properties?: Partial<DMCommandProperties>) {
         super(properties);
+
+        this.type = 'DM';
     }
 
     setCallback(callback: DMCommandCallback): this {
         return super.setCallback(callback);
     }
 
-    edit(properties: DMCommandProperties): this {
+    edit(properties: Partial<DMCommandProperties>): this {
         return super.edit(properties);
     }
 }
