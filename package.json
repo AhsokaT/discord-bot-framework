@@ -21,7 +21,7 @@
   "dependencies": {
     "@pat.npm.js/discord-bot-framework": "github:AhsokaT/discord-bot-framework",
     "@types/events": "^3.0.0",
-    "discord.js": "github:vaporox/discord.js#fix-await-interaction",
+    "discord.js": "github:discordjs/discord.js",
     "events": "^3.3.0",
     "js-augmentations": "*",
     "node-fetch": "^2.6.1",
