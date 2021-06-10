@@ -96,12 +96,12 @@ export default class Client extends DJSClient {
 
         if (command.isGuildCommand() && message.guild)
             // @ts-expect-error
-            command.callback(message, this, new Index(args));
+            return command.callback(message, this, new Index(args));
 
         if (command.isDMCommand())
             if (message.channel.type === 'dm')
                 // @ts-expect-error
-                command.callback(message, this, new Index(args));
+                return command.callback(message, this, new Index(args));
 
         // @ts-expect-error
         command.callback(message, this, new Index(args));

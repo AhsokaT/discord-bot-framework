@@ -68,11 +68,11 @@ class Client extends discord_js_1.Client {
         }
         if (command.isGuildCommand() && message.guild)
             // @ts-expect-error
-            command.callback(message, this, new js_augmentations_1.Index(args));
+            return command.callback(message, this, new js_augmentations_1.Index(args));
         if (command.isDMCommand())
             if (message.channel.type === 'dm')
                 // @ts-expect-error
-                command.callback(message, this, new js_augmentations_1.Index(args));
+                return command.callback(message, this, new js_augmentations_1.Index(args));
         // @ts-expect-error
         command.callback(message, this, new js_augmentations_1.Index(args));
     }
