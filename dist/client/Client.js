@@ -21,6 +21,11 @@ class Client extends discord_js_1.Client {
      * @param message A Discord message
      */
     async parseMessage(message) {
+        if (message.channel.type === 'dm' && !this.channels.cache.has(message.channel.id)) {
+            const channel = await this.channels.fetch(message.channel.id).catch(util.noop);
+            if (channel && channel.isText())
+                message.channel = channel;
+        }
         if (message.author.bot && !this.commands.allowBots)
             return;
         if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
@@ -32,12 +37,37 @@ class Client extends discord_js_1.Client {
         const command = this.commands.index.get(name);
         if (!command)
             return;
+        if (!command.isDMCommand() && message.channel.type === 'dm')
+            return;
         if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
             return message.channel.send('❌ This command must be run in an **NSFW** channel');
         if (command.isGuildCommand() && !message.member?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
         if (command.isGuildCommand() && !message.guild?.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+        if (command.nsfw && message.channel.type === 'dm') {
+            const question = await message.channel.send({
+                content: 'This command is marked as **NSFW**, are you sure you want to run it?',
+                components: [
+                    new discord_js_1.MessageActionRow().addComponents(new discord_js_1.MessageButton()
+                        .setCustomID('YES')
+                        .setLabel('Run')
+                        .setStyle('DANGER'), new discord_js_1.MessageButton()
+                        .setCustomID('NO')
+                        .setLabel('Cancel')
+                        .setStyle('SECONDARY'))
+                ]
+            }).catch(console.error);
+            if (!question)
+                return;
+            const response = await message.channel.awaitMessageComponentInteraction(i => i.user.id === message.author.id, 15000).catch(util.noop);
+            if (!response)
+                return message.channel.send('⏱️ **15s timeout** ❌ Command cancelled').catch(console.error);
+            if (response.customID === 'NO')
+                return response.reply('Command cancelled').catch(console.error);
+            response.deferUpdate();
+            question.delete().catch(util.noop);
+        }
         let args = [];
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
         for (const param of parameters) {

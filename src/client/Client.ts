@@ -1,4 +1,4 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import { Index } from 'js-augmentations';
@@ -32,6 +32,13 @@ export default class Client extends DJSClient {
      * @param message A Discord message
      */
     public async parseMessage(message: Message): Promise<any> {
+        if (message.channel.type === 'dm' && !this.channels.cache.has(message.channel.id)) {
+            const channel = await this.channels.fetch(message.channel.id).catch(util.noop);
+
+            if (channel && channel.isText())
+                message.channel = channel;
+        }
+
         if (message.author.bot && !this.commands.allowBots)
             return;
 
@@ -49,6 +56,9 @@ export default class Client extends DJSClient {
         if (!command)
             return;
 
+        if (!command.isDMCommand() && message.channel.type === 'dm')
+            return;
+
         if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
             return message.channel.send('❌ This command must be run in an **NSFW** channel');
 
@@ -57,6 +67,39 @@ export default class Client extends DJSClient {
 
         if (command.isGuildCommand() && !message.guild?.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
+
+        if (command.nsfw && message.channel.type === 'dm') {
+            const question = await message.channel.send({
+                content: 'This command is marked as **NSFW**, are you sure you want to run it?',
+                components: [
+                    new MessageActionRow().addComponents(
+                        new MessageButton()
+                            .setCustomID('YES')
+                            .setLabel('Run')
+                            .setStyle('DANGER'),
+                        new MessageButton()
+                            .setCustomID('NO')
+                            .setLabel('Cancel')
+                            .setStyle('SECONDARY')
+                    )
+                ]
+            }).catch(console.error);
+
+            if (!question)
+                return;
+
+            const response = await message.channel.awaitMessageComponentInteraction(i => i.user.id === message.author.id, 15000).catch(util.noop);
+
+            if (!response)
+                return message.channel.send('⏱️ **15s timeout** ❌ Command cancelled').catch(console.error);
+
+            if (response.customID === 'NO')
+                return response.reply('Command cancelled').catch(console.error);
+
+            response.deferUpdate();
+
+            question.delete().catch(util.noop);
+        }
 
         let args: any = [];
 

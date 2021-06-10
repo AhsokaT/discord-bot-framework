@@ -31,7 +31,7 @@ export default new Command()
                 fields: commands
             });
 
-            message.channel.send(embed).catch(console.error);
+            message.channel.send({ embed }).catch(console.error);
 
             return;
         }
@@ -63,14 +63,14 @@ export default new Command()
                 embed.setFooter('NSFW');
             }
 
-            message.channel.send(embed).catch(console.error);
+            message.channel.send({ embed }).catch(console.error);
 
             return;
         }
 
         const ungrouped = client.commands.index.array().filter(i => !i.group).map(command => {
             const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
-    
+
             return field;
         });
 
@@ -89,5 +89,5 @@ export default new Command()
             fields: [ ...ungrouped, ...groups ]
         });
 
-        message.channel.send(embed).catch(console.error);
+        message.channel.send({ embed }).catch(console.error);
     });

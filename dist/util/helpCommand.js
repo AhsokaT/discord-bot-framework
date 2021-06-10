@@ -28,7 +28,7 @@ exports.default = new Command_js_1.default()
             description: commands.length === 0 ? 'There are currently no commands set for this category' : '',
             fields: commands
         });
-        message.channel.send(embed).catch(console.error);
+        message.channel.send({ embed }).catch(console.error);
         return;
     }
     if (command) {
@@ -52,7 +52,7 @@ exports.default = new Command_js_1.default()
         if (command.nsfw) {
             embed.setFooter('NSFW');
         }
-        message.channel.send(embed).catch(console.error);
+        message.channel.send({ embed }).catch(console.error);
         return;
     }
     const ungrouped = client.commands.index.array().filter(i => !i.group).map(command => {
@@ -70,5 +70,5 @@ exports.default = new Command_js_1.default()
         description: `🔗 **[Invite ${client.user?.username ?? ''}](${invite})**`,
         fields: [...ungrouped, ...groups]
     });
-    message.channel.send(embed).catch(console.error);
+    message.channel.send({ embed }).catch(console.error);
 });
