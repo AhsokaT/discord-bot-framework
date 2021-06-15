@@ -3,7 +3,7 @@
  * @param items An array of strings
  * @param trailingConnective The connective to precede the final item of the array; default 'and'
  */
-export function toList(items: string[], trailingConnective = 'and') {
+function toList(items: string[], trailingConnective = 'and') {
     return `${items.length > 1 ? `${items.slice(0, items.length - 1).join(', ')} ${trailingConnective} ${items[items.length - 1]}` : items }`;
 }
 
@@ -11,21 +11,40 @@ export function toList(items: string[], trailingConnective = 'and') {
  * Convert any value to a string
  * @param value
  */
-export function toString(value: any) {
+function toString(value: any) {
     return `${value}`;
 }
 
 /**
  * No-operation
  */
-export function noop() {
+function noop() {
     // noop
 }
 
-export function isIterable(obj: any): obj is Iterable<any> {
+function isIterable(obj: any): obj is Iterable<any> {
     return typeof obj[Symbol.iterator] === 'function';
 }
 
-export function toArray<U>(obj: Iterable<U>): U[] {
+function toArray<U>(obj: Iterable<U>): U[] {
     return [ ...obj ];
+}
+
+interface AnyObject {
+    [key: string]: any;
+}
+
+function Omit<O extends AnyObject, K extends keyof O>(obj: O, ...keys: K[]): Omit<O, K> {
+    keys.forEach(key => delete obj[key]);
+
+    return obj;
+}
+
+export {
+    toList,
+    toString,
+    noop,
+    isIterable,
+    toArray,
+    Omit
 }

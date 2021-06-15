@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const js_augmentations_1 = require("js-augmentations");
+const util_js_1 = require("../../util/util.js");
 function isCommandParameter(obj) {
     return 'name' in obj;
 }
@@ -134,9 +135,9 @@ class Command {
             this.setDescription(description);
         if (typeof nsfw === 'boolean')
             this.setNSFW(nsfw);
-        if (Array.isArray(parameters))
+        if (util_js_1.isIterable(parameters))
             this.addParameters(...parameters);
-        if (Array.isArray(aliases))
+        if (util_js_1.isIterable(aliases))
             this.addAliases(...aliases);
         return this;
     }

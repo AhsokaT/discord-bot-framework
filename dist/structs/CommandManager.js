@@ -20,11 +20,12 @@ class CommandManager {
     constructor(client, options = {}) {
         this.client = client;
         this.client = client;
-        const { prefix, permissions, allowBots, automaticMessageParsing } = options;
+        const { prefix, permissions, allowBots, automaticMessageParsing, promptUserForInput } = options;
         this.index = new js_augmentations_1.Index();
         this.groups = new js_augmentations_1.Collection();
         this.permissions = new js_augmentations_1.Collection();
         this.allowBots = Boolean(allowBots);
+        this.promptUserForInput = typeof promptUserForInput === 'boolean' ? promptUserForInput : true;
         this.setPrefix(typeof prefix === 'string' ? prefix : '');
         if (Array.isArray(permissions))
             this.permissions.push(...permissions);
@@ -61,11 +62,11 @@ class CommandManager {
      * Add new commands to the bot; if provided commands match existing commands, the existing commands will be overwritten
      * @param commands Instances of the Command class or objects conforming to type CommandDetails
      * @example
-     * const ping = new Command()
+     * const ping = new UniversalCommand()
      *      .setName('ping')
      *      .setDescription('Ping pong');
      *
-     * const purge = new Command()
+     * const purge = new GuildCommand()
      *      .setName('purge')
      *      .setDescription('Delete messages');
      *
@@ -105,12 +106,12 @@ class CommandManager {
         return this.indexGroups(name);
     }
     indexGroups(...groups) {
-        const entries = groups.flat().filter(group => typeof group === 'string');
+        const entries = groups.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().filter(group => typeof group === 'string');
         entries.forEach(group => this.groups.add(group));
         return this;
     }
     deleteCommands(...commands) {
-        commands.flat().map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
+        commands.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
             let toDelete;
             if (command instanceof Command_js_1.default)
                 toDelete = command;
@@ -125,7 +126,7 @@ class CommandManager {
         return this.deleteGroups(group);
     }
     deleteGroups(...groups) {
-        groups.flat().map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(group => this.groups.delete(group));
+        groups.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().forEach(group => this.groups.delete(group));
         return this;
     }
 }

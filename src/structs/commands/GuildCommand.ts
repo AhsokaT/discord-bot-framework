@@ -16,7 +16,7 @@ interface GuildCommandProperties extends CommandProperties {
 }
 
 class GuildCommand extends Command implements GuildCommandProperties {
-    public callback: GuildCommandCallback;
+    declare public callback: GuildCommandCallback;
     public permissions: Collection<PermissionResolvable>;
     public type: 'Guild';
 

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toArray = exports.isIterable = exports.noop = exports.toString = exports.toList = void 0;
+exports.Omit = exports.toArray = exports.isIterable = exports.noop = exports.toString = exports.toList = void 0;
 /**
  * Convert an array of strings to a list
  * @param items An array of strings
@@ -33,3 +33,8 @@ function toArray(obj) {
     return [...obj];
 }
 exports.toArray = toArray;
+function Omit(obj, ...keys) {
+    keys.forEach(key => delete obj[key]);
+    return obj;
+}
+exports.Omit = Omit;

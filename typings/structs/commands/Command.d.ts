@@ -4,10 +4,11 @@ import Client from '../../client/Client.js';
 import DMCommand from './DMCommand.js';
 import GuildCommand from './GuildCommand.js';
 declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
+declare type ParameterType = 'string' | 'number' | 'boolean' | 'user' | 'member' | 'channel' | 'role' | 'mentionable';
 interface CommandParameter {
     name: string;
     description?: string;
-    type?: 'string' | 'number' | 'boolean' | 'user' | 'channel' | 'role' | 'mentionable';
+    type?: ParameterType | ParameterType[];
     wordCount?: number | 'unlimited';
     caseSensitive?: boolean;
     required?: boolean;
@@ -23,6 +24,8 @@ interface CommandProperties {
     callback: CommandCallback;
     type: 'DM' | 'Guild' | 'Universal';
 }
+interface CommandOptions extends Partial<Omit<CommandProperties, 'type'>> {
+}
 declare class Command implements CommandProperties {
     name: string;
     description: string;
@@ -32,7 +35,7 @@ declare class Command implements CommandProperties {
     parameters: Collection<CommandParameter>;
     callback: CommandCallback;
     type: 'DM' | 'Guild' | 'Universal';
-    constructor(properties?: Partial<CommandProperties>);
+    constructor(properties?: CommandOptions);
     isGuildCommand(): this is GuildCommand;
     isDMCommand(): this is DMCommand;
     isUniversalCommand(): this is Command;
@@ -84,7 +87,7 @@ declare class Command implements CommandProperties {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    edit(properties: Partial<CommandProperties>): this;
+    edit(properties: CommandOptions): this;
 }
 export { CommandProperties, CommandParameter, CommandCallback };
 export default Command;

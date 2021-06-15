@@ -12,11 +12,7 @@ interface CommandManagerOptions {
     allowBots?: boolean;
     permissions?: PermissionResolvable[];
     automaticMessageParsing?: boolean;
-}
-
-type FormatCommandProperties<T extends CommandProperties> = Partial<T> & {
-    type: T['type'];
-    name: string;
+    promptUserForInput?: boolean;
 }
 
 type Resolvable<T> = T | Iterable<T>;
@@ -25,19 +21,17 @@ type CommandResolvable =
     | Resolvable<Command>
     | Resolvable<DMCommand>
     | Resolvable<GuildCommand>
-    | Resolvable<FormatCommandProperties<CommandProperties>>
-    | Resolvable<FormatCommandProperties<DMCommandProperties>>
-    | Resolvable<FormatCommandProperties<GuildCommandProperties>>;
+    | Resolvable<CommandProperties | DMCommandProperties | GuildCommandProperties>;
 
-function isDMCommandProperties(obj: any): obj is FormatCommandProperties<DMCommandProperties> {
+function isDMCommandProperties(obj: any): obj is DMCommandProperties {
     return obj.type === 'DM';
 }
 
-function isGuildCommandProperties(obj: any): obj is FormatCommandProperties<GuildCommandProperties> {
+function isGuildCommandProperties(obj: any): obj is GuildCommandProperties {
     return obj.type === 'Guild';
 }
 
-function isUniversalCommandProperties(obj: any): obj is FormatCommandProperties<CommandProperties> {
+function isUniversalCommandProperties(obj: any): obj is CommandProperties {
     return obj.type === 'Universal';
 }
 
@@ -47,16 +41,18 @@ class CommandManager {
     public groups: Collection<string>;
     public index: Index<string, GuildCommand | DMCommand | Command>;
     public permissions: Collection<PermissionResolvable>;
+    public promptUserForInput: boolean;
 
     constructor(public client: Client, options: CommandManagerOptions = {}) {
         this.client = client;
 
-        const { prefix, permissions, allowBots, automaticMessageParsing } = options;
+        const { prefix, permissions, allowBots, automaticMessageParsing, promptUserForInput } = options;
 
         this.index = new Index();
         this.groups = new Collection();
         this.permissions = new Collection();
         this.allowBots = Boolean(allowBots);
+        this.promptUserForInput = typeof promptUserForInput === 'boolean' ? promptUserForInput : true;
         this.setPrefix(typeof prefix === 'string' ? prefix : '');
 
         if (Array.isArray(permissions))
@@ -76,7 +72,8 @@ class CommandManager {
      * setPrefix('$');
      */
     public setPrefix(prefix: string) {
-        if (typeof prefix === 'string') this.prefix = prefix;
+        if (typeof prefix === 'string')
+            this.prefix = prefix;
 
         return this;
     }
@@ -99,11 +96,11 @@ class CommandManager {
      * Add new commands to the bot; if provided commands match existing commands, the existing commands will be overwritten
      * @param commands Instances of the Command class or objects conforming to type CommandDetails
      * @example
-     * const ping = new Command()
+     * const ping = new UniversalCommand()
      *      .setName('ping')
      *      .setDescription('Ping pong');
      * 
-     * const purge = new Command()
+     * const purge = new GuildCommand()
      *      .setName('purge')
      *      .setDescription('Delete messages');
      * 
@@ -154,16 +151,16 @@ class CommandManager {
         return this.indexGroups(name);
     }
 
-    public indexGroups(...groups: string[] | string[][]): this {
-        const entries = groups.flat().filter(group => typeof group === 'string');
+    public indexGroups(...groups: Resolvable<string>[]): this {
+        const entries = groups.flat().map(item => typeof item !== 'string' && isIterable(item) ? [ ...item ] : item).flat().filter(group => typeof group === 'string');
 
         entries.forEach(group => this.groups.add(group));
 
         return this;
     }
 
-    public deleteCommands(...commands: CommandResolvable[] | string[]): this {
-        commands.flat().map(item => isIterable(item) ? [ ...item ] : item).flat().forEach(command => {
+    public deleteCommands(...commands: CommandResolvable[] | Resolvable<string>[]): this {
+        commands.flat().map(item => typeof item !== 'string' && isIterable(item) ? [ ...item ] : item).flat().forEach(command => {
             let toDelete: Command | undefined;
 
             if (command instanceof Command)
@@ -183,7 +180,7 @@ class CommandManager {
     }
 
     public deleteGroups(...groups: Resolvable<string>[]): this {
-        groups.flat().map(item => isIterable(item) ? [ ...item ] : item).flat().forEach(group => this.groups.delete(group));
+        groups.flat().map(item => typeof item !== 'string' && isIterable(item) ? [ ...item ] : item).flat().forEach(group => this.groups.delete(group));
 
         return this;
     }

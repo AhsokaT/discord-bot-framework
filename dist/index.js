@@ -11,5 +11,14 @@ const Command_js_1 = require("./structs/commands/Command.js");
 exports.UniversalCommand = Command_js_1.default;
 const ApplicationCommandManager_js_1 = require("./structs/ApplicationCommandManager.js");
 Object.defineProperty(exports, "ApplicationCommandConstructor", { enumerable: true, get: function () { return ApplicationCommandManager_js_1.ApplicationCommandConstructor; } });
+const util_js_1 = require("./util/util.js");
+let obj = {
+    foo: true,
+    bar: false,
+    baz: 3,
+    kiwi: Boolean
+};
+let omitted = util_js_1.Omit(obj, 'foo', 'baz');
+console.log(omitted);
 const Version = '2.0.0';
 exports.Version = Version;

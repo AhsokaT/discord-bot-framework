@@ -9,13 +9,10 @@ interface CommandManagerOptions {
     allowBots?: boolean;
     permissions?: PermissionResolvable[];
     automaticMessageParsing?: boolean;
+    promptUserForInput?: boolean;
 }
-declare type FormatCommandProperties<T extends CommandProperties> = Partial<T> & {
-    type: T['type'];
-    name: string;
-};
 declare type Resolvable<T> = T | Iterable<T>;
-declare type CommandResolvable = Resolvable<Command> | Resolvable<DMCommand> | Resolvable<GuildCommand> | Resolvable<FormatCommandProperties<CommandProperties>> | Resolvable<FormatCommandProperties<DMCommandProperties>> | Resolvable<FormatCommandProperties<GuildCommandProperties>>;
+declare type CommandResolvable = Resolvable<Command> | Resolvable<DMCommand> | Resolvable<GuildCommand> | Resolvable<CommandProperties | DMCommandProperties | GuildCommandProperties>;
 declare class CommandManager {
     client: Client;
     prefix: string;
@@ -23,6 +20,7 @@ declare class CommandManager {
     groups: Collection<string>;
     index: Index<string, GuildCommand | DMCommand | Command>;
     permissions: Collection<PermissionResolvable>;
+    promptUserForInput: boolean;
     constructor(client: Client, options?: CommandManagerOptions);
     [Symbol.iterator](): Generator<DMCommand | Command | GuildCommand, void, undefined>;
     /**
@@ -46,11 +44,11 @@ declare class CommandManager {
      * Add new commands to the bot; if provided commands match existing commands, the existing commands will be overwritten
      * @param commands Instances of the Command class or objects conforming to type CommandDetails
      * @example
-     * const ping = new Command()
+     * const ping = new UniversalCommand()
      *      .setName('ping')
      *      .setDescription('Ping pong');
      *
-     * const purge = new Command()
+     * const purge = new GuildCommand()
      *      .setName('purge')
      *      .setDescription('Delete messages');
      *
@@ -59,8 +57,8 @@ declare class CommandManager {
     indexCommands(...commands: CommandResolvable[]): this;
     indexDefaults(): this;
     indexGroup(name: string): this;
-    indexGroups(...groups: string[] | string[][]): this;
-    deleteCommands(...commands: CommandResolvable[] | string[]): this;
+    indexGroups(...groups: Resolvable<string>[]): this;
+    deleteCommands(...commands: CommandResolvable[] | Resolvable<string>[]): this;
     deleteGroup(group: string): this;
     deleteGroups(...groups: Resolvable<string>[]): this;
 }

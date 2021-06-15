@@ -17,7 +17,7 @@ interface DMCommandProperties extends CommandProperties {
 }
 
 class DMCommand extends Command implements DMCommandProperties {
-    public callback: DMCommandCallback;
+    declare public callback: DMCommandCallback;
     public type: 'DM';
 
     constructor(properties?: Partial<DMCommandProperties>) {

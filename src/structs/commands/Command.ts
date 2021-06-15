@@ -1,15 +1,26 @@
 import { Message } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../../client/Client.js';
+import { isIterable } from '../../util/util.js';
 import DMCommand from './DMCommand.js';
 import GuildCommand from './GuildCommand.js';
 
 type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
 
+type ParameterType =
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'user'
+    | 'member'
+    | 'channel'
+    | 'role'
+    | 'mentionable';
+
 interface CommandParameter {
     name: string;
     description?: string;
-    type?: 'string' | 'number' | 'boolean' | 'user' | 'channel' | 'role' | 'mentionable';
+    type?: ParameterType | ParameterType[];
     wordCount?: number | 'unlimited';
     caseSensitive?: boolean;
     required?: boolean;
@@ -27,6 +38,8 @@ interface CommandProperties {
     type: 'DM' | 'Guild' | 'Universal';
 }
 
+interface CommandOptions extends Partial<Omit<CommandProperties, 'type'>> {}
+
 function isCommandParameter(obj: any): obj is CommandParameter {
     return 'name' in obj;
 }
@@ -41,7 +54,7 @@ class Command implements CommandProperties {
     public callback: CommandCallback;
     public type: 'DM' | 'Guild' | 'Universal';
 
-    constructor(properties?: Partial<CommandProperties>) {
+    constructor(properties?: CommandOptions) {
         this.type = 'Universal';
         this.aliases = new Collection();
         this.parameters = new Collection();
@@ -188,7 +201,7 @@ class Command implements CommandProperties {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    public edit(properties: Partial<CommandProperties>): this {
+    public edit(properties: CommandOptions): this {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'object'.`);
 
@@ -209,10 +222,10 @@ class Command implements CommandProperties {
         if (typeof nsfw === 'boolean')
             this.setNSFW(nsfw);
 
-        if (Array.isArray(parameters))
+        if (isIterable(parameters))
             this.addParameters(...parameters);
 
-        if (Array.isArray(aliases))
+        if (isIterable(aliases))
             this.addAliases(...aliases);
 
         return this;
