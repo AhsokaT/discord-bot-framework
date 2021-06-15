@@ -18,5 +18,5 @@ declare function toArray<U>(obj: Iterable<U>): U[];
 interface AnyObject {
     [key: string]: any;
 }
-declare function Omit<O extends AnyObject, K extends string>(obj: O, ...keys: K[]): Omit<O, K>;
+declare function Omit<O extends AnyObject, K extends keyof O>(obj: O, ...keys: K[]): Omit<O, K>;
 export { toList, toString, noop, isIterable, toArray, Omit };

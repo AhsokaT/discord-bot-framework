@@ -31,7 +31,7 @@ export default new Command()
                 fields: commands
             });
 
-            message.channel.send({ embed }).catch(console.error);
+            message.channel.send({ embeds: [embed] }).catch(console.error);
 
             return;
         }
@@ -63,7 +63,7 @@ export default new Command()
                 embed.setFooter('NSFW');
             }
 
-            message.channel.send({ embed }).catch(console.error);
+            message.channel.send({ embeds: [embed] }).catch(console.error);
 
             return;
         }
@@ -89,5 +89,5 @@ export default new Command()
             fields: [ ...ungrouped, ...groups ]
         });
 
-        message.channel.send({ embed }).catch(console.error);
+        message.channel.send({ embeds: [embed] }).catch(console.error);
     });
