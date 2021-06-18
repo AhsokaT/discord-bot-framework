@@ -1,7 +1,7 @@
 import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import { Collection, Index } from 'js-augmentations';
-import Command, { CommandOptions as BaseCommandOptions } from './Prototype.js';
+import Command, { CommandOptions as BaseCommandOptions } from './Command.js';
 import { Resolvable } from '../util/types.js';
 interface CommandManagerOptions {
     prefix?: string;

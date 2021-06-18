@@ -2,7 +2,7 @@ import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import helpCommand from '../util/helpCommand.js';
 import { Collection, Index } from 'js-augmentations';
-import Command, { CommandOptions as BaseCommandOptions } from './Prototype.js';
+import Command, { CommandOptions as BaseCommandOptions } from './Command.js';
 import { isIterable } from '../util/util.js';
 import { Resolvable } from '../util/types.js';
 

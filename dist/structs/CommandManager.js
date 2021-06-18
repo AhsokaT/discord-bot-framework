@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommandManager = void 0;
 const helpCommand_js_1 = require("../util/helpCommand.js");
 const js_augmentations_1 = require("js-augmentations");
-const Prototype_js_1 = require("./Prototype.js");
+const Command_js_1 = require("./Command.js");
 const util_js_1 = require("../util/util.js");
 class CommandManager {
     constructor(client, options = {}) {
@@ -63,8 +63,8 @@ class CommandManager {
      */
     indexCommands(...commands) {
         commands.map(item => util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
-            if (!(command instanceof Prototype_js_1.default))
-                return this.indexCommands(new Prototype_js_1.default(command));
+            if (!(command instanceof Command_js_1.default))
+                return this.indexCommands(new Command_js_1.default(command));
             if (!command.name)
                 throw new Error('A command must have a name set.');
             if (command.group && !this.groups.has(command.group))
@@ -94,7 +94,7 @@ class CommandManager {
     deleteCommands(...commands) {
         commands.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().forEach(command => {
             let toDelete;
-            if (command instanceof Prototype_js_1.default)
+            if (command instanceof Command_js_1.default)
                 toDelete = command;
             else
                 toDelete = this.index.get(typeof command === 'string' ? command : command.name);

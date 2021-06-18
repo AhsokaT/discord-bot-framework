@@ -1,5 +1,5 @@
 import { EmbedFieldData, MessageEmbed } from 'discord.js';
-import Command from '../structs/Prototype.js';
+import Command from '../structs/Command.js';
 import { toString } from './util.js';
 
 export default new Command()

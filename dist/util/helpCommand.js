@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const Prototype_js_1 = require("../structs/Prototype.js");
+const Command_js_1 = require("../structs/Command.js");
 const util_js_1 = require("./util.js");
-exports.default = new Prototype_js_1.default()
+exports.default = new Command_js_1.default()
     .setName('help')
     .setDescription('Display information about my commands')
     .addParameters({

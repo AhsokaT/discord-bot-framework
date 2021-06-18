@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const CommandManager_js_1 = require("../structs/CommandManager.js");
 const ApplicationCommandManager_1 = require("../structs/ApplicationCommandManager");
-const Prototype_js_1 = require("../structs/Prototype.js");
+const Command_js_1 = require("../structs/Command.js");
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
@@ -118,7 +118,7 @@ class Client extends discord_js_1.Client {
                         return message.channel.send(`❌ Your input for \`${param.name}\` must be a member mention or ID`).catch(console.error);
                     input = member;
                 }
-                args.push([param.name, new Prototype_js_1.UserInput(input, param.type)]);
+                args.push([param.name, new Command_js_1.UserInput(input, param.type)]);
             }
         }
         command.callback(message, this, new js_augmentations_1.Index(args));

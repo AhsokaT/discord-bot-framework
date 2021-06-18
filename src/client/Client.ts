@@ -1,7 +1,7 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
-import { UserInput } from '../structs/Prototype.js';
+import { UserInput } from '../structs/Command.js';
 import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
 
