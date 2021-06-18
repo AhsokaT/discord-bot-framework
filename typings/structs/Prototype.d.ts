@@ -1,32 +1,37 @@
-import { Message } from 'discord.js';
+import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
-import Client from '../../client/Client.js';
-import DMCommand from './DMCommand.js';
-import GuildCommand from './GuildCommand.js';
-declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, string>) => void;
+import Client from '../client/Client.js';
+import { Resolvable } from '../util/types.js';
+declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, UserInput>) => void;
+declare type CommandType = 'DM' | 'Guild' | 'Universal';
 declare type ParameterType = 'string' | 'number' | 'boolean' | 'user' | 'member' | 'channel' | 'role' | 'mentionable';
 interface CommandParameter {
     name: string;
+    type: ParameterType;
     description?: string;
-    type?: ParameterType | ParameterType[];
     wordCount?: number | 'unlimited';
     caseSensitive?: boolean;
     required?: boolean;
     choices?: string[];
 }
-interface CommandProperties {
-    name: string;
-    nsfw: boolean;
-    group: string;
-    description: string;
-    parameters: Iterable<CommandParameter>;
-    aliases: Iterable<string>;
-    callback: CommandCallback;
-    type: 'DM' | 'Guild' | 'Universal';
+interface CommandOptions {
+    name?: string;
+    nsfw?: boolean;
+    group?: string;
+    description?: string;
+    callback?: CommandCallback;
+    parameters?: Iterable<CommandParameter>;
+    aliases?: Iterable<string>;
+    permissions?: Iterable<PermissionResolvable>;
+    type?: CommandType;
 }
-interface CommandOptions extends Partial<Omit<CommandProperties, 'type'>> {
+declare class UserInput {
+    value: any;
+    type: ParameterType;
+    constructor(value: any, type: ParameterType);
+    toString(): string;
 }
-declare class Command implements CommandProperties {
+declare class Command implements Required<CommandOptions> {
     name: string;
     description: string;
     group: string;
@@ -34,11 +39,9 @@ declare class Command implements CommandProperties {
     aliases: Collection<string>;
     parameters: Collection<CommandParameter>;
     callback: CommandCallback;
-    type: 'DM' | 'Guild' | 'Universal';
+    permissions: Collection<PermissionResolvable>;
+    type: CommandType;
     constructor(properties?: CommandOptions);
-    isGuildCommand(): this is GuildCommand;
-    isDMCommand(): this is DMCommand;
-    isUniversalCommand(): this is Command;
     /**
      * @param name The name of your command
      */
@@ -55,6 +58,10 @@ declare class Command implements CommandProperties {
      * @param group The group of commands this command belongs to
      */
     setGroup(group: string): this;
+    /**
+     * @param type WIP
+     */
+    setType(type: CommandType): this;
     /**
      * @param callback The function to be called when this command is invoked
      * @example
@@ -73,7 +80,15 @@ declare class Command implements CommandProperties {
      *    { name: 'role', description: 'The ID of a role', required: false }
      * );
      */
-    addParameters(...parameters: CommandParameter[] | CommandParameter[][]): this;
+    addParameters(...parameters: Resolvable<CommandParameter>[]): this;
+    /**
+     * @param permissions Permission(s) this command requires to run
+     * @example
+     * addPermissions('MANAGE_CHANNELS');
+     * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
+     * addPermissions('BAN_MEMBERS', ['KICK_MEMBERS', 'MANAGE_MESSAGES']);
+     */
+    addPermissions(...permissions: PermissionResolvable[]): this;
     /**
      * @param aliases Alternative name(s) this command can be called by
      * @example
@@ -89,5 +104,5 @@ declare class Command implements CommandProperties {
      */
     edit(properties: CommandOptions): this;
 }
-export { CommandProperties, CommandParameter, CommandCallback };
+export { Command, CommandOptions, CommandCallback, CommandType, CommandParameter, ParameterType, UserInput };
 export default Command;

@@ -2,10 +2,9 @@ import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import helpCommand from '../util/helpCommand.js';
 import { Collection, Index } from 'js-augmentations';
-import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
-import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
-import Command, { CommandProperties } from './commands/Command.js';
+import Command, { CommandOptions as BaseCommandOptions } from './Prototype.js';
 import { isIterable } from '../util/util.js';
+import { Resolvable } from '../util/types.js';
 
 interface CommandManagerOptions {
     prefix?: string;
@@ -15,31 +14,19 @@ interface CommandManagerOptions {
     promptUserForInput?: boolean;
 }
 
-type Resolvable<T> = T | Iterable<T>;
+interface CommandOptions extends BaseCommandOptions {
+    name: string;
+}
 
 type CommandResolvable =
     | Resolvable<Command>
-    | Resolvable<DMCommand>
-    | Resolvable<GuildCommand>
-    | Resolvable<CommandProperties | DMCommandProperties | GuildCommandProperties>;
-
-function isDMCommandProperties(obj: any): obj is DMCommandProperties {
-    return obj.type === 'DM';
-}
-
-function isGuildCommandProperties(obj: any): obj is GuildCommandProperties {
-    return obj.type === 'Guild';
-}
-
-function isUniversalCommandProperties(obj: any): obj is CommandProperties {
-    return obj.type === 'Universal';
-}
+    | Resolvable<CommandOptions>;
 
 class CommandManager {
     public prefix: string;
     public allowBots: boolean;
     public groups: Collection<string>;
-    public index: Index<string, GuildCommand | DMCommand | Command>;
+    public index: Index<string, Command>;
     public permissions: Collection<PermissionResolvable>;
     public promptUserForInput: boolean;
 
@@ -108,19 +95,8 @@ class CommandManager {
      */
     public indexCommands(...commands: CommandResolvable[]): this {
         commands.map(item => isIterable(item) ? [ ...item ] : item).flat().forEach(command => {
-            if (!(command instanceof Command)) {
-                if (!['DM', 'Guild', 'Universal'].includes(command.type))
-                    throw new TypeError(`CommandDetails must contain a type, either 'DM', 'Guild', or 'Universal'.`);
-
-                if (isDMCommandProperties(command))
-                    return this.indexCommands(new DMCommand(command));
-
-                if (isGuildCommandProperties(command))
-                    return this.indexCommands(new GuildCommand(command));
-
-                if (isUniversalCommandProperties(command))
-                    return this.indexCommands(new Command(command));
-            }
+            if (!(command instanceof Command))
+                return this.indexCommands(new Command(command));
 
             if (!command.name)
                 throw new Error('A command must have a name set.');
@@ -131,7 +107,7 @@ class CommandManager {
             command.aliases.forEach(alias => {
                 this.index.forEach(existing => {
                     if (existing.aliases.has(alias))
-                        throw new Error(`Alias \'${alias}\' already exists on command \'${existing.name}\'`);
+                        throw new Error(`Alias '${alias}' already exists on command '${existing.name}'`);
                 });
             });
 

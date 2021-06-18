@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const Command_js_1 = require("../structs/commands/Command.js");
-const GuildCommand_js_1 = require("../structs/commands/GuildCommand.js");
+const Prototype_js_1 = require("../structs/Prototype.js");
 const util_js_1 = require("./util.js");
-exports.default = new Command_js_1.default()
+exports.default = new Prototype_js_1.default()
     .setName('help')
     .setDescription('Display information about my commands')
     .addParameters({
     name: 'command',
+    type: 'string',
     description: 'Name of a command or category',
     required: false
 })
@@ -37,21 +37,16 @@ exports.default = new Command_js_1.default()
             author: { name: command.group ? command.group.slice(0, 1).toUpperCase() + command.group.slice(1, command.group.length).toLowerCase() : client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
             title: client.commands.prefix + command.name
         });
-        if (command.description) {
+        if (command.description)
             embed.addField('Description', command.description, false);
-        }
-        if (command.parameters.array().length > 0) {
+        if (command.parameters.array().length > 0)
             embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
-        }
-        if (command instanceof GuildCommand_js_1.default && command.permissions.array().length > 0) {
+        if (command.type === 'Guild' && command.permissions.array().length > 0)
             embed.addField('Permissions', command.permissions.array().map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
-        }
-        if (command.aliases.array().length > 0) {
+        if (command.aliases.array().length > 0)
             embed.addField('Aliases', command.aliases.array().map(i => `\`${i}\``).join(' '), false);
-        }
-        if (command.nsfw) {
+        if (command.nsfw)
             embed.setFooter('NSFW');
-        }
         message.channel.send({ embeds: [embed] }).catch(console.error);
         return;
     }

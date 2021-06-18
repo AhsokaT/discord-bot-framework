@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const CommandManager_js_1 = require("../structs/CommandManager.js");
 const ApplicationCommandManager_1 = require("../structs/ApplicationCommandManager");
+const Prototype_js_1 = require("../structs/Prototype.js");
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
@@ -37,13 +38,15 @@ class Client extends discord_js_1.Client {
         const command = this.commands.index.get(name);
         if (!command)
             return;
-        if (!command.isDMCommand() && message.channel.type === 'dm')
+        if (command.type === 'DM' && message.channel.type !== 'dm')
+            return;
+        if (command.type === 'Guild' && !message.guild)
             return;
         if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
             return message.channel.send('❌ This command must be run in an **NSFW** channel');
-        if (command.isGuildCommand() && !message.member?.permissions.has(command.permissions.array()))
+        if (command.type === 'Guild' && !message.member?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
-        if (command.isGuildCommand() && !message.guild?.me?.permissions.has(command.permissions.array()))
+        if (command.type === 'Guild' && !message.guild?.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
         if (command.nsfw && message.channel.type === 'dm') {
             const actions = new discord_js_1.MessageActionRow().addComponents(new discord_js_1.MessageButton()
@@ -99,19 +102,25 @@ class Client extends discord_js_1.Client {
                         return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${util.toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
                     }
                 }
-                if (param.type === 'number' && isNaN(Number(input)))
-                    return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
-                args.push([param.name, input]);
+                if (param.type === 'number') {
+                    if (isNaN(Number(input)))
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
+                    input = Number(input);
+                }
+                if (param.type === 'boolean') {
+                    if ((input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false'))
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a boolean: either 'true' or 'false'`).catch(console.error);
+                    input = input.toLowerCase() === 'true' ? true : false;
+                }
+                if (param.type === 'member') {
+                    const member = await message.guild?.members.fetch(input.filter(i => !isNaN(Number(i)))).catch(util.noop);
+                    if (!member)
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a member mention or ID`).catch(console.error);
+                    input = member;
+                }
+                args.push([param.name, new Prototype_js_1.UserInput(input, param.type)]);
             }
         }
-        if (command.isGuildCommand() && message.guild)
-            // @ts-expect-error
-            return command.callback(message, this, new js_augmentations_1.Index(args));
-        if (command.isDMCommand())
-            if (message.channel.type === 'dm')
-                // @ts-expect-error
-                return command.callback(message, this, new js_augmentations_1.Index(args));
-        // @ts-expect-error
         command.callback(message, this, new js_augmentations_1.Index(args));
     }
 }

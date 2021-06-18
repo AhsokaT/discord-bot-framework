@@ -1,6 +1,7 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
+import { UserInput } from '../structs/Prototype.js';
 import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
 
@@ -56,16 +57,19 @@ export default class Client extends DJSClient {
         if (!command)
             return;
 
-        if (!command.isDMCommand() && message.channel.type === 'dm')
+        if (command.type === 'DM' && message.channel.type !== 'dm')
+            return;
+
+        if (command.type === 'Guild' && !message.guild)
             return;
 
         if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
             return message.channel.send('❌ This command must be run in an **NSFW** channel');
 
-        if (command.isGuildCommand() && !message.member?.permissions.has(command.permissions.array()))
+        if (command.type === 'Guild' && !message.member?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
-        if (command.isGuildCommand() && !message.guild?.me?.permissions.has(command.permissions.array()))
+        if (command.type === 'Guild' && !message.guild?.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
         if (command.nsfw && message.channel.type === 'dm') {
@@ -116,12 +120,12 @@ export default class Client extends DJSClient {
             response.deferUpdate();
         }
 
-        let args: any = [];
+        let args: [string, UserInput][] = [];
 
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
 
         for (const param of parameters) {
-            let input: string | undefined = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
+            let input: any = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
 
             if (!input && param.required && this.commands.promptUserForInput) {
                 message.channel.send(`Please type your input for \`${param.name}\`\n\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``) ?? [], 'or')}` : ''}`);
@@ -144,23 +148,33 @@ export default class Client extends DJSClient {
                     }
                 }
 
-                if (param.type === 'number' && isNaN(Number(input)))
-                    return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
+                if (param.type === 'number') {
+                    if (isNaN(Number(input)))
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
 
-                args.push([ param.name, input ]);
+                    input = Number(input);
+                }
+
+                if (param.type === 'boolean') {
+                    if ((input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false'))
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a boolean: either 'true' or 'false'`).catch(console.error);
+
+                    input = input.toLowerCase() === 'true' ? true : false;
+                }
+
+                if (param.type === 'member') {
+                    const member = await message.guild?.members.fetch(input.filter(i => !isNaN(Number(i)))).catch(util.noop);
+
+                    if (!member)
+                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a member mention or ID`).catch(console.error);
+
+                    input = member;
+                }
+
+                args.push([param.name, new UserInput(input, param.type)]);
             }
         }
 
-        if (command.isGuildCommand() && message.guild)
-            // @ts-expect-error
-            return command.callback(message, this, new Index(args));
-
-        if (command.isDMCommand())
-            if (message.channel.type === 'dm')
-                // @ts-expect-error
-                return command.callback(message, this, new Index(args));
-
-        // @ts-expect-error
         command.callback(message, this, new Index(args));
     }
 }

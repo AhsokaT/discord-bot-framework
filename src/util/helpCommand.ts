@@ -1,6 +1,5 @@
 import { EmbedFieldData, MessageEmbed } from 'discord.js';
-import Command from '../structs/commands/Command.js';
-import GuildCommand from '../structs/commands/GuildCommand.js';
+import Command from '../structs/Prototype.js';
 import { toString } from './util.js';
 
 export default new Command()
@@ -8,6 +7,7 @@ export default new Command()
     .setDescription('Display information about my commands')
     .addParameters({
         name: 'command',
+        type: 'string',
         description: 'Name of a command or category',
         required: false
     })
@@ -43,25 +43,20 @@ export default new Command()
                 title: client.commands.prefix + command.name
             });
 
-            if (command.description) {
+            if (command.description)
                 embed.addField('Description', command.description, false);
-            }
 
-            if (command.parameters.array().length > 0) {
+            if (command.parameters.array().length > 0)
                 embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
-            }
 
-            if (command instanceof GuildCommand && command.permissions.array().length > 0) {
+            if (command.type === 'Guild' && command.permissions.array().length > 0)
                 embed.addField('Permissions', command.permissions.array().map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
-            }
 
-            if (command.aliases.array().length > 0) {
+            if (command.aliases.array().length > 0)
                 embed.addField('Aliases', command.aliases.array().map(i => `\`${i}\``).join(' '), false);
-            }
 
-            if (command.nsfw) {
+            if (command.nsfw)
                 embed.setFooter('NSFW');
-            }
 
             message.channel.send({ embeds: [embed] }).catch(console.error);
 

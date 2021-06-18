@@ -1,9 +1,8 @@
 import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import { Collection, Index } from 'js-augmentations';
-import GuildCommand, { GuildCommandProperties } from './commands/GuildCommand.js';
-import DMCommand, { DMCommandProperties } from './commands/DMCommand.js';
-import Command, { CommandProperties } from './commands/Command.js';
+import Command, { CommandOptions as BaseCommandOptions } from './Prototype.js';
+import { Resolvable } from '../util/types.js';
 interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
@@ -11,18 +10,20 @@ interface CommandManagerOptions {
     automaticMessageParsing?: boolean;
     promptUserForInput?: boolean;
 }
-declare type Resolvable<T> = T | Iterable<T>;
-declare type CommandResolvable = Resolvable<Command> | Resolvable<DMCommand> | Resolvable<GuildCommand> | Resolvable<CommandProperties | DMCommandProperties | GuildCommandProperties>;
+interface CommandOptions extends BaseCommandOptions {
+    name: string;
+}
+declare type CommandResolvable = Resolvable<Command> | Resolvable<CommandOptions>;
 declare class CommandManager {
     client: Client;
     prefix: string;
     allowBots: boolean;
     groups: Collection<string>;
-    index: Index<string, GuildCommand | DMCommand | Command>;
+    index: Index<string, Command>;
     permissions: Collection<PermissionResolvable>;
     promptUserForInput: boolean;
     constructor(client: Client, options?: CommandManagerOptions);
-    [Symbol.iterator](): Generator<DMCommand | Command | GuildCommand, void, undefined>;
+    [Symbol.iterator](): Generator<Command, void, undefined>;
     /**
      * @param prefix A command prefix the bot should discriminate messages with
      * @example
