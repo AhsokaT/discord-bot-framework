@@ -38,6 +38,7 @@ class Parameter implements Required<ParameterOptions> {
         this.setWordCount(1);
         this.setCaseSensitive(false);
         this.setRequired(true);
+        this.setType('string');
 
         if (options)
             this.edit(options);

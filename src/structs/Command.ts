@@ -2,10 +2,11 @@ import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
+import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
 import { ParameterTypeResolvable } from './ParameterType.js';
 
-type CommandCallback = (this: Command, message: Message, args: Index<string, any>, client: Client) => void;
+type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
 
 type CommandType =
     | 'DM'

@@ -1,9 +1,10 @@
 import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
+import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
 import { ParameterTypeResolvable } from './ParameterType.js';
-declare type CommandCallback = (this: Command, message: Message, args: Index<string, any>, client: Client) => void;
+declare type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
 declare type CommandType = 'DM' | 'Guild' | 'Universal';
 interface CommandOptions {
     name?: string;

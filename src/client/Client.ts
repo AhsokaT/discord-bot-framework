@@ -1,6 +1,7 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
+import Argument from '../structs/Argument.js';
 import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
 
@@ -112,7 +113,7 @@ export default class Client extends DJSClient {
             response.deferUpdate();
         }
 
-        let args: [string, any][] = [];
+        let args: [string, Argument][] = [];
 
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
 
@@ -146,14 +147,14 @@ export default class Client extends DJSClient {
                         if (isNaN(Number(input)))
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`number\``).catch(util.noop);
 
-                        input = Number(input);
+                        input = new Argument(Number(input), 'string');
                         break;
 
                     case 'boolean':
                         if (input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false')
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be either 'true' or 'false'`).catch(util.noop);
 
-                        input = input.toLowerCase() === 'true' ? true : false;
+                        input = new Argument(input.toLowerCase() === 'true' ? true : false, 'boolean');
                         break;
 
                     case 'channel':
@@ -162,16 +163,16 @@ export default class Client extends DJSClient {
                         if (!channel)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`channel\``).catch(util.noop);
 
-                        input = channel;
+                        input = new Argument(channel, 'channel');
                         break;
 
                     case 'member':
-                        const member = await message.guild?.members.fetch(snowflake).catch(util.noop);
+                        const member = snowflake ? await message.guild?.members.fetch(snowflake).catch(util.noop) : null;
 
-                        if (!member)
+                        if (!member || !snowflake)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`member\``).catch(util.noop);
 
-                        input = member;
+                        input = new Argument(member, 'member');
                         break;
 
                     case 'role':
@@ -180,7 +181,7 @@ export default class Client extends DJSClient {
                         if (!role)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`role\``).catch(util.noop);
 
-                        input = role;
+                        input = new Argument(role, 'role');
                         break;
 
                     case 'user':
@@ -189,14 +190,20 @@ export default class Client extends DJSClient {
                         if (!user)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`user\``).catch(util.noop);
 
-                        input = user;
+                        input = new Argument(user, 'user');
                         break;
 
                     default:
                         const type = this.commands.types.get(param.type);
 
-                        if (type && !await type.predicate.bind(this)(input, message))
-                            return message.channel.send(`❌ Your input for \`${param.label}\` must conform to type \`${type.key}\``).catch(util.noop);
+                        if (type) {
+                            if (!await type.predicate.bind(this)(input, message))
+                                return message.channel.send(`❌ Your input for \`${param.label}\` must conform to type \`${type.key}\``).catch(util.noop);
+
+                            input = new Argument(input, type);
+                        } else {
+                            input = new Argument(input, 'string');
+                        }
 
                         break;
                 }

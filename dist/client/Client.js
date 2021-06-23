@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const CommandManager_js_1 = require("../structs/CommandManager.js");
 const ApplicationCommandManager_1 = require("../structs/ApplicationCommandManager");
+const Argument_js_1 = require("../structs/Argument.js");
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
@@ -100,41 +101,47 @@ class Client extends discord_js_1.Client {
                     case 'number':
                         if (isNaN(Number(input)))
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`number\``).catch(util.noop);
-                        input = Number(input);
+                        input = new Argument_js_1.default(Number(input), 'string');
                         break;
                     case 'boolean':
                         if (input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false')
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be either 'true' or 'false'`).catch(util.noop);
-                        input = input.toLowerCase() === 'true' ? true : false;
+                        input = new Argument_js_1.default(input.toLowerCase() === 'true' ? true : false, 'boolean');
                         break;
                     case 'channel':
                         const channel = await message.guild?.channels.fetch(snowflake).catch(util.noop);
                         if (!channel)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`channel\``).catch(util.noop);
-                        input = channel;
+                        input = new Argument_js_1.default(channel, 'channel');
                         break;
                     case 'member':
-                        const member = await message.guild?.members.fetch(snowflake).catch(util.noop);
-                        if (!member)
+                        const member = snowflake ? await message.guild?.members.fetch(snowflake).catch(util.noop) : null;
+                        if (!member || !snowflake)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`member\``).catch(util.noop);
-                        input = member;
+                        input = new Argument_js_1.default(member, 'member');
                         break;
                     case 'role':
                         const role = await message.guild?.roles.fetch(snowflake).catch(util.noop);
                         if (!role)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`role\``).catch(util.noop);
-                        input = role;
+                        input = new Argument_js_1.default(role, 'role');
                         break;
                     case 'user':
                         const user = await this.users.fetch(snowflake).catch(util.noop);
                         if (!user)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`user\``).catch(util.noop);
-                        input = user;
+                        input = new Argument_js_1.default(user, 'user');
                         break;
                     default:
                         const type = this.commands.types.get(param.type);
-                        if (type && !await type.predicate.bind(this)(input, message))
-                            return message.channel.send(`❌ Your input for \`${param.label}\` must conform to type \`${type.key}\``).catch(util.noop);
+                        if (type) {
+                            if (!await type.predicate.bind(this)(input, message))
+                                return message.channel.send(`❌ Your input for \`${param.label}\` must conform to type \`${type.key}\``).catch(util.noop);
+                            input = new Argument_js_1.default(input, type);
+                        }
+                        else {
+                            input = new Argument_js_1.default(input, 'string');
+                        }
                         break;
                 }
                 args.push([param.key, input]);
