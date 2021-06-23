@@ -23,11 +23,6 @@ export default class Client extends DJSClient {
         this.applicationCommands = new ApplicationCommandManager(this);
     }
 
-    public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
-    public on(event: string | symbol, listener: (...args: any[]) => void) {
-        return super.on(event, listener);
-    }
-
     /**
      * Reads a message from Discord and executes a command if called
      * @param message A Discord message
