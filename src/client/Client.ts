@@ -1,4 +1,4 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton, Intents } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import Argument from '../structs/Argument.js';

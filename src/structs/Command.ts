@@ -242,6 +242,3 @@ export {
 }
 
 export default Command;
-
-new Command()
-    .setType('DM')
