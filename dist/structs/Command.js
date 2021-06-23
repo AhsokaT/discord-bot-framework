@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserInput = exports.Command = void 0;
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
+const Parameter_js_1 = require("./Parameter.js");
 class UserInput {
     constructor(value, type) {
         this.value = value;
@@ -17,10 +18,11 @@ class UserInput {
 exports.UserInput = UserInput;
 class Command {
     constructor(properties) {
-        this.type = 'Universal';
         this.aliases = new js_augmentations_1.Collection();
         this.parameters = new js_augmentations_1.Collection();
-        this.callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
+        this.permissions = new js_augmentations_1.Collection();
+        this.setType('Universal');
+        this.setCallback((message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error));
         if (properties)
             this.edit(properties);
     }
@@ -61,7 +63,9 @@ class Command {
         return this;
     }
     /**
-     * @param type WIP
+     * The type property of a command determines where the command can be called,
+     * either in a DM channel, Guild channel or both
+     * @param type
      */
     setType(type) {
         if (type !== 'DM' && type !== 'Guild' && type !== 'Universal')
@@ -72,9 +76,9 @@ class Command {
     /**
      * @param callback The function to be called when this command is invoked
      * @example
-     * setCallback((message, client, args) => message.reply('pong!'));
+     * setCallback((message, args, client) => message.reply('pong!'));
      *
-     * setCallback(function(message, client, args) {
+     * setCallback(function(message, args, client) {
      *      message.channel.send(this.name, this.description);
      * });
      */
@@ -94,20 +98,12 @@ class Command {
      */
     addParameters(...parameters) {
         parameters.map(param => util_js_1.isIterable(param) ? [...param] : param).flat().forEach(parameter => {
-            if (!('name' in parameter) && typeof parameter['name'] !== 'string')
-                throw new TypeError('Command parameters must conform to type \'CommandParameter\'');
-            const { name, description, choices, wordCount, type, required, caseSensitive } = parameter;
-            if (typeof name !== 'string')
-                throw new TypeError(`Type '${typeof name}' is not assignable to type 'string'.`);
-            if (description && typeof description !== 'string')
-                throw new TypeError(`Type '${typeof description}' is not assignable to type 'string'.`);
-            if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited')
-                throw new TypeError(`Type '${typeof wordCount}' is not assignable to type 'number'.`);
-            if (type && Boolean(0))
-                throw new TypeError(`Type '${typeof type}' is not assignable to type 'string | number'.`);
-            if (choices && !Array.isArray(choices))
-                throw new TypeError(`Type '${typeof choices}' is not assignable to type 'array'.`);
-            parameter.choices?.filter(choice => typeof choice === 'string');
+            if (!(parameter instanceof Parameter_js_1.Parameter))
+                return this.addParameters(new Parameter_js_1.Parameter(parameter));
+            const { required, caseSensitive, key } = parameter;
+            if (!key)
+                throw new Error('Command parameters must have a key set.');
+            parameter.choices.filter(choice => typeof choice === 'string');
             parameter.required = typeof required === 'boolean' ? required : true;
             parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
             this.parameters.add(parameter);
@@ -158,12 +154,14 @@ class Command {
             this.setNSFW(nsfw);
         if (type)
             this.setType(type);
-        if (util_js_1.isIterable(parameters))
-            this.addParameters(...parameters);
-        if (util_js_1.isIterable(aliases))
+        if (parameters && util_js_1.isIterable(parameters))
+            this.addParameters(parameters);
+        if (aliases && util_js_1.isIterable(aliases))
             this.addAliases(...aliases);
         return this;
     }
 }
 exports.Command = Command;
 exports.default = Command;
+new Command()
+    .setType('DM');

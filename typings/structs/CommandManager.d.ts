@@ -3,6 +3,7 @@ import Client from '../client/Client.js';
 import { Collection, Index } from 'js-augmentations';
 import Command, { CommandOptions as BaseCommandOptions } from './Command.js';
 import { Resolvable } from '../util/types.js';
+import ParameterType, { ParameterTypeResolvable } from './ParameterType.js';
 interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
@@ -20,6 +21,7 @@ declare class CommandManager {
     allowBots: boolean;
     groups: Collection<string>;
     index: Index<string, Command>;
+    types: Index<string, ParameterType>;
     permissions: Collection<PermissionResolvable>;
     promptUserForInput: boolean;
     constructor(client: Client, options?: CommandManagerOptions);
@@ -30,6 +32,8 @@ declare class CommandManager {
      * setPrefix('$');
      */
     setPrefix(prefix: string): this;
+    indexType(type: ParameterTypeResolvable): this;
+    indexTypes(...types: Resolvable<ParameterTypeResolvable>[]): this;
     /**
      * Add a new command to the bot; if provided name matches an existing command, the existing command will be overwritten
      * @param command An instance of the Command class or an object conforming to type CommandDetails

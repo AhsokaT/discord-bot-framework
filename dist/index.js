@@ -1,10 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ApplicationCommandConstructor = exports.Command = exports.Client = exports.Version = void 0;
+exports.ApplicationCommandConstructor = exports.ParameterType = exports.Parameter = exports.Command = exports.Client = exports.Version = void 0;
 const Client_js_1 = require("./client/Client.js");
 exports.Client = Client_js_1.default;
 const Command_js_1 = require("./structs/Command.js");
 exports.Command = Command_js_1.default;
+const Parameter_js_1 = require("./structs/Parameter.js");
+exports.Parameter = Parameter_js_1.default;
+const ParameterType_js_1 = require("./structs/ParameterType.js");
+exports.ParameterType = ParameterType_js_1.default;
 const ApplicationCommandManager_js_1 = require("./structs/ApplicationCommandManager.js");
 Object.defineProperty(exports, "ApplicationCommandConstructor", { enumerable: true, get: function () { return ApplicationCommandManager_js_1.ApplicationCommandConstructor; } });
 const Version = '2.0.0';

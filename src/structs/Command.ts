@@ -1,89 +1,142 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserInput = exports.Command = void 0;
-const js_augmentations_1 = require("js-augmentations");
-const util_js_1 = require("../util/util.js");
+import { Message, PermissionResolvable } from 'discord.js';
+import { Collection, Index } from 'js-augmentations';
+import Client from '../client/Client.js';
+import { isIterable } from '../util/util.js';
+import { Parameter, ParameterResolvable } from './Parameter.js';
+import { ParameterTypeResolvable } from './ParameterType.js';
+
+type CommandCallback = (this: Command, message: Message, args: Index<string, any>, client: Client) => void;
+
+type CommandType =
+    | 'DM'
+    | 'Guild'
+    | 'Universal';
+
+interface CommandOptions {
+    name?: string;
+    nsfw?: boolean;
+    group?: string;
+    description?: string;
+    callback?: CommandCallback;
+    parameters?: Iterable<Parameter>;
+    aliases?: Iterable<string>;
+    permissions?: Iterable<PermissionResolvable>;
+    type?: CommandType;
+}
+
 class UserInput {
-    constructor(value, type) {
-        this.value = value;
-        this.type = type;
+    constructor(public value: any, public type: ParameterTypeResolvable) {
         this.value = value;
         this.type = type;
     }
+
     toString() {
         return `${this.value}`;
     }
 }
-exports.UserInput = UserInput;
-class Command {
-    constructor(properties) {
-        this.type = 'Universal';
-        this.aliases = new js_augmentations_1.Collection();
-        this.parameters = new js_augmentations_1.Collection();
-        this.callback = (message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error);
+
+class Command implements Required<CommandOptions> {
+    public name: string;
+    public description: string;
+    public group: string;
+    public nsfw: boolean;
+    public aliases: Collection<string>;
+    public parameters: Collection<Parameter>;
+    public callback: CommandCallback;
+    public permissions: Collection<PermissionResolvable>;
+    public type: CommandType;
+
+    constructor(properties?: CommandOptions) {
+        this.aliases = new Collection();
+        this.parameters = new Collection();
+        this.permissions = new Collection();
+        this.setType('Universal');
+        this.setCallback((message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error));
+
         if (properties)
             this.edit(properties);
     }
+
     /**
      * @param name The name of your command
      */
-    setName(name) {
+    public setName(name: string): this {
         if (typeof name !== 'string')
             throw new TypeError(`Type '${typeof name}' is not assignable to type 'string'.`);
+
         this.name = name;
+
         return this;
     }
+
     /**
      * @param description A short description of your command
      */
-    setDescription(description) {
+    public setDescription(description: string): this {
         if (typeof description !== 'string')
             throw new TypeError(`Type '${typeof description}' is not assignable to type 'string'.`);
+
         this.description = description;
+
         return this;
     }
+
     /**
      * @param nsfw Whether the command should only be usable in NSFW channels; true by default
      */
-    setNSFW(nsfw = true) {
+    public setNSFW(nsfw = true): this {
         if (typeof nsfw !== 'boolean')
             throw new TypeError(`Type '${typeof nsfw}' is not assignable to type 'boolean'.`);
+
         this.nsfw = nsfw;
+
         return this;
     }
+
     /**
      * @param group The group of commands this command belongs to
      */
-    setGroup(group) {
+    public setGroup(group: string): this { 
         if (typeof group !== 'string')
             throw new TypeError(`Type '${typeof group}' is not assignable to type 'string'.`);
+
         this.group = group;
+
         return this;
     }
+
     /**
-     * @param type WIP
+     * The type property of a command determines where the command can be called,
+     * either in a DM channel, Guild channel or both
+     * @param type
      */
-    setType(type) {
+    public setType(type: CommandType): this {
         if (type !== 'DM' && type !== 'Guild' && type !== 'Universal')
             throw new TypeError(`Value '${type}' is not assignable to type 'CommandType'.`);
+
         this.type = type;
+
         return this;
     }
+
     /**
      * @param callback The function to be called when this command is invoked
      * @example
-     * setCallback((message, client, args) => message.reply('pong!'));
-     *
-     * setCallback(function(message, client, args) {
+     * setCallback((message, args, client) => message.reply('pong!'));
+     * 
+     * setCallback(function(message, args, client) {
      *      message.channel.send(this.name, this.description);
      * });
      */
-    setCallback(callback) {
+    public setCallback(callback: CommandCallback): this {
         if (typeof callback !== 'function')
             throw new TypeError(`Type '${typeof callback}' is not assignable to type 'function'.`);
+
         this.callback = callback;
+
         return this;
     }
+
     /**
      * @param parameters Parameter(s) this command accepts
      * @example
@@ -92,29 +145,28 @@ class Command {
      *    { name: 'role', description: 'The ID of a role', required: false }
      * );
      */
-    addParameters(...parameters) {
-        parameters.map(param => util_js_1.isIterable(param) ? [...param] : param).flat().forEach(parameter => {
-            if (!('name' in parameter) && typeof parameter['name'] !== 'string')
-                throw new TypeError('Command parameters must conform to type \'CommandParameter\'');
-            const { name, description, choices, wordCount, type, required, caseSensitive } = parameter;
-            if (typeof name !== 'string')
-                throw new TypeError(`Type '${typeof name}' is not assignable to type 'string'.`);
-            if (description && typeof description !== 'string')
-                throw new TypeError(`Type '${typeof description}' is not assignable to type 'string'.`);
-            if (wordCount && typeof wordCount !== 'number' && wordCount !== 'unlimited')
-                throw new TypeError(`Type '${typeof wordCount}' is not assignable to type 'number'.`);
-            if (type && Boolean(0))
-                throw new TypeError(`Type '${typeof type}' is not assignable to type 'string | number'.`);
-            if (choices && !Array.isArray(choices))
-                throw new TypeError(`Type '${typeof choices}' is not assignable to type 'array'.`);
-            parameter.choices?.filter(choice => typeof choice === 'string');
+    public addParameters(...parameters: ParameterResolvable[]): this {
+        parameters.map(param => isIterable(param) ? [...param] : param).flat().forEach(parameter => {
+            if (!(parameter instanceof Parameter))
+                return this.addParameters(new Parameter(parameter));
+
+            const { required, caseSensitive, key } = parameter;
+
+            if (!key)
+                throw new Error('Command parameters must have a key set.');
+
+            parameter.choices.filter(choice => typeof choice === 'string');
             parameter.required = typeof required === 'boolean' ? required : true;
             parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
+
             this.parameters.add(parameter);
         });
+
         this.parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
+
         return this;
     }
+
     /**
      * @param permissions Permission(s) this command requires to run
      * @example
@@ -122,48 +174,73 @@ class Command {
      * addPermissions('BAN_MEMBERS', 'KICK_MEMBERS', 'MANAGE_MESSAGES');
      * addPermissions('BAN_MEMBERS', ['KICK_MEMBERS', 'MANAGE_MESSAGES']);
      */
-    addPermissions(...permissions) {
+    addPermissions(...permissions: PermissionResolvable[]): this {
         permissions.forEach(permission => this.permissions.add(permission));
+
         return this;
     }
+
     /**
      * @param aliases Alternative name(s) this command can be called by
      * @example
      * addAliases('prune');
      * addAliases('purge', 'bulkdelete');
      */
-    addAliases(...aliases) {
+    public addAliases(...aliases: string[]): this {
         aliases.filter(alias => typeof alias === 'string').forEach(alias => this.aliases.add(alias));
+
         return this;
     }
+
     /**
      * Edit the properties of this command
      * @param properties Object containing new properties
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    edit(properties) {
+    public edit(properties: CommandOptions): this {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'object'.`);
+
         const { name, nsfw, description, parameters, group, aliases, callback, type } = properties;
+
         if (name)
             this.setName(name);
+
         if (group)
             this.setGroup(group);
+
         if (callback)
             this.setCallback(callback);
+
         if (description)
             this.setDescription(description);
+
         if (typeof nsfw === 'boolean')
             this.setNSFW(nsfw);
+
         if (type)
             this.setType(type);
-        if (util_js_1.isIterable(parameters))
-            this.addParameters(...parameters);
-        if (util_js_1.isIterable(aliases))
+
+        if (parameters && isIterable(parameters))
+            this.addParameters(parameters);
+
+        if (aliases && isIterable(aliases))
             this.addAliases(...aliases);
+
         return this;
     }
 }
-exports.Command = Command;
-exports.default = Command;
+
+export {
+    Command,
+    CommandOptions,
+    CommandCallback,
+    CommandType,
+    UserInput
+}
+
+export default Command;
+
+new Command()
+    .setType('DM')

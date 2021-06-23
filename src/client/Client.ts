@@ -1,7 +1,6 @@
 import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
-import { UserInput } from '../structs/Command.js';
 import { Index } from 'js-augmentations';
 import * as util from '../util/util.js';
 
@@ -33,13 +32,6 @@ export default class Client extends DJSClient {
      * @param message A Discord message
      */
     public async parseMessage(message: Message): Promise<any> {
-        if (message.channel.type === 'dm' && !this.channels.cache.has(message.channel.id)) {
-            const channel = await this.channels.fetch(message.channel.id).catch(util.noop);
-
-            if (channel && channel.isText())
-                message.channel = channel;
-        }
-
         if (!this.commands.allowBots && message.author.bot)
             return;
 
@@ -52,7 +44,7 @@ export default class Client extends DJSClient {
         if (!name)
             return;
 
-        const command = this.commands.index.get(name);
+        const command = this.commands.index.get(name) || this.commands.index.find(i => i.name.toLowerCase() === name || i.aliases.map(alias => alias.toLowerCase()).has(name));
 
         if (!command)
             return;
@@ -64,12 +56,12 @@ export default class Client extends DJSClient {
             return;
 
         if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
-            return message.channel.send('❌ This command must be run in an **NSFW** channel');
+            return message.channel.send('❌ This command must be called in an **NSFW** channel');
 
-        if (command.type === 'Guild' && !message.member?.permissions.has(command.permissions.array()))
+        if (message.guild && !message.member?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
-        if (command.type === 'Guild' && !message.guild?.me?.permissions.has(command.permissions.array()))
+        if (message.guild && !message.guild.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
         if (command.nsfw && message.channel.type === 'dm') {
@@ -120,7 +112,7 @@ export default class Client extends DJSClient {
             response.deferUpdate();
         }
 
-        let args: [string, UserInput][] = [];
+        let args: [string, any][] = [];
 
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
 
@@ -128,53 +120,95 @@ export default class Client extends DJSClient {
             let input: any = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
 
             if (!input && param.required && this.commands.promptUserForInput) {
-                message.channel.send(`Please type your input for \`${param.name}\`\n\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``) ?? [], 'or')}` : ''}`);
+                message.channel.send(`Please type your input for \`${param.label}\`\n\n**Type** \`${param.type}\`\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices.size > 0 ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``).array() ?? [], 'or')}` : ''}`);
 
                 input = (await message.channel.awaitMessages(res => res.author.id === message.author.id, { time: 15000, max: 1 })).first()?.content;
 
                 if (!input)
-                    return message.channel.send(`⏱️ **15s timeout** ❌ You did not provide an input for ${util.toList(parameters.slice(parameters.indexOf(param), parameters.length).filter(i => i.required).map(i => `\`${i.name}\``), 'or')}`).catch(console.error);
+                    return message.channel.send(`⏱️ **15s timeout** ❌ You did not provide an input for ${util.toList(parameters.slice(parameters.indexOf(param), parameters.length).filter(i => i.required).map(i => `\`${i.label}\``), 'or')}`).catch(console.error);
             } else if (!input && param.required) {
-                return message.channel.send(`❌ You did not provide an input for \`${param.name}\``).catch(util.noop);
+                return message.channel.send(`❌ You did not provide an input for \`${param.label}\``).catch(util.noop);
             }
 
             if (input) {
+                const snowflake = input.split('').filter(char => !isNaN(Number(char))).join('');
+
                 if (typeof param.wordCount === 'number' && input.split(' ').length < param.wordCount)
-                    return message.channel.send(`❌ Your input for \`${param.name}\` must be ${param.wordCount} words long`).catch(console.error);
+                    return message.channel.send(`❌ Your input for \`${param.label}\` must be ${param.wordCount} words long`).catch(console.error);
 
-                if (param.choices && param.choices.length > 0) {
-                    if ((!param.caseSensitive && !param.choices.map(i => i.toLowerCase()).includes(input.toLowerCase())) || (param.caseSensitive && !param.choices.includes(input))) {
-                        return message.channel.send(`❌ Your input for \`${param.name}\` must be either ${util.toList(param.choices.map(i => `\`${i}\``), 'or')}`).catch(console.error);
-                    }
+                if (param.choices && param.choices.size > 0) {
+                    if ((!param.caseSensitive && !param.choices.map(i => i.toLowerCase()).has(input.toLowerCase())) || (param.caseSensitive && !param.choices.has(input)))
+                        return message.channel.send(`❌ Your input for \`${param.label}\` must be either ${util.toList(param.choices.map(i => `\`${i}\``).array(), 'or')}`).catch(console.error);
                 }
 
-                if (param.type === 'number') {
-                    if (isNaN(Number(input)))
-                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a number`).catch(console.error);
+                switch (param.type) {
+                    case 'number':
+                        if (isNaN(Number(input)))
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`number\``).catch(util.noop);
 
-                    input = Number(input);
+                        input = Number(input);
+                        break;
+
+                    case 'boolean':
+                        if (input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false')
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must be either 'true' or 'false'`).catch(util.noop);
+
+                        input = input.toLowerCase() === 'true' ? true : false;
+                        break;
+
+                    case 'channel':
+                        const channel = await message.guild?.channels.fetch(snowflake).catch(util.noop);
+
+                        if (!channel)
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`channel\``).catch(util.noop);
+
+                        input = channel;
+                        break;
+
+                    case 'member':
+                        const member = await message.guild?.members.fetch(snowflake).catch(util.noop);
+
+                        if (!member)
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`member\``).catch(util.noop);
+
+                        input = member;
+                        break;
+
+                    case 'role':
+                        const role = await message.guild?.roles.fetch(snowflake).catch(util.noop);
+
+                        if (!role)
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`role\``).catch(util.noop);
+
+                        input = role;
+                        break;
+
+                    case 'user':
+                        const user = await this.users.fetch(snowflake).catch(util.noop);
+
+                        if (!user)
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`user\``).catch(util.noop);
+
+                        input = user;
+                        break;
+
+                    default:
+                        const type = this.commands.types.get(param.type);
+
+                        if (type && !await type.predicate.bind(this)(input, message))
+                            return message.channel.send(`❌ Your input for \`${param.label}\` must conform to type \`${type.key}\``).catch(util.noop);
+
+                        break;
                 }
 
-                if (param.type === 'boolean') {
-                    if ((input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false'))
-                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a boolean: either 'true' or 'false'`).catch(console.error);
-
-                    input = input.toLowerCase() === 'true' ? true : false;
-                }
-
-                if (param.type === 'member') {
-                    const member = await message.guild?.members.fetch(input.filter(i => !isNaN(Number(i)))).catch(util.noop);
-
-                    if (!member)
-                        return message.channel.send(`❌ Your input for \`${param.name}\` must be a member mention or ID`).catch(console.error);
-
-                    input = member;
-                }
-
-                args.push([param.name, new UserInput(input, param.type)]);
+                args.push([param.key, input]);
             }
         }
 
-        command.callback(message, this, new Index(args));
+        try {
+            command.callback(message, new Index(args), this);
+        } catch (err) {
+            message.channel.send(`❌ Command \`${command.name}\` failed to run due to an internal error`).catch(util.noop);
+        }
     }
 }

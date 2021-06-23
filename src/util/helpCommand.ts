@@ -1,24 +1,26 @@
 import { EmbedFieldData, MessageEmbed } from 'discord.js';
 import Command from '../structs/Command.js';
-import { toString } from './util.js';
+import Parameter from '../structs/Parameter.js';
+import { noop, toString } from './util.js';
 
 export default new Command()
     .setName('help')
     .setDescription('Display information about my commands')
-    .addParameters({
-        name: 'command',
-        type: 'string',
-        description: 'Name of a command or category',
-        required: false
-    })
-    .setCallback(function (message, client, args) {
+    .addParameters(
+        new Parameter()
+            .setKey('query')
+            .setDescription('Either a command, category or type')
+            .setRequired(false)
+    )
+    .setCallback(function (message, args, client) {
         const input = toString(args.first()).toLowerCase();
-        const group = client.commands.groups.find(i => i.toLowerCase() === input) ?? null;
+        const group = client.commands.groups.find(i => i.toLowerCase() === input);
         const command = client.commands.index.get(input) ?? client.commands.index.find(cmd => cmd.name.toLowerCase() === input) ?? client.commands.index.find(cmd => cmd.aliases.map(alias => alias.toLowerCase()).has(input));
+        const type = client.commands.types.find((v, k) => k.toLowerCase() === input.toLowerCase());
 
         if (group) {
             const commands = client.commands.index.array().filter(command => command.group === group).map(command => {
-                const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
+                const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.label}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
 
                 return field;
             });
@@ -47,7 +49,7 @@ export default new Command()
                 embed.addField('Description', command.description, false);
 
             if (command.parameters.array().length > 0)
-                embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.name}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
+                embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.label}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
 
             if (command.type === 'Guild' && command.permissions.array().length > 0)
                 embed.addField('Permissions', command.permissions.array().map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
@@ -63,8 +65,21 @@ export default new Command()
             return;
         }
 
+        if (type) {
+            message.channel.send({ embeds: [
+                new MessageEmbed({
+                    color: '#2F3136',
+                    author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
+                    title: type.key,
+                    description: type.description || 'This type has no description'
+                })
+            ] }).catch(noop);
+
+            return;
+        }
+
         const ungrouped = client.commands.index.array().filter(i => !i.group).map(command => {
-            const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.name}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
+            const field: EmbedFieldData = { name: `${client.commands.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.label}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
 
             return field;
         });

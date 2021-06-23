@@ -1,34 +1,25 @@
 import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
-import { Resolvable } from '../util/types.js';
-declare type CommandCallback = (this: Command, message: Message, client: Client, args: Index<string, UserInput>) => void;
+import { Parameter, ParameterResolvable } from './Parameter.js';
+import { ParameterTypeResolvable } from './ParameterType.js';
+declare type CommandCallback = (this: Command, message: Message, args: Index<string, any>, client: Client) => void;
 declare type CommandType = 'DM' | 'Guild' | 'Universal';
-declare type ParameterType = 'string' | 'number' | 'boolean' | 'user' | 'member' | 'channel' | 'role' | 'mentionable';
-interface CommandParameter {
-    name: string;
-    type: ParameterType;
-    description?: string;
-    wordCount?: number | 'unlimited';
-    caseSensitive?: boolean;
-    required?: boolean;
-    choices?: string[];
-}
 interface CommandOptions {
     name?: string;
     nsfw?: boolean;
     group?: string;
     description?: string;
     callback?: CommandCallback;
-    parameters?: Iterable<CommandParameter>;
+    parameters?: Iterable<Parameter>;
     aliases?: Iterable<string>;
     permissions?: Iterable<PermissionResolvable>;
     type?: CommandType;
 }
 declare class UserInput {
     value: any;
-    type: ParameterType;
-    constructor(value: any, type: ParameterType);
+    type: ParameterTypeResolvable;
+    constructor(value: any, type: ParameterTypeResolvable);
     toString(): string;
 }
 declare class Command implements Required<CommandOptions> {
@@ -37,7 +28,7 @@ declare class Command implements Required<CommandOptions> {
     group: string;
     nsfw: boolean;
     aliases: Collection<string>;
-    parameters: Collection<CommandParameter>;
+    parameters: Collection<Parameter>;
     callback: CommandCallback;
     permissions: Collection<PermissionResolvable>;
     type: CommandType;
@@ -59,15 +50,17 @@ declare class Command implements Required<CommandOptions> {
      */
     setGroup(group: string): this;
     /**
-     * @param type WIP
+     * The type property of a command determines where the command can be called,
+     * either in a DM channel, Guild channel or both
+     * @param type
      */
     setType(type: CommandType): this;
     /**
      * @param callback The function to be called when this command is invoked
      * @example
-     * setCallback((message, client, args) => message.reply('pong!'));
+     * setCallback((message, args, client) => message.reply('pong!'));
      *
-     * setCallback(function(message, client, args) {
+     * setCallback(function(message, args, client) {
      *      message.channel.send(this.name, this.description);
      * });
      */
@@ -80,7 +73,7 @@ declare class Command implements Required<CommandOptions> {
      *    { name: 'role', description: 'The ID of a role', required: false }
      * );
      */
-    addParameters(...parameters: Resolvable<CommandParameter>[]): this;
+    addParameters(...parameters: ParameterResolvable[]): this;
     /**
      * @param permissions Permission(s) this command requires to run
      * @example
@@ -104,5 +97,5 @@ declare class Command implements Required<CommandOptions> {
      */
     edit(properties: CommandOptions): this;
 }
-export { Command, CommandOptions, CommandCallback, CommandType, CommandParameter, ParameterType, UserInput };
+export { Command, CommandOptions, CommandCallback, CommandType, UserInput };
 export default Command;

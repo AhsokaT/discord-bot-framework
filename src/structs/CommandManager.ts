@@ -5,6 +5,7 @@ import { Collection, Index } from 'js-augmentations';
 import Command, { CommandOptions as BaseCommandOptions } from './Command.js';
 import { isIterable } from '../util/util.js';
 import { Resolvable } from '../util/types.js';
+import ParameterType, { ParameterTypeResolvable } from './ParameterType.js';
 
 interface CommandManagerOptions {
     prefix?: string;
@@ -27,6 +28,7 @@ class CommandManager {
     public allowBots: boolean;
     public groups: Collection<string>;
     public index: Index<string, Command>;
+    public types: Index<string, ParameterType>;
     public permissions: Collection<PermissionResolvable>;
     public promptUserForInput: boolean;
 
@@ -36,11 +38,12 @@ class CommandManager {
         const { prefix, permissions, allowBots, automaticMessageParsing, promptUserForInput } = options;
 
         this.index = new Index();
+        this.types = new Index();
         this.groups = new Collection();
         this.permissions = new Collection();
         this.allowBots = Boolean(allowBots);
         this.promptUserForInput = typeof promptUserForInput === 'boolean' ? promptUserForInput : true;
-        this.setPrefix(typeof prefix === 'string' ? prefix : '');
+        this.setPrefix(prefix ?? '');
 
         if (Array.isArray(permissions))
             this.permissions.push(...permissions);
@@ -61,6 +64,24 @@ class CommandManager {
     public setPrefix(prefix: string) {
         if (typeof prefix === 'string')
             this.prefix = prefix;
+
+        return this;
+    }
+
+    public indexType(type: ParameterTypeResolvable): this {
+        return this.indexTypes(type);
+    }
+
+    public indexTypes(...types: Resolvable<ParameterTypeResolvable>[]): this {
+        types.map(i => isIterable(i) ? [...i] : i).flat().forEach(type => {
+            if (!type.key)
+                throw new Error('ParameterTypes must have a key set.');
+
+            if (!type.predicate)
+                throw new Error('ParameterTypes must have a predicate set.');
+
+            this.types.set(type.key, type instanceof ParameterType ? type : new ParameterType(type));
+        });
 
         return this;
     }
@@ -111,6 +132,11 @@ class CommandManager {
                 });
             });
 
+            command.parameters.forEach(param => {
+                if (param.type && !this.types.get(param.type) && !['string', 'number', 'boolean', 'user', 'member', 'channel', 'role'].includes(param.type))
+                    throw new Error(`There is no ParameterType with key '${param.type}'`);
+            });
+
             this.index.set(command.name, command);
         });
 
@@ -118,7 +144,7 @@ class CommandManager {
     }
 
     public indexDefaults(): this {
-        this.indexCommand(helpCommand);
+        this.indexCommands(helpCommand);
 
         return this;
     }

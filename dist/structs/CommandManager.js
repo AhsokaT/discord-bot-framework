@@ -5,17 +5,19 @@ const helpCommand_js_1 = require("../util/helpCommand.js");
 const js_augmentations_1 = require("js-augmentations");
 const Command_js_1 = require("./Command.js");
 const util_js_1 = require("../util/util.js");
+const ParameterType_js_1 = require("./ParameterType.js");
 class CommandManager {
     constructor(client, options = {}) {
         this.client = client;
         this.client = client;
         const { prefix, permissions, allowBots, automaticMessageParsing, promptUserForInput } = options;
         this.index = new js_augmentations_1.Index();
+        this.types = new js_augmentations_1.Index();
         this.groups = new js_augmentations_1.Collection();
         this.permissions = new js_augmentations_1.Collection();
         this.allowBots = Boolean(allowBots);
         this.promptUserForInput = typeof promptUserForInput === 'boolean' ? promptUserForInput : true;
-        this.setPrefix(typeof prefix === 'string' ? prefix : '');
+        this.setPrefix(prefix ?? '');
         if (Array.isArray(permissions))
             this.permissions.push(...permissions);
         if (automaticMessageParsing ?? true)
@@ -32,6 +34,19 @@ class CommandManager {
     setPrefix(prefix) {
         if (typeof prefix === 'string')
             this.prefix = prefix;
+        return this;
+    }
+    indexType(type) {
+        return this.indexTypes(type);
+    }
+    indexTypes(...types) {
+        types.map(i => util_js_1.isIterable(i) ? [...i] : i).flat().forEach(type => {
+            if (!type.key)
+                throw new Error('ParameterTypes must have a key set.');
+            if (!type.predicate)
+                throw new Error('ParameterTypes must have a predicate set.');
+            this.types.set(type.key, type instanceof ParameterType_js_1.default ? type : new ParameterType_js_1.default(type));
+        });
         return this;
     }
     /**
@@ -75,12 +90,16 @@ class CommandManager {
                         throw new Error(`Alias '${alias}' already exists on command '${existing.name}'`);
                 });
             });
+            command.parameters.forEach(param => {
+                if (param.type && !this.types.get(param.type) && !['string', 'number', 'boolean', 'user', 'member', 'channel', 'role'].includes(param.type))
+                    throw new Error(`There is no ParameterType with key '${param.type}'`);
+            });
             this.index.set(command.name, command);
         });
         return this;
     }
     indexDefaults() {
-        this.indexCommand(helpCommand_js_1.default);
+        this.indexCommands(helpCommand_js_1.default);
         return this;
     }
     indexGroup(name) {
