@@ -13,7 +13,7 @@ export default new Command()
             .setRequired(false)
     )
     .setCallback(function (message, args, client) {
-        const input = toString(args.first()).toLowerCase();
+        const input = toString(args.first()?.value).toLowerCase();
         const group = client.commands.groups.find(i => i.toLowerCase() === input);
         const command = client.commands.index.get(input) ?? client.commands.index.find(cmd => cmd.name.toLowerCase() === input) ?? client.commands.index.find(cmd => cmd.aliases.map(alias => alias.toLowerCase()).has(input));
         const type = client.commands.types.find((v, k) => k.toLowerCase() === input.toLowerCase());

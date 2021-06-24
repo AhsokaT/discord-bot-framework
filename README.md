@@ -1,5 +1,4 @@
 ## Description
-
 discord-bot-framework is a basic command manager designed with [discord.js](https://www.npmjs.com/package/discord.js)
 * Object oriented
 * Written in TypeScript: included typings
@@ -57,4 +56,4 @@ client.commands
 
                 message.channel.bulkDelete(input.value);
             });
-    )
+    );

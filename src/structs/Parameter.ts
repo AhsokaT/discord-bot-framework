@@ -48,7 +48,10 @@ class Parameter implements Required<ParameterOptions> {
         if (typeof options !== 'object')
             throw new TypeError(`Type ${typeof options} is not assignable to type 'Partial<ParameterOptions>'.`);
 
-        const { label, type, description, wordCount, caseSensitive, required, choices, key } = options;
+        const { label, type, description, wordCount, caseSensitive, required, choices, key, default: defaultValue } = options;
+
+        if (defaultValue)
+            this.setDefault(defaultValue);
 
         if (key)
             this.setKey(key);
@@ -73,6 +76,12 @@ class Parameter implements Required<ParameterOptions> {
 
         if (choices && isIterable(choices))
             this.addChoices(...choices);
+
+        return this;
+    }
+
+    public setDefault(value: any): this {
+        this.default = value;
 
         return this;
     }

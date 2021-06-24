@@ -25,17 +25,6 @@ interface CommandOptions {
     type?: CommandType;
 }
 
-class UserInput {
-    constructor(public value: any, public type: ParameterTypeResolvable) {
-        this.value = value;
-        this.type = type;
-    }
-
-    toString() {
-        return `${this.value}`;
-    }
-}
-
 class Command implements Required<CommandOptions> {
     public name: string;
     public description: string;
@@ -237,8 +226,7 @@ export {
     Command,
     CommandOptions,
     CommandCallback,
-    CommandType,
-    UserInput
+    CommandType
 }
 
 export default Command;

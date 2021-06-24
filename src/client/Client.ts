@@ -1,4 +1,4 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, ClientEvents, MessageActionRow, MessageButton, Intents } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, MessageActionRow, MessageButton } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/ApplicationCommandManager';
 import Argument from '../structs/Argument.js';
@@ -197,7 +197,7 @@ export default class Client extends DJSClient {
 
                             input = new Argument(input, type);
                         } else {
-                            input = new Argument(input, 'string');
+                            input = new Argument(!input && param.default ? param.default : input, 'string');
                         }
 
                         break;
