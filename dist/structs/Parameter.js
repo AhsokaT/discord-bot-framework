@@ -10,13 +10,16 @@ class Parameter {
         this.setCaseSensitive(false);
         this.setRequired(true);
         this.setType('string');
+        this.setTimeout(15000);
         if (options)
             this.edit(options);
     }
     edit(options) {
         if (typeof options !== 'object')
             throw new TypeError(`Type ${typeof options} is not assignable to type 'Partial<ParameterOptions>'.`);
-        const { label, type, description, wordCount, caseSensitive, required, choices, key } = options;
+        const { label, type, description, wordCount, caseSensitive, required, choices, key, default: defaultValue } = options;
+        if (defaultValue)
+            this.setDefault(defaultValue);
         if (key)
             this.setKey(key);
         if (label)
@@ -35,11 +38,25 @@ class Parameter {
             this.addChoices(...choices);
         return this;
     }
+    setTimeout(timeout) {
+        if (typeof timeout !== 'number')
+            throw new TypeError(`Type ${typeof timeout} is not assignable to type 'number'.`);
+        if (timeout < 3000)
+            throw new Error('The timeout of a parameter cannot be less than 3000 milliseconds.');
+        if (timeout > 60000)
+            throw new Error('The timeout of a parameter cannot be greater than 60000 milliseconds.');
+        this.timeout = timeout;
+        return this;
+    }
+    setDefault(value) {
+        this.default = value;
+        return this;
+    }
     /**
      * @param choices
      */
     addChoices(...choices) {
-        choices.map(choice => typeof choice !== 'string' && util_js_1.isIterable(choice) ? [...choice] : choice).flat().forEach(choice => {
+        choices.flatMap(choice => typeof choice !== 'string' && util_js_1.isIterable(choice) ? [...choice] : choice).forEach(choice => {
             if (typeof choice !== 'string')
                 throw new TypeError(`Type ${typeof choice} is not assignable to type 'string'.`);
             this.choices.add(choice);
@@ -103,6 +120,8 @@ class Parameter {
     setWordCount(count) {
         if (typeof count !== 'number' && count !== 'unlimited')
             throw new TypeError(`Type ${typeof count} is not assignable to type 'number' or 'unlimited'.`);
+        if (count < 1)
+            throw new Error('The word count of a parameter must be greater than 0.');
         this.wordCount = count;
         return this;
     }

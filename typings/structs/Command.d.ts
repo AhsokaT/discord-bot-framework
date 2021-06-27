@@ -3,7 +3,6 @@ import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
-import { ParameterTypeResolvable } from './ParameterType.js';
 declare type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
 declare type CommandType = 'DM' | 'Guild' | 'Universal';
 interface CommandOptions {
@@ -16,12 +15,6 @@ interface CommandOptions {
     aliases?: Iterable<string>;
     permissions?: Iterable<PermissionResolvable>;
     type?: CommandType;
-}
-declare class UserInput {
-    value: any;
-    type: ParameterTypeResolvable;
-    constructor(value: any, type: ParameterTypeResolvable);
-    toString(): string;
 }
 declare class Command implements Required<CommandOptions> {
     name: string;
@@ -98,5 +91,5 @@ declare class Command implements Required<CommandOptions> {
      */
     edit(properties: CommandOptions): this;
 }
-export { Command, CommandOptions, CommandCallback, CommandType, UserInput };
+export { Command, CommandOptions, CommandCallback, CommandType };
 export default Command;

@@ -11,6 +11,7 @@ interface ParameterOptions {
     caseSensitive?: boolean;
     required?: boolean;
     choices?: Iterable<string>;
+    timeout?: number;
     default?: any;
 }
 declare type ParameterResolvable = Resolvable<Parameter> | Resolvable<ParameterOptions>;
@@ -24,9 +25,12 @@ declare class Parameter implements Required<ParameterOptions> {
     caseSensitive: boolean;
     required: boolean;
     choices: Collection<string>;
+    timeout: number;
     default: any;
     constructor(options?: Partial<ParameterOptions>);
     edit(options: Partial<ParameterOptions>): this;
+    setTimeout(timeout: number): this;
+    setDefault(value: any): this;
     /**
      * @param choices
      */

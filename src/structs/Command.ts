@@ -190,7 +190,7 @@ class Command implements Required<CommandOptions> {
      */
     public edit(properties: CommandOptions): this {
         if (typeof properties !== 'object')
-            throw new TypeError(`Type '${typeof properties}' does not conform to type 'object'.`);
+            throw new TypeError(`Type '${typeof properties}' does not conform to type 'CommandOptions'.`);
 
         const { name, nsfw, description, parameters, group, aliases, callback, type } = properties;
 

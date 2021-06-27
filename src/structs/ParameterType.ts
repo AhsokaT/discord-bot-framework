@@ -8,7 +8,8 @@ type ParameterTypeKey =
     | 'user'
     | 'member'
     | 'channel'
-    | 'role';
+    | 'role'
+    | 'any';
 
 type ParameterTypeResolvable =
     | ParameterTypeOptions

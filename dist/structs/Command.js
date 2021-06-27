@@ -1,21 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserInput = exports.Command = void 0;
+exports.Command = void 0;
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
 const Parameter_js_1 = require("./Parameter.js");
-class UserInput {
-    constructor(value, type) {
-        this.value = value;
-        this.type = type;
-        this.value = value;
-        this.type = type;
-    }
-    toString() {
-        return `${this.value}`;
-    }
-}
-exports.UserInput = UserInput;
 class Command {
     constructor(properties) {
         this.aliases = new js_augmentations_1.Collection();
@@ -140,7 +128,7 @@ class Command {
      */
     edit(properties) {
         if (typeof properties !== 'object')
-            throw new TypeError(`Type '${typeof properties}' does not conform to type 'object'.`);
+            throw new TypeError(`Type '${typeof properties}' does not conform to type 'CommandOptions'.`);
         const { name, nsfw, description, parameters, group, aliases, callback, type } = properties;
         if (name)
             this.setName(name);
@@ -163,5 +151,3 @@ class Command {
 }
 exports.Command = Command;
 exports.default = Command;
-new Command()
-    .setType('DM');
