@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
-const SlashCommand_js_1 = require("./SlashCommand.js");
+const APISlashCommand_js_1 = require("./APISlashCommand.js");
 const ApplicationCommand_js_1 = require("./ApplicationCommand.js");
 class ApplicationCommandManager {
     constructor(client) {
@@ -14,22 +14,22 @@ class ApplicationCommandManager {
             if (!interaction.isCommand())
                 return;
             const command = this.cache.get(interaction.commandID);
-            if (command)
+            if (command && command.callback)
                 command.callback(interaction, command, this.client);
         });
     }
     async post(command) {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
-        if (!(command instanceof SlashCommand_js_1.default))
-            return this.post(new SlashCommand_js_1.default(command));
+        if (!(command instanceof APISlashCommand_js_1.default))
+            return this.post(new APISlashCommand_js_1.default(command));
         const guild = command.guild ? await resolveGuild(command.guild, this.client) : null;
         const manager = guild ? guild.commands : this.client.application.commands;
         const existing = (await manager.fetch()).find(i => i.name === command.name);
         if (existing)
-            return this.edit(new ApplicationCommand_js_1.default(this.client, existing, command.callback), command);
+            return this.edit(new ApplicationCommand_js_1.default(this.client, { ...existing, deleted: false }, command.callback), command);
         const posted = await manager.create(command.toAPIObject());
-        return posted ? new ApplicationCommand_js_1.default(this.client, posted, command.callback) : null;
+        return posted ? new ApplicationCommand_js_1.default(this.client, { ...posted, deleted: false }, command.callback) : null;
     }
     async edit(command, data) {
         if (!this.client.application)
@@ -37,8 +37,35 @@ class ApplicationCommandManager {
         if (!(command instanceof ApplicationCommand_js_1.default))
             throw new TypeError(`Type ${typeof command} is not assignable to type 'ApplicationCommand'.`);
         const manager = command.guild ? command.guild.commands : this.client.application.commands;
-        const editted = await manager.edit(command.id, new SlashCommand_js_1.default({ ...command, ...data }).toAPIObject());
-        return editted ? new ApplicationCommand_js_1.default(this.client, editted, command.callback) : null;
+        const editted = await manager.edit(command.id, new APISlashCommand_js_1.default({ ...command, ...data }).toAPIObject());
+        return editted ? new ApplicationCommand_js_1.default(this.client, { ...editted, deleted: false }, command.callback) : null;
+    }
+    async delete(command, guild) {
+        if (!this.client.application)
+            throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
+        if (!(command instanceof ApplicationCommand_js_1.default)) {
+            const fetched = await this.fetch(command, guild);
+            return fetched ? this.delete(fetched, guild) : null;
+        }
+        if (command.guild)
+            guild = command.guild;
+        else if (guild)
+            guild = await resolveGuild(guild, this.client);
+        const manager = guild ? guild.commands : this.client.application.commands;
+        const deleted = manager.delete(command.id);
+        return deleted ? new ApplicationCommand_js_1.default(this.client, { ...deleted, deleted: true }, command.callback) : null;
+    }
+    async fetch(command, guild) {
+        if (!this.client.application)
+            throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
+        if (command instanceof ApplicationCommand_js_1.default && command.guild)
+            guild = command.guild;
+        else if (guild)
+            guild = await resolveGuild(guild, this.client);
+        const manager = guild ? guild.commands : this.client.application.commands;
+        const fetched = await manager.fetch(command instanceof ApplicationCommand_js_1.default ? command.id : command);
+        const callback = this.cache.get(fetched.id)?.callback;
+        return fetched ? new ApplicationCommand_js_1.default(this.client, { ...fetched, deleted: false }, callback ?? null) : null;
     }
 }
 exports.default = ApplicationCommandManager;

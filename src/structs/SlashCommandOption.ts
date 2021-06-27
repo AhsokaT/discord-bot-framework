@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionData as APISlashCommandOption, ApplicationCommandOptionType as SlashCommandOptionType, ApplicationCommandOptionChoice as SlashCommandOptionChoice } from 'discord.js';
+import { ApplicationCommandOptionData as APISlashCommandOptionData, ApplicationCommandOptionType as SlashCommandOptionType, ApplicationCommandOptionChoice as SlashCommandOptionChoice } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import { Resolvable } from '../util/types';
 import { isIterable } from '../util/util.js';
@@ -140,7 +140,7 @@ class SlashCommandOption {
         return this;
     }
 
-    public toAPIObject(): APISlashCommandOption {
+    public toAPIObject(): APISlashCommandOptionData {
         const { type, name, description, required, choices, options } = this;
 
         return { type, name, description, required, choices: choices.array(), options: options.map(param => param.toAPIObject()).array() };
@@ -153,7 +153,7 @@ export {
     SlashCommandOptionChoice,
     SlashCommandOptionResolvable,
     SlashCommandOptionType,
-    APISlashCommandOption
+    APISlashCommandOptionData
 }
 
 export default SlashCommandOption;

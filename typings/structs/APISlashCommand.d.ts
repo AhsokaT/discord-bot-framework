@@ -1,28 +1,28 @@
-import { CommandInteraction, ApplicationCommandData as APISlashCommand, GuildResolvable } from 'discord.js';
+import { CommandInteraction, ApplicationCommandData as APISlashCommandData, GuildResolvable } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import ApplicationCommand from './ApplicationCommand.js';
 import SlashCommandOption, { SlashCommandOptionResolvable } from './SlashCommandOption.js';
-declare type SlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
-interface SlashCommandOptions {
+declare type APISlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
+interface APISlashCommandOptions {
     name: string;
     description: string;
     guild?: GuildResolvable | null;
     options?: Collection<SlashCommandOption>;
     defaultPermission?: boolean;
-    callback?: SlashCommandCallback;
+    callback?: APISlashCommandCallback;
 }
-declare type SlashCommandResolvable = SlashCommand | SlashCommandOptions;
-declare class SlashCommand {
+declare type APISlashCommandResolvable = APISlashCommand | APISlashCommandOptions;
+declare class APISlashCommand {
     name: string;
     description: string;
     guild: GuildResolvable | null;
     options: Collection<SlashCommandOption>;
     defaultPermission: boolean;
-    callback: SlashCommandCallback;
-    constructor(options?: Partial<SlashCommandOptions>);
-    edit(options: Partial<SlashCommandOptions>): this;
-    setCallback(callback: SlashCommandCallback): this;
+    callback: APISlashCommandCallback;
+    constructor(options?: Partial<APISlashCommandOptions>);
+    edit(options: Partial<APISlashCommandOptions>): this;
+    setCallback(callback: APISlashCommandCallback): this;
     /**
      * @param name 1-32 lowercase character name matching ^[\w-]{1,32}$
      */
@@ -37,7 +37,7 @@ declare class SlashCommand {
     setDefaultPermission(defaultPermission: boolean): this;
     setGuild(guild: GuildResolvable): this;
     addOptions(...options: SlashCommandOptionResolvable[]): this;
-    toAPIObject(): APISlashCommand;
+    toAPIObject(): APISlashCommandData;
 }
-export { SlashCommandOptions, SlashCommandCallback, SlashCommandResolvable };
-export default SlashCommand;
+export { APISlashCommandOptions, APISlashCommandCallback, APISlashCommandResolvable };
+export default APISlashCommand;

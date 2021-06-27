@@ -12,7 +12,7 @@ class Client extends discord_js_1.Client {
         if (options.token)
             super.token = options.token;
         this.commands = new CommandManager_js_1.default(this, options);
-        this.applicationCommands = new SlashCommandManager_js_1.default(this);
+        this.slashCommands = new SlashCommandManager_js_1.default(this);
     }
     /**
      * Reads a message from Discord and executes a command if called

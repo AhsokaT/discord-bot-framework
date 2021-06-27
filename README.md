@@ -55,5 +55,5 @@ client.commands
                     return;
 
                 message.channel.bulkDelete(input.value);
-            });
+            })
     );

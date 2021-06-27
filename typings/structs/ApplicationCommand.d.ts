@@ -1,21 +1,24 @@
-import { ApplicationCommand as DJSApplicationCommand, Guild } from 'discord.js';
+import { Guild } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { Snowflake } from '../util/types';
-import { SlashCommandCallback } from './SlashCommand.js';
+import { APISlashCommandCallback } from './APISlashCommand.js';
 import ApplicationCommandOption from './SlashCommandOption.js';
-declare class ApplicationCommand {
+declare type SlashCommandResolvable = SlashCommand | Snowflake;
+declare class SlashCommand {
     client: Client;
     id: Snowflake;
     name: string;
     description: string;
     defaultPermission: boolean;
     options: Collection<ApplicationCommandOption>;
-    callback: SlashCommandCallback;
+    callback: APISlashCommandCallback | null;
     guild: Guild | null;
-    constructor(client: Client, command: DJSApplicationCommand, callback: SlashCommandCallback);
+    deleted: boolean;
+    constructor(client: Client, command: any, callback?: APISlashCommandCallback | null);
     get createdAt(): Date;
-    fetch(): Promise<ApplicationCommand | null>;
-    delete(): Promise<ApplicationCommand | null>;
+    fetch(): Promise<SlashCommand | null>;
+    delete(): Promise<SlashCommand | null>;
 }
-export default ApplicationCommand;
+export { SlashCommandResolvable };
+export default SlashCommand;

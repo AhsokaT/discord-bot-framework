@@ -4,7 +4,7 @@ const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
 const SlashCommandOption_js_1 = require("./SlashCommandOption.js");
-class SlashCommand {
+class APISlashCommand {
     constructor(options) {
         this.guild = null;
         this.options = new js_augmentations_1.Collection();
@@ -43,8 +43,8 @@ class SlashCommand {
     setName(name) {
         if (typeof name !== 'string')
             throw new TypeError(`Type '${typeof name}' is not assignable to type 'string'.`);
-        // if (/^[\w-]{1,32}$/.test(name))
-        //     throw new Error('Your argument for name does not match the regular expression ^[\w-]{1,32}$');
+        if (!/^[\w-]{1,32}$/.test(name))
+            throw new Error('Your argument for name does not match the regular expression ^[\w-]{1,32}$');
         this.name = name;
         return this;
     }
@@ -89,4 +89,4 @@ class SlashCommand {
         return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
     }
 }
-exports.default = SlashCommand;
+exports.default = APISlashCommand;

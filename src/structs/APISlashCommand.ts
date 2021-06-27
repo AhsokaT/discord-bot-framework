@@ -1,34 +1,34 @@
-import { CommandInteraction, ApplicationCommandData as APISlashCommand, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Role } from 'discord.js';
+import { CommandInteraction, ApplicationCommandData as APISlashCommandData, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Role } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
 import ApplicationCommand from './ApplicationCommand.js';
 import SlashCommandOption, { SlashCommandOptionResolvable } from './SlashCommandOption.js';
 
-type SlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
+type APISlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
 
-interface SlashCommandOptions {
+interface APISlashCommandOptions {
     name: string;
     description: string;
     guild?: GuildResolvable | null;
     options?: Collection<SlashCommandOption>;
     defaultPermission?: boolean;
-    callback?: SlashCommandCallback;
+    callback?: APISlashCommandCallback;
 }
 
-type SlashCommandResolvable =
-    | SlashCommand
-    | SlashCommandOptions;
+type APISlashCommandResolvable =
+    | APISlashCommand
+    | APISlashCommandOptions;
 
-class SlashCommand {
+class APISlashCommand {
     public name: string;
     public description: string;
     public guild: GuildResolvable | null;
     public options: Collection<SlashCommandOption>;
     public defaultPermission: boolean;
-    public callback: SlashCommandCallback;
+    public callback: APISlashCommandCallback;
 
-    constructor(options?: Partial<SlashCommandOptions>) {
+    constructor(options?: Partial<APISlashCommandOptions>) {
         this.guild = null;
         this.options = new Collection();
 
@@ -39,7 +39,7 @@ class SlashCommand {
             this.edit(options);
     }
 
-    public edit(options: Partial<SlashCommandOptions>): this {
+    public edit(options: Partial<APISlashCommandOptions>): this {
         if (typeof options !== 'object')
             throw new TypeError(`Type '${typeof options}' does not conform to type 'SlashCommandOptions'.`);
 
@@ -66,7 +66,7 @@ class SlashCommand {
         return this;
     }
 
-    public setCallback(callback: SlashCommandCallback): this {
+    public setCallback(callback: APISlashCommandCallback): this {
         if (typeof callback !== 'function')
             throw new TypeError(`Type ${typeof callback} is not assignable to type 'SlashCommandCallback'.`);
 
@@ -82,8 +82,8 @@ class SlashCommand {
         if (typeof name !== 'string')
             throw new TypeError(`Type '${typeof name}' is not assignable to type 'string'.`);
 
-        // if (/^[\w-]{1,32}$/.test(name))
-        //     throw new Error('Your argument for name does not match the regular expression ^[\w-]{1,32}$');
+        if (!/^[\w-]{1,32}$/.test(name))
+            throw new Error('Your argument for name does not match the regular expression ^[\w-]{1,32}$');
 
         this.name = name;
 
@@ -140,7 +140,7 @@ class SlashCommand {
         return this;
     }
 
-    public toAPIObject(): APISlashCommand {
+    public toAPIObject(): APISlashCommandData {
         const { name, description, defaultPermission, options } = this;        
 
         return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
@@ -148,9 +148,9 @@ class SlashCommand {
 }
 
 export {
-    SlashCommandOptions,
-    SlashCommandCallback,
-    SlashCommandResolvable
+    APISlashCommandOptions,
+    APISlashCommandCallback,
+    APISlashCommandResolvable
 }
 
-export default SlashCommand;
+export default APISlashCommand;

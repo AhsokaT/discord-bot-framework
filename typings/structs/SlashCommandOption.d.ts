@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionData as APISlashCommandOption, ApplicationCommandOptionType as SlashCommandOptionType, ApplicationCommandOptionChoice as SlashCommandOptionChoice } from 'discord.js';
+import { ApplicationCommandOptionData as APISlashCommandOptionData, ApplicationCommandOptionType as SlashCommandOptionType, ApplicationCommandOptionChoice as SlashCommandOptionChoice } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import { Resolvable } from '../util/types';
 interface SlashCommandOptionDetails {
@@ -34,7 +34,7 @@ declare class SlashCommandOption {
      * @param required if the parameter is required or optional; default false
      */
     setRequired(required: boolean): this;
-    toAPIObject(): APISlashCommandOption;
+    toAPIObject(): APISlashCommandOptionData;
 }
-export { SlashCommandOptionDetails, SlashCommandOption, SlashCommandOptionChoice, SlashCommandOptionResolvable, SlashCommandOptionType, APISlashCommandOption };
+export { SlashCommandOptionDetails, SlashCommandOption, SlashCommandOptionChoice, SlashCommandOptionResolvable, SlashCommandOptionType, APISlashCommandOptionData };
 export default SlashCommandOption;

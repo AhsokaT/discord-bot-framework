@@ -3,24 +3,24 @@ import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { Snowflake } from '../util/types';
 import { noop } from '../util/util.js';
-import { SlashCommandCallback } from './SlashCommand.js';
+import { APISlashCommandCallback } from './APISlashCommand.js';
 import ApplicationCommandOption from './SlashCommandOption.js';
 
-type ApplicationCommandResolvable =
-    | ApplicationCommand
+type SlashCommandResolvable =
+    | SlashCommand
     | Snowflake;
 
-class ApplicationCommand {
+class SlashCommand {
     public id: Snowflake;
     public name: string;
     public description: string;
     public defaultPermission: boolean;
     public options: Collection<ApplicationCommandOption>;
-    public callback: SlashCommandCallback | null;
+    public callback: APISlashCommandCallback | null;
     public guild: Guild | null;
     public deleted: boolean;
 
-    constructor(public client: Client, command: any, callback: SlashCommandCallback | null = null) {
+    constructor(public client: Client, command: any, callback: APISlashCommandCallback | null = null) {
         this.client = client;
         this.options = new Collection();
 
@@ -43,7 +43,7 @@ class ApplicationCommand {
         return SnowflakeUtil.deconstruct(this.id).date;
     }
 
-    public async fetch(): Promise<ApplicationCommand | null> {
+    public async fetch(): Promise<SlashCommand | null> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
@@ -51,16 +51,16 @@ class ApplicationCommand {
 
         const fetched = await manager.fetch(this.id).catch(noop);
 
-        return fetched ? new ApplicationCommand(this.client, { deleted: false, ...fetched }, this.callback) : null;
+        return fetched ? new SlashCommand(this.client, { deleted: false, ...fetched }, this.callback) : null;
     }
 
-    public async delete(): Promise<ApplicationCommand | null> {
+    public async delete(): Promise<SlashCommand | null> {
         return this.client.slashCommands.delete(this);
     }
 }
 
 export {
-    ApplicationCommandResolvable
+    SlashCommandResolvable
 }
 
-export default ApplicationCommand;
+export default SlashCommand;

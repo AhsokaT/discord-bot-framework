@@ -4,7 +4,7 @@ import Parameter, { ParameterOptions, ParameterResolvable } from './structs/Para
 import ParameterType, { ParameterTypeResolvable, ParameterTypePredicate } from './structs/ParameterType.js';
 import { CommandManagerOptions, CommandResolvable } from './structs/CommandManager.js';
 import SlashCommandOption, { SlashCommandOptionDetails, SlashCommandOptionChoice, SlashCommandOptionResolvable, SlashCommandOptionType, APISlashCommandOption } from './structs/SlashCommandOption.js';
-import SlashCommand, { SlashCommandCallback, SlashCommandOptions } from './structs/SlashCommand.js';
+import APISlashCommand, { APISlashCommandCallback, APISlashCommandOptions } from './structs/APISlashCommand.js';
 
 const Version = '2.0.0';
 
@@ -24,10 +24,10 @@ export {
     ParameterTypePredicate,
     ParameterTypeResolvable,
     CommandManagerOptions,
-    SlashCommand,
-    SlashCommandCallback,
+    APISlashCommand,
+    APISlashCommandCallback,
     SlashCommandOption,
-    SlashCommandOptions,
+    APISlashCommandOptions,
     SlashCommandOptionDetails,
     SlashCommandOptionChoice,
     SlashCommandOptionResolvable,
