@@ -1,8 +1,10 @@
 import { Channel, GuildMember, Role, User } from 'discord.js';
+import Parameter from './Parameter.js';
 import ParameterType, { ParameterTypeKey } from './ParameterType.js';
 
 class Argument {
-    constructor(public value: any, public type: ParameterType | ParameterTypeKey) {
+    constructor(public value: any, public type: ParameterType | ParameterTypeKey, public parameter: Parameter) {
+        this.parameter = parameter;
         this.value = value;
         this.type = type;
     }

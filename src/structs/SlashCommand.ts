@@ -1,4 +1,4 @@
-import { CommandInteraction, ApplicationCommandData as APISlashCommandData, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Role } from 'discord.js';
+import { CommandInteraction, ApplicationCommandData as SlashCommandData, GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Role } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
@@ -140,7 +140,13 @@ class SlashCommand implements Required<SlashCommandOptions> {
         return this;
     }
 
-    public toAPIObject(): APISlashCommandData {
+    get APIObject(): SlashCommandData {
+        const { name, description, defaultPermission, options } = this;        
+
+        return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
+    }
+
+    public toAPIObject(): SlashCommandData {
         const { name, description, defaultPermission, options } = this;        
 
         return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };

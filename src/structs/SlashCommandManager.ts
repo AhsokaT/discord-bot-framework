@@ -5,7 +5,7 @@ import { Snowflake } from '../util/types';
 import SlashCommand, { SlashCommandResolvable, SlashCommandOptions } from './SlashCommand.js';
 import DiscordSlashCommand, { DiscordSlashCommandResolvable } from './DiscordSlashCommand.js';
 
-class DiscordSlashCommandManager {
+class SlashCommandManager {
     public cache: Index<Snowflake, DiscordSlashCommand>;
 
     constructor(public client: Client) {
@@ -23,7 +23,7 @@ class DiscordSlashCommandManager {
         });
     }
 
-    public async create(command: SlashCommandResolvable): Promise<DiscordSlashCommand | null> {
+    public async create(command: SlashCommandResolvable): Promise<DiscordSlashCommand> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
@@ -34,22 +34,22 @@ class DiscordSlashCommandManager {
 
         const manager = guild ? guild.commands : this.client.application.commands;
 
-        const existing = (await manager.fetch()).find(i => i.name === command.name);
+        const existing = (await manager.fetch()).find(({name}) => name === command.name);
 
         if (existing)
             return this.edit(new DiscordSlashCommand(this.client, existing), command);
 
         const posted = await manager.create(command.toAPIObject());
 
-        return posted ? new DiscordSlashCommand(this.client, { ...command, ...posted }) : null;
+        return new DiscordSlashCommand(this.client, { ...command, ...posted });
     }
 
-    public async edit(command: DiscordSlashCommand, data: SlashCommandOptions): Promise<DiscordSlashCommand> {
+    public async edit(command: DiscordSlashCommandResolvable, data: Partial<SlashCommandOptions>): Promise<DiscordSlashCommand> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
         if (!(command instanceof DiscordSlashCommand))
-            throw new TypeError(`Type ${typeof command} is not assignable to type 'DiscordSlashCommand'.`);
+            return this.edit(await this.fetch(command), data);
 
         const manager = command.guild ? command.guild.commands : this.client.application.commands;
 
@@ -57,7 +57,7 @@ class DiscordSlashCommandManager {
 
         const editted = await manager.edit(command.id, newCommand.toAPIObject());
 
-        return new DiscordSlashCommand(this.client, { ...newCommand, ...editted });
+        return new DiscordSlashCommand(this.client, { ...command, ...editted });
     }
 
     public async delete(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand | null> {
@@ -84,7 +84,7 @@ class DiscordSlashCommandManager {
 
     public async fetch(): Promise<Index<Snowflake, DiscordSlashCommand>>;
     public async fetch(command: null, guild: GuildResolvable): Promise<Index<Snowflake, DiscordSlashCommand>>;
-    public async fetch(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand | null>;
+    public async fetch(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand>;
     public async fetch(command?: DiscordSlashCommandResolvable | null, guild?: GuildResolvable): Promise<any> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
@@ -103,7 +103,7 @@ class DiscordSlashCommandManager {
     }
 }
 
-export default DiscordSlashCommandManager;
+export default SlashCommandManager;
 
 function resolveGuild(guild: Guild | GuildEmoji | GuildMember | GuildChannel | Role, client: Client): Guild;
 function resolveGuild(guild: Snowflake | Invite, client: Client): Promise<Guild | undefined>;

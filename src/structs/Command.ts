@@ -1,6 +1,7 @@
 import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
+import { Resolvable } from '../util/types.js';
 import { isIterable } from '../util/util.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
@@ -175,8 +176,8 @@ class Command implements Required<CommandOptions> {
      * addAliases('prune');
      * addAliases('purge', 'bulkdelete');
      */
-    public addAliases(...aliases: string[]): this {
-        aliases.filter(alias => typeof alias === 'string').forEach(alias => this.aliases.add(alias));
+    public addAliases(...aliases: Resolvable<string>[]): this {
+        aliases.map(i => typeof i !== 'string' && isIterable(i) ? [...i] : i).flat().filter(alias => typeof alias === 'string').forEach(alias => this.aliases.add(alias));
 
         return this;
     }
