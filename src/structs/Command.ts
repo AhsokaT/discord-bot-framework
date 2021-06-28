@@ -4,7 +4,6 @@ import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
-import { ParameterTypeResolvable } from './ParameterType.js';
 
 type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
 
@@ -25,17 +24,6 @@ interface CommandOptions {
     type?: CommandType;
 }
 
-class UserInput {
-    constructor(public value: any, public type: ParameterTypeResolvable) {
-        this.value = value;
-        this.type = type;
-    }
-
-    toString() {
-        return `${this.value}`;
-    }
-}
-
 class Command implements Required<CommandOptions> {
     public name: string;
     public description: string;
@@ -52,7 +40,7 @@ class Command implements Required<CommandOptions> {
         this.parameters = new Collection();
         this.permissions = new Collection();
         this.setType('Universal');
-        this.setCallback((message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error));
+        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(console.error));
 
         if (properties)
             this.edit(properties);
@@ -201,7 +189,7 @@ class Command implements Required<CommandOptions> {
      */
     public edit(properties: CommandOptions): this {
         if (typeof properties !== 'object')
-            throw new TypeError(`Type '${typeof properties}' does not conform to type 'object'.`);
+            throw new TypeError(`Type '${typeof properties}' does not conform to type 'CommandOptions'.`);
 
         const { name, nsfw, description, parameters, group, aliases, callback, type } = properties;
 
@@ -237,8 +225,7 @@ export {
     Command,
     CommandOptions,
     CommandCallback,
-    CommandType,
-    UserInput
+    CommandType
 }
 
 export default Command;
