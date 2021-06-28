@@ -4,7 +4,6 @@ import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
-import { ParameterTypeResolvable } from './ParameterType.js';
 
 type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
 
@@ -41,7 +40,7 @@ class Command implements Required<CommandOptions> {
         this.parameters = new Collection();
         this.permissions = new Collection();
         this.setType('Universal');
-        this.setCallback((message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error));
+        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(console.error));
 
         if (properties)
             this.edit(properties);

@@ -2,44 +2,44 @@ import { CommandInteraction, ApplicationCommandData as APISlashCommandData, Guil
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
-import ApplicationCommand from './ApplicationCommand.js';
+import ApplicationCommand from './DiscordSlashCommand.js';
 import SlashCommandOption, { SlashCommandOptionResolvable } from './SlashCommandOption.js';
 
-type APISlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
+type SlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
 
-interface APISlashCommandOptions {
+interface SlashCommandOptions {
     name: string;
     description: string;
     guild?: GuildResolvable | null;
-    options?: Collection<SlashCommandOption>;
+    options?: Iterable<SlashCommandOptionResolvable>;
     defaultPermission?: boolean;
-    callback?: APISlashCommandCallback;
+    callback?: SlashCommandCallback;
 }
 
-type APISlashCommandResolvable =
-    | APISlashCommand
-    | APISlashCommandOptions;
+type SlashCommandResolvable =
+    | SlashCommand
+    | SlashCommandOptions;
 
-class APISlashCommand {
+class SlashCommand implements Required<SlashCommandOptions> {
     public name: string;
     public description: string;
     public guild: GuildResolvable | null;
     public options: Collection<SlashCommandOption>;
     public defaultPermission: boolean;
-    public callback: APISlashCommandCallback;
+    public callback: SlashCommandCallback;
 
-    constructor(options?: Partial<APISlashCommandOptions>) {
+    constructor(options?: Partial<SlashCommandOptions>) {
         this.guild = null;
         this.options = new Collection();
 
         this.setDefaultPermission(true);
-        this.setCallback((interaction) => interaction.reply({ content: '❌ This command has not yet been programmed', ephemeral: true }));
+        this.setCallback((interaction) => interaction.reply({ content: '🛠️ This command is **under construction** 🏗️', ephemeral: true }));
 
         if (options)
             this.edit(options);
     }
 
-    public edit(options: Partial<APISlashCommandOptions>): this {
+    public edit(options: Partial<SlashCommandOptions>): this {
         if (typeof options !== 'object')
             throw new TypeError(`Type '${typeof options}' does not conform to type 'SlashCommandOptions'.`);
 
@@ -60,13 +60,13 @@ class APISlashCommand {
         if (callback)
             this.setCallback(callback);
 
-        if (isIterable(opts))
+        if (opts && isIterable(opts))
             this.addOptions(...opts);
 
         return this;
     }
 
-    public setCallback(callback: APISlashCommandCallback): this {
+    public setCallback(callback: SlashCommandCallback): this {
         if (typeof callback !== 'function')
             throw new TypeError(`Type ${typeof callback} is not assignable to type 'SlashCommandCallback'.`);
 
@@ -148,9 +148,9 @@ class APISlashCommand {
 }
 
 export {
-    APISlashCommandOptions,
-    APISlashCommandCallback,
-    APISlashCommandResolvable
+    SlashCommandOptions,
+    SlashCommandCallback,
+    SlashCommandResolvable
 }
 
-export default APISlashCommand;
+export default SlashCommand;

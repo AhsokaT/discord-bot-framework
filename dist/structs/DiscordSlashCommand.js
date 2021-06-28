@@ -2,36 +2,37 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
-const util_js_1 = require("../util/util.js");
 const SlashCommandOption_js_1 = require("./SlashCommandOption.js");
-class SlashCommand {
-    constructor(client, command, callback = null) {
+class DiscordSlashCommand {
+    constructor(client, data) {
         this.client = client;
         this.client = client;
         this.options = new js_augmentations_1.Collection();
-        const { id, name, description, defaultPermission, guild, options, deleted } = command;
+        const { id, name, description, defaultPermission, guild, options, deleted = false, callback } = data;
         this.id = id;
         this.name = name;
         this.guild = guild;
+        this.deleted = deleted;
         this.description = description;
         this.defaultPermission = defaultPermission;
-        this.callback = callback;
-        this.deleted = deleted;
+        this.callback = callback ?? this.client.slashCommands.cache.get(this.id)?.callback ?? ((interaction) => interaction.reply({ content: '🛠️ This command is **under construction** 🏗️', ephemeral: true }));
         options.forEach(option => this.options.add(new SlashCommandOption_js_1.default(option)));
-        this.client.slashCommands.cache.set(this.id, this);
+        if (this.deleted)
+            this.client.slashCommands.cache.delete(this.id);
+        else
+            this.client.slashCommands.cache.set(this.id, this);
     }
     get createdAt() {
         return discord_js_1.SnowflakeUtil.deconstruct(this.id).date;
     }
     async fetch() {
-        if (!this.client.application)
-            throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
-        const manager = this.guild ? this.guild.commands : this.client.application.commands;
-        const fetched = await manager.fetch(this.id).catch(util_js_1.noop);
-        return fetched ? new SlashCommand(this.client, { deleted: false, ...fetched }, this.callback) : null;
+        return this.client.slashCommands.fetch(this);
     }
     async delete() {
         return this.client.slashCommands.delete(this);
     }
+    async edit(data) {
+        return this.client.slashCommands.edit(this, data);
+    }
 }
-exports.default = SlashCommand;
+exports.default = DiscordSlashCommand;

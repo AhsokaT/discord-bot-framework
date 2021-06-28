@@ -66,7 +66,7 @@ exports.default = new Command_js_1.default()
         return field;
     });
     const groups = client.commands.groups.array().map(group => {
-        const field = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `\`${client.commands.prefix}help ${group.toLowerCase()}\``, inline: true };
+        const field = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `${client.commands.prefix}help ${group.toLowerCase()}`, inline: true };
         return field;
     });
     const invite = client.generateInvite({ permissions: client.commands.permissions.array() });

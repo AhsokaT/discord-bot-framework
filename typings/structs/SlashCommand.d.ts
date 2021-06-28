@@ -1,28 +1,28 @@
 import { CommandInteraction, ApplicationCommandData as APISlashCommandData, GuildResolvable } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
-import ApplicationCommand from './ApplicationCommand.js';
+import ApplicationCommand from './DiscordSlashCommand.js';
 import SlashCommandOption, { SlashCommandOptionResolvable } from './SlashCommandOption.js';
-declare type APISlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
-interface APISlashCommandOptions {
+declare type SlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
+interface SlashCommandOptions {
     name: string;
     description: string;
     guild?: GuildResolvable | null;
-    options?: Collection<SlashCommandOption>;
+    options?: Iterable<SlashCommandOptionResolvable>;
     defaultPermission?: boolean;
-    callback?: APISlashCommandCallback;
+    callback?: SlashCommandCallback;
 }
-declare type APISlashCommandResolvable = APISlashCommand | APISlashCommandOptions;
-declare class APISlashCommand {
+declare type SlashCommandResolvable = SlashCommand | SlashCommandOptions;
+declare class SlashCommand implements Required<SlashCommandOptions> {
     name: string;
     description: string;
     guild: GuildResolvable | null;
     options: Collection<SlashCommandOption>;
     defaultPermission: boolean;
-    callback: APISlashCommandCallback;
-    constructor(options?: Partial<APISlashCommandOptions>);
-    edit(options: Partial<APISlashCommandOptions>): this;
-    setCallback(callback: APISlashCommandCallback): this;
+    callback: SlashCommandCallback;
+    constructor(options?: Partial<SlashCommandOptions>);
+    edit(options: Partial<SlashCommandOptions>): this;
+    setCallback(callback: SlashCommandCallback): this;
     /**
      * @param name 1-32 lowercase character name matching ^[\w-]{1,32}$
      */
@@ -39,5 +39,5 @@ declare class APISlashCommand {
     addOptions(...options: SlashCommandOptionResolvable[]): this;
     toAPIObject(): APISlashCommandData;
 }
-export { APISlashCommandOptions, APISlashCommandCallback, APISlashCommandResolvable };
-export default APISlashCommand;
+export { SlashCommandOptions, SlashCommandCallback, SlashCommandResolvable };
+export default SlashCommand;

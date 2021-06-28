@@ -2,34 +2,33 @@ import { GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Invite, 
 import Client from '../client/Client.js';
 import { Index } from 'js-augmentations';
 import { Snowflake } from '../util/types';
-import APISlashCommand, { APISlashCommandResolvable, APISlashCommandOptions } from './APISlashCommand.js';
-import ApplicationCommand, { ApplicationCommandResolvable } from './ApplicationCommand.js';
+import SlashCommand, { SlashCommandResolvable, SlashCommandOptions } from './SlashCommand.js';
+import DiscordSlashCommand, { DiscordSlashCommandResolvable } from './DiscordSlashCommand.js';
 
-class ApplicationCommandManager {
-    public cache: Index<Snowflake, ApplicationCommand>;
+class DiscordSlashCommandManager {
+    public cache: Index<Snowflake, DiscordSlashCommand>;
 
     constructor(public client: Client) {
         this.client = client;
         this.cache = new Index();
 
         client.on('interaction', interaction => {
-            console.log(`Interaction: ${interaction.isCommand()}`);
             if (!interaction.isCommand())
                 return;
 
             const command = this.cache.get(interaction.commandID);
 
-            if (command && command.callback)
+            if (command?.callback)
                 command.callback(interaction, command, this.client);
         });
     }
 
-    public async post(command: APISlashCommandResolvable): Promise<ApplicationCommand | null> {
+    public async create(command: SlashCommandResolvable): Promise<DiscordSlashCommand | null> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
-        if (!(command instanceof APISlashCommand))
-            return this.post(new APISlashCommand(command));
+        if (!(command instanceof SlashCommand))
+            return this.create(new SlashCommand(command));
 
         const guild = command.guild ? await resolveGuild(command.guild, this.client) : null;
 
@@ -38,32 +37,34 @@ class ApplicationCommandManager {
         const existing = (await manager.fetch()).find(i => i.name === command.name);
 
         if (existing)
-            return this.edit(new ApplicationCommand(this.client, { ...existing, deleted: false }, command.callback), command);
+            return this.edit(new DiscordSlashCommand(this.client, existing), command);
 
         const posted = await manager.create(command.toAPIObject());
 
-        return posted ? new ApplicationCommand(this.client, { ...posted, deleted: false }, command.callback) : null;
+        return posted ? new DiscordSlashCommand(this.client, { ...command, ...posted }) : null;
     }
 
-    public async edit(command: ApplicationCommand, data: APISlashCommandOptions): Promise<ApplicationCommand | null> {
+    public async edit(command: DiscordSlashCommand, data: SlashCommandOptions): Promise<DiscordSlashCommand> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
-        if (!(command instanceof ApplicationCommand))
-            throw new TypeError(`Type ${typeof command} is not assignable to type 'ApplicationCommand'.`);
+        if (!(command instanceof DiscordSlashCommand))
+            throw new TypeError(`Type ${typeof command} is not assignable to type 'DiscordSlashCommand'.`);
 
         const manager = command.guild ? command.guild.commands : this.client.application.commands;
 
-        const editted = await manager.edit(command.id, new APISlashCommand({ ...command, ...data }).toAPIObject());
+        const newCommand = new SlashCommand({ ...command, ...data });
 
-        return editted ? new ApplicationCommand(this.client, { ...editted, deleted: false }, command.callback) : null;
+        const editted = await manager.edit(command.id, newCommand.toAPIObject());
+
+        return new DiscordSlashCommand(this.client, { ...newCommand, ...editted });
     }
 
-    public async delete(command: ApplicationCommandResolvable, guild?: GuildResolvable): Promise<ApplicationCommand | null> {
+    public async delete(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand | null> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
-        if (!(command instanceof ApplicationCommand)) {
+        if (!(command instanceof DiscordSlashCommand)) {
             const fetched = await this.fetch(command, guild);
 
             return fetched ? this.delete(fetched, guild) : null;
@@ -73,38 +74,39 @@ class ApplicationCommandManager {
             guild = command.guild;
         else if (guild)
             guild = await resolveGuild(guild, this.client);
-        
+
         const manager = guild ? guild.commands : this.client.application.commands;
 
-        const deleted = manager.delete(command.id);
+        const deleted = await manager.delete(command.id);
 
-        return deleted ? new ApplicationCommand(this.client, { ...deleted, deleted: true }, command.callback) : null;
+        return deleted ? new DiscordSlashCommand(this.client, { ...command, ...deleted, deleted: true }) : null;
     }
 
-    public async fetch(command: ApplicationCommandResolvable, guild?: GuildResolvable): Promise<ApplicationCommand | null> {
+    public async fetch(): Promise<Index<Snowflake, DiscordSlashCommand>>;
+    public async fetch(command: null, guild: GuildResolvable): Promise<Index<Snowflake, DiscordSlashCommand>>;
+    public async fetch(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand | null>;
+    public async fetch(command?: DiscordSlashCommandResolvable | null, guild?: GuildResolvable): Promise<any> {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
-        if (command instanceof ApplicationCommand && command.guild)
+        if (command instanceof DiscordSlashCommand && command.guild)
             guild = command.guild;
         else if (guild)
             guild = await resolveGuild(guild, this.client);
 
         const manager = guild ? guild.commands : this.client.application.commands;
 
-        const fetched = await manager.fetch(command instanceof ApplicationCommand ? command.id : command);
+        if (command)
+            return new DiscordSlashCommand(this.client, await manager.fetch(command instanceof DiscordSlashCommand ? command.id : command));
 
-        const callback = this.cache.get(fetched.id)?.callback;
-
-        return fetched ? new ApplicationCommand(this.client, { ...fetched, deleted: false }, callback ?? null) : null;
+        return new Index([ ...(await manager.fetch()).map(i => new DiscordSlashCommand(this.client, i)).entries() ]);
     }
 }
 
-export default ApplicationCommandManager;
+export default DiscordSlashCommandManager;
 
 function resolveGuild(guild: Guild | GuildEmoji | GuildMember | GuildChannel | Role, client: Client): Guild;
-function resolveGuild(guild: Invite, client: Client): Guild | undefined;
-function resolveGuild(guild: Snowflake, client: Client): Promise<Guild | undefined>;
+function resolveGuild(guild: Snowflake | Invite, client: Client): Promise<Guild | undefined>;
 function resolveGuild(guild: GuildResolvable, client: Client): Guild | undefined | Promise<Guild | undefined>;
 function resolveGuild(guild: GuildResolvable, client: Client): Guild | undefined | Promise<Guild | undefined> {
     if (guild instanceof Guild)
@@ -115,7 +117,7 @@ function resolveGuild(guild: GuildResolvable, client: Client): Guild | undefined
 
     if (guild instanceof Invite) {
         if (guild.guild)
-            return guild.guild;
+            return guild.guild.fetch();
         else
             return;
     }

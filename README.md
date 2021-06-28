@@ -12,7 +12,7 @@ const { Intents } = require('discord.js');
 
 const client = new Client({
     token: 'A valid Discord bot token',
-    intents: Intents.FLAGS.DIRECT_MESSAGES
+    intents: [Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILDS]
     // Intents are now required by discord for all bots
 });
 
@@ -57,3 +57,4 @@ client.commands
                 message.channel.bulkDelete(input.value);
             })
     );
+```

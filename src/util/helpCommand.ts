@@ -85,7 +85,7 @@ export default new Command()
         });
 
         const groups = client.commands.groups.array().map(group => {
-            const field: EmbedFieldData = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `\`${client.commands.prefix}help ${group.toLowerCase()}\``, inline: true };
+            const field: EmbedFieldData = { name: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(), value: `${client.commands.prefix}help ${group.toLowerCase()}`, inline: true };
 
             return field;
         });

@@ -1,4 +1,4 @@
-import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, MessageActionRow, MessageButton } from 'discord.js';
+import { Client as DJSClient, ClientOptions as DJSClientOptions, Message, MessageActionRow, MessageButton, ThreadChannel } from 'discord.js';
 import CommandManager, { CommandManagerOptions } from '../structs/CommandManager.js';
 import ApplicationCommandManager from '../structs/SlashCommandManager.js';
 import Argument from '../structs/Argument.js';
@@ -51,7 +51,7 @@ export default class Client extends DJSClient {
         if (command.type === 'Guild' && !message.guild)
             return;
 
-        if (command.nsfw && message.channel.type !== 'dm' && !message.channel.nsfw)
+        if (command.nsfw && message.channel.type !== 'dm' && !(message.channel instanceof ThreadChannel) && !message.channel.nsfw)
             return message.channel.send('❌ This command must be called in an **NSFW** channel');
 
         if (message.guild && !message.member?.permissions.has(command.permissions.array()))
@@ -89,7 +89,7 @@ export default class Client extends DJSClient {
             if (!question)
                 return;
 
-            const response = await message.channel.awaitMessageComponentInteraction(i => i.user.id === message.author.id, 15000).catch(util.noop);
+            const response = await message.channel.awaitMessageComponentInteraction({ filter: i => i.user.id === message.author.id, time: 15000 }).catch(util.noop);
 
             if (!response) {
                 message.channel.send('⏱️ **15s timeout** ❌ Command cancelled').catch(console.error);
@@ -118,7 +118,7 @@ export default class Client extends DJSClient {
             if (!input && param.required && this.commands.promptUserForInput) {
                 message.channel.send(`Please type your input for \`${param.label}\`\n\n**Type** \`${param.type}\`\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices.size > 0 ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``).array() ?? [], 'or')}` : ''}`);
 
-                input = (await message.channel.awaitMessages(res => res.author.id === message.author.id, { time: param.timeout, max: 1 })).first()?.content;
+                input = (await message.channel.awaitMessages({ filter: res => res.author.id === message.author.id, time: param.timeout, max: 1 })).first()?.content;
 
                 if (!input)
                     return message.channel.send(`⏱️ **${param.timeout / 1000}s timeout** ❌ You did not provide an input for ${util.toList(parameters.slice(parameters.indexOf(param), parameters.length).filter(i => i.required).map(i => `\`${i.label}\``), 'or')}`).catch(console.error);

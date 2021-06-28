@@ -10,7 +10,7 @@ class Command {
         this.parameters = new js_augmentations_1.Collection();
         this.permissions = new js_augmentations_1.Collection();
         this.setType('Universal');
-        this.setCallback((message) => message.channel.send('❌ This command has not yet been programmed').catch(console.error));
+        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(console.error));
         if (properties)
             this.edit(properties);
     }

@@ -4,12 +4,12 @@ const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
 const SlashCommandOption_js_1 = require("./SlashCommandOption.js");
-class APISlashCommand {
+class SlashCommand {
     constructor(options) {
         this.guild = null;
         this.options = new js_augmentations_1.Collection();
         this.setDefaultPermission(true);
-        this.setCallback((interaction) => interaction.reply({ content: '❌ This command has not yet been programmed', ephemeral: true }));
+        this.setCallback((interaction) => interaction.reply({ content: '🛠️ This command is **under construction** 🏗️', ephemeral: true }));
         if (options)
             this.edit(options);
     }
@@ -27,7 +27,7 @@ class APISlashCommand {
             this.setDefaultPermission(defaultPermission);
         if (callback)
             this.setCallback(callback);
-        if (util_js_1.isIterable(opts))
+        if (opts && util_js_1.isIterable(opts))
             this.addOptions(...opts);
         return this;
     }
@@ -89,4 +89,4 @@ class APISlashCommand {
         return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
     }
 }
-exports.default = APISlashCommand;
+exports.default = SlashCommand;

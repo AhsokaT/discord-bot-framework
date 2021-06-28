@@ -23,9 +23,9 @@ class SlashCommandOption {
             this.setType(type);
         if (typeof required === 'boolean')
             this.setRequired(required);
-        if (util_js_1.isIterable(choices))
+        if (choices && util_js_1.isIterable(choices))
             this.addChoices(...choices);
-        if (util_js_1.isIterable(options))
+        if (options && util_js_1.isIterable(options))
             this.addOptions(...options);
         return this;
     }
@@ -59,7 +59,7 @@ class SlashCommandOption {
     setName(name) {
         if (typeof name !== 'string')
             throw new TypeError(`Type '${typeof name}' is not assignable to type 'string'.`);
-        if (/^[\w-]{1,32}$/.test(name))
+        if (!/^[\w-]{1,32}$/.test(name))
             throw new Error('Your argument for name does not match the regular expression ^[\w-]{1,32}$');
         this.name = name;
         return this;

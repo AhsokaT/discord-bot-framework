@@ -2,15 +2,17 @@ import { GuildResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import { Index } from 'js-augmentations';
 import { Snowflake } from '../util/types';
-import { APISlashCommandResolvable, APISlashCommandOptions } from './APISlashCommand.js';
-import ApplicationCommand, { ApplicationCommandResolvable } from './ApplicationCommand.js';
-declare class ApplicationCommandManager {
+import { SlashCommandResolvable, SlashCommandOptions } from './SlashCommand.js';
+import DiscordSlashCommand, { DiscordSlashCommandResolvable } from './DiscordSlashCommand.js';
+declare class DiscordSlashCommandManager {
     client: Client;
-    cache: Index<Snowflake, ApplicationCommand>;
+    cache: Index<Snowflake, DiscordSlashCommand>;
     constructor(client: Client);
-    post(command: APISlashCommandResolvable): Promise<ApplicationCommand | null>;
-    edit(command: ApplicationCommand, data: APISlashCommandOptions): Promise<ApplicationCommand | null>;
-    delete(command: ApplicationCommandResolvable, guild?: GuildResolvable): Promise<ApplicationCommand | null>;
-    fetch(command: ApplicationCommandResolvable, guild?: GuildResolvable): Promise<ApplicationCommand | null>;
+    create(command: SlashCommandResolvable): Promise<DiscordSlashCommand | null>;
+    edit(command: DiscordSlashCommand, data: SlashCommandOptions): Promise<DiscordSlashCommand>;
+    delete(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand | null>;
+    fetch(): Promise<Index<Snowflake, DiscordSlashCommand>>;
+    fetch(command: null, guild: GuildResolvable): Promise<Index<Snowflake, DiscordSlashCommand>>;
+    fetch(command: DiscordSlashCommandResolvable, guild?: GuildResolvable): Promise<DiscordSlashCommand | null>;
 }
-export default ApplicationCommandManager;
+export default DiscordSlashCommandManager;
