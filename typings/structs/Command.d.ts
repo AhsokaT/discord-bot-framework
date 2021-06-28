@@ -1,6 +1,7 @@
 import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
+import { Resolvable } from '../util/types.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
 declare type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
@@ -82,7 +83,7 @@ declare class Command implements Required<CommandOptions> {
      * addAliases('prune');
      * addAliases('purge', 'bulkdelete');
      */
-    addAliases(...aliases: string[]): this;
+    addAliases(...aliases: Resolvable<string>[]): this;
     /**
      * Edit the properties of this command
      * @param properties Object containing new properties

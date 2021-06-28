@@ -84,6 +84,10 @@ class SlashCommand {
         });
         return this;
     }
+    get APIObject() {
+        const { name, description, defaultPermission, options } = this;
+        return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
+    }
     toAPIObject() {
         const { name, description, defaultPermission, options } = this;
         return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };

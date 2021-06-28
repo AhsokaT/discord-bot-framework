@@ -1,9 +1,11 @@
 import { Channel, GuildMember, Role, User } from 'discord.js';
+import Parameter from './Parameter.js';
 import ParameterType, { ParameterTypeKey } from './ParameterType.js';
 declare class Argument {
     value: any;
     type: ParameterType | ParameterTypeKey;
-    constructor(value: any, type: ParameterType | ParameterTypeKey);
+    parameter: Parameter;
+    constructor(value: any, type: ParameterType | ParameterTypeKey, parameter: Parameter);
     isMember(): this is MemberArgument;
     isRole(): this is RoleArgument;
     isChannel(): this is ChannelArgument;

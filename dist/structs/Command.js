@@ -117,7 +117,7 @@ class Command {
      * addAliases('purge', 'bulkdelete');
      */
     addAliases(...aliases) {
-        aliases.filter(alias => typeof alias === 'string').forEach(alias => this.aliases.add(alias));
+        aliases.map(i => typeof i !== 'string' && util_js_1.isIterable(i) ? [...i] : i).flat().filter(alias => typeof alias === 'string').forEach(alias => this.aliases.add(alias));
         return this;
     }
     /**

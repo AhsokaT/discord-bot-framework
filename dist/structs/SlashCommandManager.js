@@ -4,7 +4,7 @@ const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
 const SlashCommand_js_1 = require("./SlashCommand.js");
 const DiscordSlashCommand_js_1 = require("./DiscordSlashCommand.js");
-class DiscordSlashCommandManager {
+class SlashCommandManager {
     constructor(client) {
         this.client = client;
         this.client = client;
@@ -24,21 +24,21 @@ class DiscordSlashCommandManager {
             return this.create(new SlashCommand_js_1.default(command));
         const guild = command.guild ? await resolveGuild(command.guild, this.client) : null;
         const manager = guild ? guild.commands : this.client.application.commands;
-        const existing = (await manager.fetch()).find(i => i.name === command.name);
+        const existing = (await manager.fetch()).find(({ name }) => name === command.name);
         if (existing)
             return this.edit(new DiscordSlashCommand_js_1.default(this.client, existing), command);
         const posted = await manager.create(command.toAPIObject());
-        return posted ? new DiscordSlashCommand_js_1.default(this.client, { ...command, ...posted }) : null;
+        return new DiscordSlashCommand_js_1.default(this.client, { ...command, ...posted });
     }
     async edit(command, data) {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
         if (!(command instanceof DiscordSlashCommand_js_1.default))
-            throw new TypeError(`Type ${typeof command} is not assignable to type 'DiscordSlashCommand'.`);
+            return this.edit(await this.fetch(command), data);
         const manager = command.guild ? command.guild.commands : this.client.application.commands;
         const newCommand = new SlashCommand_js_1.default({ ...command, ...data });
         const editted = await manager.edit(command.id, newCommand.toAPIObject());
-        return new DiscordSlashCommand_js_1.default(this.client, { ...newCommand, ...editted });
+        return new DiscordSlashCommand_js_1.default(this.client, { ...command, ...editted });
     }
     async delete(command, guild) {
         if (!this.client.application)
@@ -68,7 +68,7 @@ class DiscordSlashCommandManager {
         return new js_augmentations_1.Index([...(await manager.fetch()).map(i => new DiscordSlashCommand_js_1.default(this.client, i)).entries()]);
     }
 }
-exports.default = DiscordSlashCommandManager;
+exports.default = SlashCommandManager;
 function resolveGuild(guild, client) {
     if (guild instanceof discord_js_1.Guild)
         return guild;

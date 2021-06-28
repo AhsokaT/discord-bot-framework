@@ -2,9 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Argument = void 0;
 class Argument {
-    constructor(value, type) {
+    constructor(value, type, parameter) {
         this.value = value;
         this.type = type;
+        this.parameter = parameter;
+        this.parameter = parameter;
         this.value = value;
         this.type = type;
     }

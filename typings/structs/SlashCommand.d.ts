@@ -1,4 +1,4 @@
-import { CommandInteraction, ApplicationCommandData as APISlashCommandData, GuildResolvable } from 'discord.js';
+import { CommandInteraction, ApplicationCommandData as SlashCommandData, GuildResolvable } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import ApplicationCommand from './DiscordSlashCommand.js';
@@ -37,7 +37,8 @@ declare class SlashCommand implements Required<SlashCommandOptions> {
     setDefaultPermission(defaultPermission: boolean): this;
     setGuild(guild: GuildResolvable): this;
     addOptions(...options: SlashCommandOptionResolvable[]): this;
-    toAPIObject(): APISlashCommandData;
+    get APIObject(): SlashCommandData;
+    toAPIObject(): SlashCommandData;
 }
 export { SlashCommandOptions, SlashCommandCallback, SlashCommandResolvable };
 export default SlashCommand;
