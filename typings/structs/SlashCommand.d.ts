@@ -1,14 +1,14 @@
 import { CommandInteraction, ApplicationCommandData as SlashCommandData, GuildResolvable } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
-import ApplicationCommand from './DiscordSlashCommand.js';
-import SlashCommandOption, { SlashCommandOptionResolvable } from './SlashCommandOption.js';
-declare type SlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
+import DiscordSlashCommand from './DiscordSlashCommand.js';
+import SlashCommandParameter, { SlashCommandParameterResolvable } from './SlashCommandParameter.js';
+declare type SlashCommandCallback = (this: SlashCommand, interaction: CommandInteraction, command: DiscordSlashCommand, client: Client) => void;
 interface SlashCommandOptions {
     name: string;
     description: string;
     guild?: GuildResolvable | null;
-    options?: Iterable<SlashCommandOptionResolvable>;
+    parameters?: Iterable<SlashCommandParameterResolvable>;
     defaultPermission?: boolean;
     callback?: SlashCommandCallback;
 }
@@ -17,9 +17,9 @@ declare class SlashCommand implements Required<SlashCommandOptions> {
     name: string;
     description: string;
     guild: GuildResolvable | null;
-    options: Collection<SlashCommandOption>;
     defaultPermission: boolean;
     callback: SlashCommandCallback;
+    parameters: Collection<SlashCommandParameter>;
     constructor(options?: Partial<SlashCommandOptions>);
     edit(options: Partial<SlashCommandOptions>): this;
     setCallback(callback: SlashCommandCallback): this;
@@ -36,9 +36,8 @@ declare class SlashCommand implements Required<SlashCommandOptions> {
      */
     setDefaultPermission(defaultPermission: boolean): this;
     setGuild(guild: GuildResolvable): this;
-    addOptions(...options: SlashCommandOptionResolvable[]): this;
-    get APIObject(): SlashCommandData;
-    toAPIObject(): SlashCommandData;
+    addParameters(...parameters: SlashCommandParameterResolvable[]): this;
+    get data(): SlashCommandData;
 }
 export { SlashCommandOptions, SlashCommandCallback, SlashCommandResolvable };
 export default SlashCommand;

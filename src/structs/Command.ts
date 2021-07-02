@@ -14,7 +14,7 @@ type CommandType =
     | 'Universal';
 
 interface CommandOptions {
-    name?: string;
+    name: string;
     nsfw?: boolean;
     group?: string;
     description?: string;
@@ -36,7 +36,7 @@ class Command implements Required<CommandOptions> {
     public permissions: Collection<PermissionResolvable>;
     public type: CommandType;
 
-    constructor(properties?: CommandOptions) {
+    constructor(properties?: Partial<CommandOptions>) {
         this.aliases = new Collection();
         this.parameters = new Collection();
         this.permissions = new Collection();
@@ -146,8 +146,8 @@ class Command implements Required<CommandOptions> {
                 throw new Error('Command parameters must have a key set.');
 
             parameter.choices.filter(choice => typeof choice === 'string');
-            parameter.required = typeof required === 'boolean' ? required : true;
-            parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
+            parameter.setRequired(typeof required === 'boolean' ? required : true);
+            parameter.setCaseSensitive(typeof caseSensitive === 'boolean' ? caseSensitive : true);
 
             this.parameters.add(parameter);
         });
@@ -188,7 +188,7 @@ class Command implements Required<CommandOptions> {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    public edit(properties: CommandOptions): this {
+    public edit(properties: Partial<CommandOptions>): this {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'CommandOptions'.`);
 
@@ -216,7 +216,7 @@ class Command implements Required<CommandOptions> {
             this.addParameters(parameters);
 
         if (aliases && isIterable(aliases))
-            this.addAliases(...aliases);
+            this.addAliases(aliases);
 
         return this;
     }

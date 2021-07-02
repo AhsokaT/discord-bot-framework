@@ -7,6 +7,8 @@ const Argument_js_1 = require("../structs/Argument.js");
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
+    commands;
+    slashCommands;
     constructor(options) {
         super(options);
         if (options.token)
@@ -19,15 +21,15 @@ class Client extends discord_js_1.Client {
      * @param message A Discord message
      */
     async parseMessage(message) {
-        if (!this.commands.allowBots && message.author.bot)
+        if (message.author.bot && !this.commands.allowBots)
             return;
         if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
             return;
         const messageSegments = message.content.split(' ');
-        const name = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
-        if (!name)
+        const commandName = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
+        if (!commandName)
             return;
-        const command = this.commands.index.get(name) || this.commands.index.find(i => i.name.toLowerCase() === name || i.aliases.map(alias => alias.toLowerCase()).has(name));
+        const command = this.commands.index.get(commandName) || this.commands.index.find(({ name, aliases }) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
         if (!command)
             return;
         if (command.type === 'DM' && message.channel.type !== 'dm')
@@ -48,13 +50,6 @@ class Client extends discord_js_1.Client {
                 .setCustomID('NO')
                 .setLabel('Cancel')
                 .setStyle('SECONDARY'));
-            function disableButtons(msg) {
-                actions.components = actions.components.map(button => button.setDisabled(true));
-                return msg.edit({
-                    content: msg.content,
-                    components: [actions]
-                });
-            }
             const question = await message.channel.send({
                 content: 'This command is marked as **NSFW**, are you sure you want to run it?',
                 components: [actions]
@@ -64,13 +59,13 @@ class Client extends discord_js_1.Client {
             const response = await message.channel.awaitMessageComponentInteraction({ filter: i => i.user.id === message.author.id, time: 15000 }).catch(util.noop);
             if (!response) {
                 message.channel.send('⏱️ **15s timeout** ❌ Command cancelled').catch(console.error);
-                return disableButtons(question);
+                return question.delete().catch(util.noop);
             }
             if (response.customID === 'NO') {
-                response.reply('Command cancelled').catch(console.error);
-                return disableButtons(question);
+                response.deferUpdate().catch(util.noop);
+                return question.delete().catch(util.noop);
             }
-            disableButtons(question);
+            question.delete().catch(util.noop);
             response.deferUpdate();
         }
         let args = [];
@@ -94,40 +89,40 @@ class Client extends discord_js_1.Client {
                     if ((!param.caseSensitive && !param.choices.map(i => i.toLowerCase()).has(input.toLowerCase())) || (param.caseSensitive && !param.choices.has(input)))
                         return message.channel.send(`❌ Your input for \`${param.label}\` must be either ${util.toList(param.choices.map(i => `\`${i}\``).array(), 'or')}`).catch(console.error);
                 }
-                switch (param.type) {
+                switch (param.type.toLowerCase()) {
                     case 'number':
                         if (isNaN(Number(input)))
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`number\``).catch(util.noop);
-                        input = new Argument_js_1.default(Number(input), 'number', param);
+                        input = new Argument_js_1.default(Number(input), 'Number', param);
                         break;
                     case 'boolean':
                         if (input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false')
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be either 'true' or 'false'`).catch(util.noop);
-                        input = new Argument_js_1.default(input.toLowerCase() === 'true' ? true : false, 'boolean', param);
+                        input = new Argument_js_1.default(input.toLowerCase() === 'true' ? true : false, 'Boolean', param);
                         break;
                     case 'channel':
                         const channel = await message.guild?.channels.fetch(snowflake).catch(util.noop);
                         if (!channel)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`channel\``).catch(util.noop);
-                        input = new Argument_js_1.default(channel, 'channel', param);
+                        input = new Argument_js_1.default(channel, 'Channel', param);
                         break;
                     case 'member':
                         const member = snowflake ? await message.guild?.members.fetch(snowflake).catch(util.noop) : null;
                         if (!member || !snowflake)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`member\``).catch(util.noop);
-                        input = new Argument_js_1.default(member, 'member', param);
+                        input = new Argument_js_1.default(member, 'Member', param);
                         break;
                     case 'role':
                         const role = await message.guild?.roles.fetch(snowflake).catch(util.noop);
                         if (!role)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`role\``).catch(util.noop);
-                        input = new Argument_js_1.default(role, 'role', param);
+                        input = new Argument_js_1.default(role, 'Role', param);
                         break;
                     case 'user':
                         const user = await this.users.fetch(snowflake).catch(util.noop);
                         if (!user)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`user\``).catch(util.noop);
-                        input = new Argument_js_1.default(user, 'user', param);
+                        input = new Argument_js_1.default(user, 'User', param);
                         break;
                     default:
                         const type = this.commands.types.get(param.type);
@@ -139,7 +134,7 @@ class Client extends discord_js_1.Client {
                         break;
                 }
                 if (!(input instanceof Argument_js_1.default))
-                    input = new Argument_js_1.default(param.default ? param.default : input, 'any', param);
+                    input = new Argument_js_1.default(param.default ? param.default : input, 'String', param);
                 args.push([param.key, input]);
             }
         }

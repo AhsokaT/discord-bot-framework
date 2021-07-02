@@ -1,12 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SlashCommandOption = void 0;
+exports.SlashCommandOptionTypes = exports.SlashCommandParameter = void 0;
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
-class SlashCommandOption {
+var SlashCommandOptionTypes;
+(function (SlashCommandOptionTypes) {
+    SlashCommandOptionTypes["SubCommand"] = "SUB_COMMAND";
+    SlashCommandOptionTypes["SubCommandGroup"] = "SUB_COMMAND_GROUP";
+    SlashCommandOptionTypes["String"] = "STRING";
+    SlashCommandOptionTypes["Integer"] = "INTEGER";
+    SlashCommandOptionTypes["Boolean"] = "BOOLEAN";
+    SlashCommandOptionTypes["User"] = "USER";
+    SlashCommandOptionTypes["Channel"] = "CHANNEL";
+    SlashCommandOptionTypes["Role"] = "ROLE";
+    SlashCommandOptionTypes["Mentionable"] = "MENTIONABLE";
+})(SlashCommandOptionTypes || (SlashCommandOptionTypes = {}));
+exports.SlashCommandOptionTypes = SlashCommandOptionTypes;
+class SlashCommandParameter {
+    type;
+    name;
+    description;
+    required;
+    choices;
     constructor(options) {
         this.choices = new js_augmentations_1.Collection();
-        this.options = new js_augmentations_1.Collection();
         this.setRequired(false);
         if (options)
             this.edit(options);
@@ -14,7 +31,7 @@ class SlashCommandOption {
     edit(properties) {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'ApplicationCommandOptionDetails'.`);
-        const { name, description, type, required, choices, options } = properties;
+        const { name, description, type, required, choices } = properties;
         if (name)
             this.setName(name);
         if (description)
@@ -25,8 +42,6 @@ class SlashCommandOption {
             this.setRequired(required);
         if (choices && util_js_1.isIterable(choices))
             this.addChoices(...choices);
-        if (options && util_js_1.isIterable(options))
-            this.addOptions(...options);
         return this;
     }
     addChoices(...choices) {
@@ -39,17 +54,17 @@ class SlashCommandOption {
         });
         return this;
     }
-    addOptions(...options) {
-        options.map(i => util_js_1.isIterable(i) ? [...i] : i).flat().forEach(option => {
-            if (!(option instanceof SlashCommandOption))
-                return this.addOptions(new SlashCommandOption(option));
-            this.options.add(option);
-        });
-        return this;
-    }
+    // public addOptions(...options: SlashCommandParameterResolvable[]): this {
+    //     options.map(i => isIterable(i) ? [...i] : i).flat().forEach(option => {
+    //         if (!(option instanceof SlashCommandParameter))
+    //             return this.addOptions(new SlashCommandParameter(option));
+    //         this.options.add(option);
+    //     });
+    //     return this;
+    // }
     setType(type) {
-        if (!['SUB_COMMAND', 'SUB_COMMAND_GROUP', 'STRING', 'INTEGER', 'BOOLEAN', 'USER', 'CHANNEL', 'ROLE', 'MENTIONABLE'].includes(type))
-            throw new TypeError(`Type ${typeof type} is not assignable to type 'ApplicationCommandOptionType'.`);
+        if (!['String', 'Integer', 'Boolean', 'User', 'Channel', 'Role', 'Mentionable'].includes(type))
+            throw new TypeError(`Type ${typeof type} is not assignable to type 'SlashCommandOptionType'.`);
         this.type = type;
         return this;
     }
@@ -86,10 +101,10 @@ class SlashCommandOption {
         this.required = required;
         return this;
     }
-    toAPIObject() {
-        const { type, name, description, required, choices, options } = this;
-        return { type, name, description, required, choices: choices.array(), options: options.map(param => param.toAPIObject()).array() };
+    get data() {
+        const { type, name, description, required, choices } = this;
+        return { type: SlashCommandOptionTypes[type], name, description, required, choices: choices.array() };
     }
 }
-exports.SlashCommandOption = SlashCommandOption;
-exports.default = SlashCommandOption;
+exports.SlashCommandParameter = SlashCommandParameter;
+exports.default = SlashCommandParameter;

@@ -3,7 +3,7 @@ import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { Snowflake } from '../util/types';
 import { SlashCommandCallback, SlashCommandOptions } from './SlashCommand.js';
-import SlashCommandOption from './SlashCommandOption.js';
+import SlashCommandOption from './SlashCommandParameter.js';
 interface DiscordSlashCommandData extends Omit<ApplicationCommand, 'delete' | 'edit' | 'fetch' | 'fetchPermissions' | 'toJSON' | 'valueOf' | 'setPermissions'> {
     callback?: SlashCommandCallback;
     deleted?: boolean;

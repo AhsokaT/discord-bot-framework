@@ -7,6 +7,14 @@ const Command_js_1 = require("./Command.js");
 const util_js_1 = require("../util/util.js");
 const ParameterType_js_1 = require("./ParameterType.js");
 class CommandManager {
+    client;
+    prefix;
+    allowBots;
+    groups;
+    index;
+    types;
+    permissions;
+    promptUserForInput;
     constructor(client, options = {}) {
         this.client = client;
         this.client = client;
@@ -18,7 +26,7 @@ class CommandManager {
         this.allowBots = Boolean(allowBots);
         this.promptUserForInput = typeof promptUserForInput === 'boolean' ? promptUserForInput : true;
         this.setPrefix(prefix ?? '');
-        if (Array.isArray(permissions))
+        if (permissions && util_js_1.isIterable(permissions))
             this.permissions.push(...permissions);
         if (automaticMessageParsing ?? true)
             this.client.on('message', this.client.parseMessage);
@@ -90,9 +98,9 @@ class CommandManager {
                         throw new Error(`Alias '${alias}' already exists on command '${existing.name}'`);
                 });
             });
-            command.parameters.forEach(param => {
-                if (param.type && !this.types.get(param.type) && !['string', 'number', 'boolean', 'user', 'member', 'channel', 'role'].includes(param.type))
-                    throw new Error(`There is no ParameterType with key '${param.type}'`);
+            command.parameters.forEach(({ type }) => {
+                if (type && !this.types.get(type) && !['String', 'Number', 'Boolean', 'User', 'Member', 'Channel', 'Role'].includes(type))
+                    throw new Error(`There is no ParameterType with key '${type}'`);
             });
             this.index.set(command.name, command);
         });

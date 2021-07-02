@@ -4,12 +4,23 @@ exports.Parameter = void 0;
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
 class Parameter {
+    key;
+    label;
+    type;
+    description;
+    wordCount;
+    characterLimit;
+    caseSensitive;
+    required;
+    choices;
+    timeout;
+    default;
     constructor(options) {
         this.choices = new js_augmentations_1.Collection();
         this.setWordCount(1);
         this.setCaseSensitive(false);
         this.setRequired(true);
-        this.setType('string');
+        this.setType('String');
         this.setTimeout(15000);
         if (options)
             this.edit(options);

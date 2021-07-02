@@ -2,7 +2,7 @@ import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import helpCommand from '../util/helpCommand.js';
 import { Collection, Index } from 'js-augmentations';
-import Command, { CommandOptions as BaseCommandOptions } from './Command.js';
+import Command, { CommandOptions } from './Command.js';
 import { isIterable } from '../util/util.js';
 import { Resolvable } from '../util/types.js';
 import ParameterType, { ParameterTypeResolvable } from './ParameterType.js';
@@ -10,13 +10,9 @@ import ParameterType, { ParameterTypeResolvable } from './ParameterType.js';
 interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
-    permissions?: PermissionResolvable[];
+    permissions?: Iterable<PermissionResolvable>;
     automaticMessageParsing?: boolean;
     promptUserForInput?: boolean;
-}
-
-interface CommandOptions extends BaseCommandOptions {
-    name: string;
 }
 
 type CommandResolvable =
@@ -45,7 +41,7 @@ class CommandManager {
         this.promptUserForInput = typeof promptUserForInput === 'boolean' ? promptUserForInput : true;
         this.setPrefix(prefix ?? '');
 
-        if (Array.isArray(permissions))
+        if (permissions && isIterable(permissions))
             this.permissions.push(...permissions);
 
         if (automaticMessageParsing ?? true)
@@ -132,9 +128,9 @@ class CommandManager {
                 });
             });
 
-            command.parameters.forEach(param => {
-                if (param.type && !this.types.get(param.type) && !['string', 'number', 'boolean', 'user', 'member', 'channel', 'role'].includes(param.type))
-                    throw new Error(`There is no ParameterType with key '${param.type}'`);
+            command.parameters.forEach(({ type }) => {
+                if (type && !this.types.get(type) && !['String', 'Number', 'Boolean', 'User', 'Member', 'Channel', 'Role'].includes(type))
+                    throw new Error(`There is no ParameterType with key '${type}'`);
             });
 
             this.index.set(command.name, command);

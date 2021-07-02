@@ -15,31 +15,31 @@ declare class Argument {
     isString(): this is StringArgument;
 }
 interface MemberArgument extends Argument {
-    type: 'member';
+    type: 'Member';
     value: GuildMember;
 }
 interface RoleArgument extends Argument {
-    type: 'role';
+    type: 'Role';
     value: Role;
 }
 interface ChannelArgument extends Argument {
-    type: 'channel';
+    type: 'Channel';
     value: Channel;
 }
 interface UserArgument extends Argument {
-    type: 'user';
+    type: 'User';
     value: User;
 }
 interface BooleanArgument extends Argument {
-    type: 'boolean';
+    type: 'Boolean';
     value: boolean;
 }
 interface NumberArgument extends Argument {
-    type: 'number';
+    type: 'Number';
     value: number;
 }
 interface StringArgument extends Argument {
-    type: 'string';
+    type: 'String';
     value: string;
 }
 export { Argument, MemberArgument, RoleArgument, ChannelArgument, UserArgument, BooleanArgument, NumberArgument, StringArgument, };

@@ -5,6 +5,8 @@ const js_augmentations_1 = require("js-augmentations");
 const SlashCommand_js_1 = require("./SlashCommand.js");
 const DiscordSlashCommand_js_1 = require("./DiscordSlashCommand.js");
 class SlashCommandManager {
+    client;
+    cache;
     constructor(client) {
         this.client = client;
         this.client = client;
@@ -14,7 +16,7 @@ class SlashCommandManager {
                 return;
             const command = this.cache.get(interaction.commandID);
             if (command?.callback)
-                command.callback(interaction, command, this.client);
+                command.callback.bind(command)(interaction, command, this.client);
         });
     }
     async create(command) {
@@ -27,7 +29,7 @@ class SlashCommandManager {
         const existing = (await manager.fetch()).find(({ name }) => name === command.name);
         if (existing)
             return this.edit(new DiscordSlashCommand_js_1.default(this.client, existing), command);
-        const posted = await manager.create(command.toAPIObject());
+        const posted = await manager.create(command.data);
         return new DiscordSlashCommand_js_1.default(this.client, { ...command, ...posted });
     }
     async edit(command, data) {
@@ -37,7 +39,7 @@ class SlashCommandManager {
             return this.edit(await this.fetch(command), data);
         const manager = command.guild ? command.guild.commands : this.client.application.commands;
         const newCommand = new SlashCommand_js_1.default({ ...command, ...data });
-        const editted = await manager.edit(command.id, newCommand.toAPIObject());
+        const editted = await manager.edit(command.id, newCommand.data);
         return new DiscordSlashCommand_js_1.default(this.client, { ...command, ...editted });
     }
     async delete(command, guild) {

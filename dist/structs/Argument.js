@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Argument = void 0;
 class Argument {
+    value;
+    type;
+    parameter;
     constructor(value, type, parameter) {
         this.value = value;
         this.type = type;
@@ -11,25 +14,25 @@ class Argument {
         this.type = type;
     }
     isMember() {
-        return this.type === 'member';
+        return this.type === 'Member';
     }
     isRole() {
-        return this.type === 'role';
+        return this.type === 'Role';
     }
     isChannel() {
-        return this.type === 'channel';
+        return this.type === 'Channel';
     }
     isUser() {
-        return this.type === 'user';
+        return this.type === 'User';
     }
     isBoolean() {
-        return this.type === 'boolean';
+        return this.type === 'Boolean';
     }
     isNumber() {
-        return this.type === 'number';
+        return this.type === 'Number';
     }
     isString() {
-        return this.type === 'string';
+        return this.type === 'String';
     }
 }
 exports.Argument = Argument;

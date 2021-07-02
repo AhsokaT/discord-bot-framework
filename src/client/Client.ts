@@ -28,19 +28,19 @@ export default class Client extends DJSClient {
      * @param message A Discord message
      */
     public async parseMessage(message: Message): Promise<any> {
-        if (!this.commands.allowBots && message.author.bot)
+        if (message.author.bot && !this.commands.allowBots)
             return;
 
         if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
             return;
 
         const messageSegments = message.content.split(' ');
-        const name = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
+        const commandName = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
 
-        if (!name)
+        if (!commandName)
             return;
 
-        const command = this.commands.index.get(name) || this.commands.index.find(i => i.name.toLowerCase() === name || i.aliases.map(alias => alias.toLowerCase()).has(name));
+        const command = this.commands.index.get(commandName) || this.commands.index.find(({name, aliases}) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
 
         if (!command)
             return;
@@ -72,15 +72,6 @@ export default class Client extends DJSClient {
                     .setStyle('SECONDARY')
             );
 
-            function disableButtons(msg) {
-                actions.components = actions.components.map(button => button.setDisabled(true));
-
-                return msg.edit({
-                    content: msg.content,
-                    components: [actions]
-                });
-            }
-
             const question = await message.channel.send({
                 content: 'This command is marked as **NSFW**, are you sure you want to run it?',
                 components: [actions]
@@ -94,16 +85,16 @@ export default class Client extends DJSClient {
             if (!response) {
                 message.channel.send('⏱️ **15s timeout** ❌ Command cancelled').catch(console.error);
 
-                return disableButtons(question);
+                return question.delete().catch(util.noop);
             }
 
             if (response.customID === 'NO') {
-                response.reply('Command cancelled').catch(console.error);
+                response.deferUpdate().catch(util.noop);
 
-                return disableButtons(question);
+                return question.delete().catch(util.noop);
             }
 
-            disableButtons(question);
+            question.delete().catch(util.noop);
 
             response.deferUpdate();
         }
@@ -137,19 +128,19 @@ export default class Client extends DJSClient {
                         return message.channel.send(`❌ Your input for \`${param.label}\` must be either ${util.toList(param.choices.map(i => `\`${i}\``).array(), 'or')}`).catch(console.error);
                 }
 
-                switch (param.type) {
+                switch (param.type.toLowerCase()) {
                     case 'number':
                         if (isNaN(Number(input)))
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`number\``).catch(util.noop);
 
-                        input = new Argument(Number(input), 'number', param);
+                        input = new Argument(Number(input), 'Number', param);
                         break;
 
                     case 'boolean':
                         if (input.toLowerCase() !== 'true' && input.toLowerCase() !== 'false')
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be either 'true' or 'false'`).catch(util.noop);
 
-                        input = new Argument(input.toLowerCase() === 'true' ? true : false, 'boolean', param);
+                        input = new Argument(input.toLowerCase() === 'true' ? true : false, 'Boolean', param);
                         break;
 
                     case 'channel':
@@ -158,7 +149,7 @@ export default class Client extends DJSClient {
                         if (!channel)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`channel\``).catch(util.noop);
 
-                        input = new Argument(channel, 'channel', param);
+                        input = new Argument(channel, 'Channel', param);
                         break;
 
                     case 'member':
@@ -167,7 +158,7 @@ export default class Client extends DJSClient {
                         if (!member || !snowflake)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`member\``).catch(util.noop);
 
-                        input = new Argument(member, 'member', param);
+                        input = new Argument(member, 'Member', param);
                         break;
 
                     case 'role':
@@ -176,7 +167,7 @@ export default class Client extends DJSClient {
                         if (!role)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`role\``).catch(util.noop);
 
-                        input = new Argument(role, 'role', param);
+                        input = new Argument(role, 'Role', param);
                         break;
 
                     case 'user':
@@ -185,7 +176,7 @@ export default class Client extends DJSClient {
                         if (!user)
                             return message.channel.send(`❌ Your input for \`${param.label}\` must be of type \`user\``).catch(util.noop);
 
-                        input = new Argument(user, 'user', param);
+                        input = new Argument(user, 'User', param);
                         break;
 
                     default:
@@ -202,7 +193,7 @@ export default class Client extends DJSClient {
                 }
 
                 if (!(input instanceof Argument))
-                    input = new Argument(param.default ? param.default : input, 'any', param);
+                    input = new Argument(param.default ? param.default : input, 'String', param);
 
                 args.push([param.key, input]);
             }

@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParameterType = void 0;
 class ParameterType {
+    key;
+    description;
+    predicate;
     constructor(options) {
         if (options)
             this.edit(options);

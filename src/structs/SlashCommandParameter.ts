@@ -1,32 +1,44 @@
-import { ApplicationCommandOptionData as APISlashCommandOptionData, ApplicationCommandOptionType as SlashCommandOptionType, ApplicationCommandOptionChoice as SlashCommandOptionChoice } from 'discord.js';
+import { ApplicationCommandOptionData as SlashCommandOptionData, ApplicationCommandOptionChoice as SlashCommandParameterChoice } from 'discord.js';
 import { Collection } from 'js-augmentations';
 import { Resolvable } from '../util/types';
 import { isIterable } from '../util/util.js';
 
-interface SlashCommandOptionDetails {
-    type: SlashCommandOptionType;
+enum SlashCommandOptionTypes {
+    SubCommand = 'SUB_COMMAND',
+    SubCommandGroup = 'SUB_COMMAND_GROUP',
+    String = 'STRING',
+    Integer = 'INTEGER',
+    Boolean = 'BOOLEAN',
+    User = 'USER',
+    Channel = 'CHANNEL',
+    Role = 'ROLE',
+    Mentionable = 'MENTIONABLE'
+}
+
+type SlashCommandParameterType = Exclude<keyof typeof SlashCommandOptionTypes, 'SubCommand' | 'SubCommandGroup'>;
+
+interface SlashCommandParameterOptions {
+    type: SlashCommandParameterType;
     name: string;
     description: string;
     required?: boolean;
-    choices?: Iterable<SlashCommandOptionChoice>;
-    options?: Iterable<this>;
+    choices?: Iterable<SlashCommandParameterChoice>;
+    // options?: Iterable<this>;
 }
 
-type SlashCommandOptionResolvable =
-    | Resolvable<SlashCommandOptionDetails>
-    | Resolvable<SlashCommandOption>;
+type SlashCommandParameterResolvable =
+    | Resolvable<SlashCommandParameterOptions>
+    | Resolvable<SlashCommandParameter>;
 
-class SlashCommandOption {
-    public type: SlashCommandOptionType;
+class SlashCommandParameter {
+    public type: SlashCommandParameterType;
     public name: string;
     public description: string;
     public required: boolean;
-    public choices: Collection<SlashCommandOptionChoice>;
-    public options: Collection<SlashCommandOption>;
+    public choices: Collection<SlashCommandParameterChoice>;
 
-    constructor(options?: Partial<SlashCommandOptionDetails>) {
+    constructor(options?: Partial<SlashCommandParameterOptions>) {
         this.choices = new Collection();
-        this.options = new Collection();
 
         this.setRequired(false);
 
@@ -34,11 +46,11 @@ class SlashCommandOption {
             this.edit(options);
     }
 
-    public edit(properties: Partial<SlashCommandOptionDetails>): this {
+    public edit(properties: Partial<SlashCommandParameterOptions>): this {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'ApplicationCommandOptionDetails'.`);
 
-        const { name, description, type, required, choices, options } = properties;
+        const { name, description, type, required, choices } = properties;
 
         if (name)
             this.setName(name);
@@ -55,13 +67,10 @@ class SlashCommandOption {
         if (choices && isIterable(choices))
             this.addChoices(...choices);
 
-        if (options && isIterable(options))
-            this.addOptions(...options);
-
         return this;
     }
 
-    public addChoices(...choices: Resolvable<SlashCommandOptionChoice>[]): this {
+    public addChoices(...choices: Resolvable<SlashCommandParameterChoice>[]): this {
         choices.flatMap(i => isIterable(i) ? [...i] : i).forEach(choice => {
             if (typeof choice.name !== 'string')
                 throw new TypeError(`Type ${typeof choice.name} is not assignable to type 'string'.`);
@@ -75,20 +84,20 @@ class SlashCommandOption {
         return this;
     }
 
-    public addOptions(...options: SlashCommandOptionResolvable[]): this {
-        options.map(i => isIterable(i) ? [...i] : i).flat().forEach(option => {
-            if (!(option instanceof SlashCommandOption))
-                return this.addOptions(new SlashCommandOption(option));
+    // public addOptions(...options: SlashCommandParameterResolvable[]): this {
+    //     options.map(i => isIterable(i) ? [...i] : i).flat().forEach(option => {
+    //         if (!(option instanceof SlashCommandParameter))
+    //             return this.addOptions(new SlashCommandParameter(option));
 
-            this.options.add(option);
-        });
+    //         this.options.add(option);
+    //     });
 
-        return this;
-    }
+    //     return this;
+    // }
 
-    public setType(type: SlashCommandOptionType): this {
-        if (!['SUB_COMMAND', 'SUB_COMMAND_GROUP', 'STRING', 'INTEGER', 'BOOLEAN', 'USER', 'CHANNEL', 'ROLE', 'MENTIONABLE'].includes(type))
-            throw new TypeError(`Type ${typeof type} is not assignable to type 'ApplicationCommandOptionType'.`);
+    public setType(type: SlashCommandParameterType): this {
+        if (!['String', 'Integer', 'Boolean', 'User', 'Channel', 'Role', 'Mentionable'].includes(type))
+            throw new TypeError(`Type ${typeof type} is not assignable to type 'SlashCommandOptionType'.`);
 
         this.type = type;
 
@@ -128,7 +137,7 @@ class SlashCommandOption {
         return this;
     }
 
-    /** 
+    /**
      * @param required if the parameter is required or optional; default false
      */
     public setRequired(required: boolean): this {
@@ -140,20 +149,21 @@ class SlashCommandOption {
         return this;
     }
 
-    public toAPIObject(): APISlashCommandOptionData {
-        const { type, name, description, required, choices, options } = this;
+    get data(): SlashCommandOptionData {
+        const { type, name, description, required, choices } = this;
 
-        return { type, name, description, required, choices: choices.array(), options: options.map(param => param.toAPIObject()).array() };
+        return { type: SlashCommandOptionTypes[type], name, description, required, choices: choices.array() };
     }
 }
 
 export {
-    SlashCommandOptionDetails,
-    SlashCommandOption,
-    SlashCommandOptionChoice,
-    SlashCommandOptionResolvable,
-    SlashCommandOptionType,
-    APISlashCommandOptionData
+    SlashCommandParameterOptions,
+    SlashCommandParameter,
+    SlashCommandParameterChoice,
+    SlashCommandParameterResolvable,
+    SlashCommandParameterType,
+    SlashCommandOptionTypes,
+    SlashCommandOptionData
 }
 
-export default SlashCommandOption;
+export default SlashCommandParameter;

@@ -7,7 +7,7 @@ import { Parameter, ParameterResolvable } from './Parameter.js';
 declare type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
 declare type CommandType = 'DM' | 'Guild' | 'Universal';
 interface CommandOptions {
-    name?: string;
+    name: string;
     nsfw?: boolean;
     group?: string;
     description?: string;
@@ -27,7 +27,7 @@ declare class Command implements Required<CommandOptions> {
     callback: CommandCallback;
     permissions: Collection<PermissionResolvable>;
     type: CommandType;
-    constructor(properties?: CommandOptions);
+    constructor(properties?: Partial<CommandOptions>);
     /**
      * @param name The name of your command
      */
@@ -90,7 +90,7 @@ declare class Command implements Required<CommandOptions> {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    edit(properties: CommandOptions): this;
+    edit(properties: Partial<CommandOptions>): this;
 }
 export { Command, CommandOptions, CommandCallback, CommandType };
 export default Command;

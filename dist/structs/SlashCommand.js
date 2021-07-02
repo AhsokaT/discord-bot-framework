@@ -3,11 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
-const SlashCommandOption_js_1 = require("./SlashCommandOption.js");
+const SlashCommandParameter_js_1 = require("./SlashCommandParameter.js");
 class SlashCommand {
+    name;
+    description;
+    guild;
+    defaultPermission;
+    callback;
+    parameters;
     constructor(options) {
         this.guild = null;
-        this.options = new js_augmentations_1.Collection();
+        this.parameters = new js_augmentations_1.Collection();
         this.setDefaultPermission(true);
         this.setCallback((interaction) => interaction.reply({ content: '🛠️ This command is **under construction** 🏗️', ephemeral: true }));
         if (options)
@@ -16,7 +22,7 @@ class SlashCommand {
     edit(options) {
         if (typeof options !== 'object')
             throw new TypeError(`Type '${typeof options}' does not conform to type 'SlashCommandOptions'.`);
-        const { name, description, guild, options: opts, defaultPermission, callback } = options;
+        const { name, description, guild, parameters, defaultPermission, callback } = options;
         if (name)
             this.setName(name);
         if (description)
@@ -27,8 +33,8 @@ class SlashCommand {
             this.setDefaultPermission(defaultPermission);
         if (callback)
             this.setCallback(callback);
-        if (opts && util_js_1.isIterable(opts))
-            this.addOptions(...opts);
+        if (parameters && util_js_1.isIterable(parameters))
+            this.addParameters(...parameters);
         return this;
     }
     setCallback(callback) {
@@ -76,21 +82,17 @@ class SlashCommand {
         this.guild = guild;
         return this;
     }
-    addOptions(...options) {
-        options.map(i => util_js_1.isIterable(i) ? [...i] : i).flat().forEach(option => {
-            if (!(option instanceof SlashCommandOption_js_1.default))
-                return this.addOptions(new SlashCommandOption_js_1.default(option));
-            this.options.add(option);
+    addParameters(...parameters) {
+        parameters.map(i => util_js_1.isIterable(i) ? [...i] : i).flat().forEach(param => {
+            if (!(param instanceof SlashCommandParameter_js_1.default))
+                return this.addParameters(new SlashCommandParameter_js_1.default(param));
+            this.parameters.add(param);
         });
         return this;
     }
-    get APIObject() {
-        const { name, description, defaultPermission, options } = this;
-        return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
-    }
-    toAPIObject() {
-        const { name, description, defaultPermission, options } = this;
-        return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
+    get data() {
+        const { name, description, defaultPermission, parameters } = this;
+        return { name, description, defaultPermission, options: [...parameters.map(({ data }) => data)] };
     }
 }
 exports.default = SlashCommand;

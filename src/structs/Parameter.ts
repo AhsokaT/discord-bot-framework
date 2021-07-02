@@ -40,7 +40,7 @@ class Parameter implements Required<ParameterOptions> {
         this.setWordCount(1);
         this.setCaseSensitive(false);
         this.setRequired(true);
-        this.setType('string');
+        this.setType('String');
         this.setTimeout(15000);
 
         if (options)

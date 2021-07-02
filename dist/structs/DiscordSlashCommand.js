@@ -2,8 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const js_augmentations_1 = require("js-augmentations");
-const SlashCommandOption_js_1 = require("./SlashCommandOption.js");
+const SlashCommandParameter_js_1 = require("./SlashCommandParameter.js");
 class DiscordSlashCommand {
+    client;
+    id;
+    name;
+    description;
+    defaultPermission;
+    options;
+    callback;
+    guild;
+    deleted;
     constructor(client, data) {
         this.client = client;
         this.client = client;
@@ -16,7 +25,7 @@ class DiscordSlashCommand {
         this.description = description;
         this.defaultPermission = defaultPermission;
         this.callback = callback ?? this.client.slashCommands.cache.get(this.id)?.callback ?? ((interaction) => interaction.reply({ content: '🛠️ This command is **under construction** 🏗️', ephemeral: true }));
-        options.forEach(option => this.options.add(new SlashCommandOption_js_1.default(option)));
+        options.forEach(option => this.options.add(new SlashCommandParameter_js_1.default(option)));
         if (this.deleted)
             this.client.slashCommands.cache.delete(this.id);
         else

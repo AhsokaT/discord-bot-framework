@@ -19,7 +19,7 @@ class SlashCommandManager {
             const command = this.cache.get(interaction.commandID);
 
             if (command?.callback)
-                command.callback(interaction, command, this.client);
+                command.callback.bind(command)(interaction, command, this.client);
         });
     }
 
@@ -39,7 +39,7 @@ class SlashCommandManager {
         if (existing)
             return this.edit(new DiscordSlashCommand(this.client, existing), command);
 
-        const posted = await manager.create(command.toAPIObject());
+        const posted = await manager.create(command.data);
 
         return new DiscordSlashCommand(this.client, { ...command, ...posted });
     }
@@ -55,7 +55,7 @@ class SlashCommandManager {
 
         const newCommand = new SlashCommand({ ...command, ...data });
 
-        const editted = await manager.edit(command.id, newCommand.toAPIObject());
+        const editted = await manager.edit(command.id, newCommand.data);
 
         return new DiscordSlashCommand(this.client, { ...command, ...editted });
     }

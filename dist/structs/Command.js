@@ -5,6 +5,15 @@ const js_augmentations_1 = require("js-augmentations");
 const util_js_1 = require("../util/util.js");
 const Parameter_js_1 = require("./Parameter.js");
 class Command {
+    name;
+    description;
+    group;
+    nsfw;
+    aliases;
+    parameters;
+    callback;
+    permissions;
+    type;
     constructor(properties) {
         this.aliases = new js_augmentations_1.Collection();
         this.parameters = new js_augmentations_1.Collection();
@@ -92,8 +101,8 @@ class Command {
             if (!key)
                 throw new Error('Command parameters must have a key set.');
             parameter.choices.filter(choice => typeof choice === 'string');
-            parameter.required = typeof required === 'boolean' ? required : true;
-            parameter.caseSensitive = typeof caseSensitive === 'boolean' ? caseSensitive : true;
+            parameter.setRequired(typeof required === 'boolean' ? required : true);
+            parameter.setCaseSensitive(typeof caseSensitive === 'boolean' ? caseSensitive : true);
             this.parameters.add(parameter);
         });
         this.parameters.sort((a, b) => a.required && !b.required ? -1 : 0);
@@ -145,7 +154,7 @@ class Command {
         if (parameters && util_js_1.isIterable(parameters))
             this.addParameters(parameters);
         if (aliases && util_js_1.isIterable(aliases))
-            this.addAliases(...aliases);
+            this.addAliases(aliases);
         return this;
     }
 }

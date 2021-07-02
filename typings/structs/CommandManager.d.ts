@@ -1,18 +1,15 @@
 import { PermissionResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import { Collection, Index } from 'js-augmentations';
-import Command, { CommandOptions as BaseCommandOptions } from './Command.js';
+import Command, { CommandOptions } from './Command.js';
 import { Resolvable } from '../util/types.js';
 import ParameterType, { ParameterTypeResolvable } from './ParameterType.js';
 interface CommandManagerOptions {
     prefix?: string;
     allowBots?: boolean;
-    permissions?: PermissionResolvable[];
+    permissions?: Iterable<PermissionResolvable>;
     automaticMessageParsing?: boolean;
     promptUserForInput?: boolean;
-}
-interface CommandOptions extends BaseCommandOptions {
-    name: string;
 }
 declare type CommandResolvable = Resolvable<Command> | Resolvable<CommandOptions>;
 declare class CommandManager {

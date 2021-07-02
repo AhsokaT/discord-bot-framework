@@ -2,14 +2,13 @@ import { Message } from 'discord.js';
 import Client from '../client/Client.js';
 
 type ParameterTypeKey =
-    | 'string'
-    | 'number'
-    | 'boolean'
-    | 'user'
-    | 'member'
-    | 'channel'
-    | 'role'
-    | 'any';
+    | 'String'
+    | 'Number'
+    | 'Boolean'
+    | 'User'
+    | 'Member'
+    | 'Channel'
+    | 'Role';
 
 type ParameterTypeResolvable =
     | ParameterTypeOptions

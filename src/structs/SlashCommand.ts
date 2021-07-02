@@ -2,16 +2,17 @@ import { CommandInteraction, ApplicationCommandData as SlashCommandData, GuildRe
 import { Collection } from 'js-augmentations';
 import Client from '../client/Client.js';
 import { isIterable } from '../util/util.js';
-import ApplicationCommand from './DiscordSlashCommand.js';
-import SlashCommandOption, { SlashCommandOptionResolvable } from './SlashCommandOption.js';
+import DiscordSlashCommand from './DiscordSlashCommand.js';
+import SlashCommandParameter, { SlashCommandParameterResolvable } from './SlashCommandParameter.js';
+import SlashSubCommand from './SlashSubCommand.js';
 
-type SlashCommandCallback = (interaction: CommandInteraction, command: ApplicationCommand, client: Client) => void;
+type SlashCommandCallback = (this: SlashCommand, interaction: CommandInteraction, command: DiscordSlashCommand, client: Client) => void;
 
 interface SlashCommandOptions {
     name: string;
     description: string;
     guild?: GuildResolvable | null;
-    options?: Iterable<SlashCommandOptionResolvable>;
+    parameters?: Iterable<SlashCommandParameterResolvable>;
     defaultPermission?: boolean;
     callback?: SlashCommandCallback;
 }
@@ -24,13 +25,13 @@ class SlashCommand implements Required<SlashCommandOptions> {
     public name: string;
     public description: string;
     public guild: GuildResolvable | null;
-    public options: Collection<SlashCommandOption>;
     public defaultPermission: boolean;
     public callback: SlashCommandCallback;
+    public parameters: Collection<SlashCommandParameter>;
 
     constructor(options?: Partial<SlashCommandOptions>) {
         this.guild = null;
-        this.options = new Collection();
+        this.parameters = new Collection();
 
         this.setDefaultPermission(true);
         this.setCallback((interaction) => interaction.reply({ content: '🛠️ This command is **under construction** 🏗️', ephemeral: true }));
@@ -43,7 +44,7 @@ class SlashCommand implements Required<SlashCommandOptions> {
         if (typeof options !== 'object')
             throw new TypeError(`Type '${typeof options}' does not conform to type 'SlashCommandOptions'.`);
 
-        const { name, description, guild, options: opts, defaultPermission, callback } = options;
+        const { name, description, guild, parameters, defaultPermission, callback } = options;
 
         if (name)
             this.setName(name);
@@ -60,8 +61,8 @@ class SlashCommand implements Required<SlashCommandOptions> {
         if (callback)
             this.setCallback(callback);
 
-        if (opts && isIterable(opts))
-            this.addOptions(...opts);
+        if (parameters && isIterable(parameters))
+            this.addParameters(...parameters);
 
         return this;
     }
@@ -129,27 +130,21 @@ class SlashCommand implements Required<SlashCommandOptions> {
         return this;
     }
 
-    public addOptions(...options: SlashCommandOptionResolvable[]): this {
-        options.map(i => isIterable(i) ? [...i] : i).flat().forEach(option => {
-            if (!(option instanceof SlashCommandOption))
-                return this.addOptions(new SlashCommandOption(option));
+    public addParameters(...parameters: SlashCommandParameterResolvable[]): this {
+        parameters.map(i => isIterable(i) ? [...i] : i).flat().forEach(param => {
+            if (!(param instanceof SlashCommandParameter))
+                return this.addParameters(new SlashCommandParameter(param));
 
-            this.options.add(option);
+            this.parameters.add(param);
         });
 
         return this;
     }
 
-    get APIObject(): SlashCommandData {
-        const { name, description, defaultPermission, options } = this;        
+    get data(): SlashCommandData {
+        const { name, description, defaultPermission, parameters } = this;
 
-        return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
-    }
-
-    public toAPIObject(): SlashCommandData {
-        const { name, description, defaultPermission, options } = this;        
-
-        return { name, description, defaultPermission, options: options.map(param => param.toAPIObject()).array() };
+        return { name, description, defaultPermission, options: [ ...parameters.map(({ data }) => data) ] };
     }
 }
 
