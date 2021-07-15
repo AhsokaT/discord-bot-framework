@@ -51,13 +51,13 @@ export default class Client extends DJSClient {
         if (message.guild && command.allowedGuilds.size > 0 && !command.allowedGuilds.has(message.guild.id))
             return;
 
-        if (command.type === 'DM' && message.channel.type !== 'dm')
+        if (command.type === 'DM' && message.channel.type !== 'DM')
             return;
 
         if (command.type === 'Guild' && !message.guild)
             return;
 
-        if (command.nsfw && message.channel.type !== 'dm' && !(message.channel instanceof ThreadChannel) && !message.channel.nsfw)
+        if (command.nsfw && message.channel.type !== 'DM' && !(message.channel instanceof ThreadChannel) && !message.channel.nsfw)
             return message.channel.send('❌ This command must be called in an **NSFW** channel');
 
         if (message.guild && !message.member?.permissions.has(command.permissions.array()))
@@ -66,14 +66,14 @@ export default class Client extends DJSClient {
         if (message.guild && !message.guild.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
 
-        if (command.nsfw && message.channel.type === 'dm') {
+        if (command.nsfw && message.channel.type === 'DM') {
             const actions = new MessageActionRow().addComponents(
                 new MessageButton()
-                    .setCustomID('YES')
+                    .setCustomId('YES')
                     .setLabel('Run')
                     .setStyle('DANGER'),
                 new MessageButton()
-                    .setCustomID('NO')
+                    .setCustomId('NO')
                     .setLabel('Cancel')
                     .setStyle('SECONDARY')
             );
@@ -86,6 +86,7 @@ export default class Client extends DJSClient {
             if (!question)
                 return;
 
+            // @ts-expect-error
             const response = await message.channel.awaitMessageComponentInteraction({ filter: i => i.user.id === message.author.id, time: 15000 }).catch(util.noop);
 
             if (!response) {

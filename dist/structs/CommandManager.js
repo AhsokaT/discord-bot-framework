@@ -29,7 +29,7 @@ class CommandManager {
         if (permissions && util_js_1.isIterable(permissions))
             this.permissions.push(...permissions);
         if (automaticMessageParsing ?? true)
-            this.client.on('message', this.client.parseMessage);
+            this.client.on('messageCreate', this.client.parseMessage);
     }
     *[Symbol.iterator]() {
         yield* this.index.array();

@@ -36,22 +36,22 @@ class Client extends discord_js_1.Client {
             return;
         if (message.guild && command.allowedGuilds.size > 0 && !command.allowedGuilds.has(message.guild.id))
             return;
-        if (command.type === 'DM' && message.channel.type !== 'dm')
+        if (command.type === 'DM' && message.channel.type !== 'DM')
             return;
         if (command.type === 'Guild' && !message.guild)
             return;
-        if (command.nsfw && message.channel.type !== 'dm' && !(message.channel instanceof discord_js_1.ThreadChannel) && !message.channel.nsfw)
+        if (command.nsfw && message.channel.type !== 'DM' && !(message.channel instanceof discord_js_1.ThreadChannel) && !message.channel.nsfw)
             return message.channel.send('❌ This command must be called in an **NSFW** channel');
         if (message.guild && !message.member?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ You require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
         if (message.guild && !message.guild.me?.permissions.has(command.permissions.array()))
             return message.channel.send(`❌ I require the ${command.permissions.size > 1 ? 'permissions' : 'permission'} ${util.toList(command.permissions.array().map(i => `\`${i.toString().toLowerCase().replace(/_/g, ' ')}\``))} to run this command`).catch(console.error);
-        if (command.nsfw && message.channel.type === 'dm') {
+        if (command.nsfw && message.channel.type === 'DM') {
             const actions = new discord_js_1.MessageActionRow().addComponents(new discord_js_1.MessageButton()
-                .setCustomID('YES')
+                .setCustomId('YES')
                 .setLabel('Run')
                 .setStyle('DANGER'), new discord_js_1.MessageButton()
-                .setCustomID('NO')
+                .setCustomId('NO')
                 .setLabel('Cancel')
                 .setStyle('SECONDARY'));
             const question = await message.channel.send({
@@ -60,6 +60,7 @@ class Client extends discord_js_1.Client {
             }).catch(console.error);
             if (!question)
                 return;
+            // @ts-expect-error
             const response = await message.channel.awaitMessageComponentInteraction({ filter: i => i.user.id === message.author.id, time: 15000 }).catch(util.noop);
             if (!response) {
                 message.channel.send('⏱️ **15s timeout** ❌ Command cancelled').catch(console.error);

@@ -80,7 +80,7 @@ class DefaultCommands {
                 };
                 return field ?? {};
             });
-            const invite = client.generateInvite({ permissions: client.manager.permissions.array() });
+            const invite = client.generateInvite({ scopes: ['bot', 'applications.commands'], permissions: client.manager.permissions.array() });
             const embed = new discord_js_1.MessageEmbed({
                 color: '#2F3136',
                 author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
