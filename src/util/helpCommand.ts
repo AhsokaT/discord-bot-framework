@@ -53,13 +53,13 @@ class DefaultCommands {
                 .setDescription(`🔗 **[Invite ${client.user?.username ?? ''}](${invite})**`);
 
             client.manager.commands.array().filter(({ group }) => !group).forEach(function({ name, description, parameters }) {
-                embed.addField(name + ' ' + parameters, description ?? 'No description');
+                embed.addField(`${client.manager.prefix}${name} ` + parameters.map(({ label, required }) => `**\`${label}${!required ? '?' : ''}\`**`).join(' '), description ?? 'No description');
             });
 
             client.manager.groups.forEach(function(group) {
                 const commands = client.manager.commands.array().filter(({ group: commandGroup }) => commandGroup === group);
 
-                const formatted = commands.map(({ name, parameters }) => `${name} ` + parameters.map(({ label, required }) => `**\`${label}${!required ? '?' : ''}\`**`).join(' ')).join('\n');
+                const formatted = commands.map(({ name, parameters }) => `${client.manager.prefix}${name} ` + parameters.map(({ label, required }) => `**\`${label}${!required ? '?' : ''}\`**`).join(' ')).join('\n');
 
                 embed.addField(group, formatted ? formatted : '**No commands**', true);
             });
