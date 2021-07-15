@@ -43,10 +43,10 @@ class SlashCommandParameter {
         this.setRequired(false);
 
         if (options)
-            this.edit(options);
+            this.repair(options);
     }
 
-    public edit(properties: Partial<SlashCommandParameterOptions>): this {
+    public repair(properties: Partial<SlashCommandParameterOptions>): this {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'ApplicationCommandOptionDetails'.`);
 

@@ -57,7 +57,7 @@ class SlashSubCommand {
 
         return this;
     }
- 
+
     get data(): SlashCommandOptionData {
         const { name, description, parameters } = this;
 

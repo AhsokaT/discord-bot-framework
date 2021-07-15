@@ -7,13 +7,13 @@ const Argument_js_1 = require("../structs/Argument.js");
 const js_augmentations_1 = require("js-augmentations");
 const util = require("../util/util.js");
 class Client extends discord_js_1.Client {
-    commands;
+    manager;
     slashCommands;
     constructor(options) {
         super(options);
         if (options.token)
             super.token = options.token;
-        this.commands = new CommandManager_js_1.default(this, options);
+        this.manager = new CommandManager_js_1.default(this, options);
         this.slashCommands = new SlashCommandManager_js_1.default(this);
     }
     /**
@@ -21,16 +21,20 @@ class Client extends discord_js_1.Client {
      * @param message A Discord message
      */
     async parseMessage(message) {
-        if (message.author.bot && !this.commands.allowBots)
+        if (message.author.bot && !this.manager.allowBots)
             return;
-        if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
+        if (!message.content.toLowerCase().startsWith(this.manager.prefix.toLowerCase()))
             return;
         const messageSegments = message.content.split(' ');
-        const commandName = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
+        const commandName = messageSegments.shift()?.slice(this.manager.prefix.length).toLowerCase();
         if (!commandName)
             return;
-        const command = this.commands.index.get(commandName) || this.commands.index.find(({ name, aliases }) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
+        const command = this.manager.index.get(commandName) || this.manager.index.find(({ name, aliases }) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
         if (!command)
+            return;
+        if (command.allowedUsers.size > 0 && !command.allowedUsers.has(message.author.id))
+            return;
+        if (message.guild && command.allowedGuilds.size > 0 && !command.allowedGuilds.has(message.guild.id))
             return;
         if (command.type === 'DM' && message.channel.type !== 'dm')
             return;
@@ -72,7 +76,7 @@ class Client extends discord_js_1.Client {
         const parameters = command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0);
         for (const param of parameters) {
             let input = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
-            if (!input && param.required && this.commands.promptUserForInput) {
+            if (!input && param.required && this.manager.promptUserForInput) {
                 message.channel.send(`Please type your input for \`${param.label}\`\n\n**Type** \`${param.type}\`\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices.size > 0 ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``).array() ?? [], 'or')}` : ''}`);
                 input = (await message.channel.awaitMessages({ filter: res => res.author.id === message.author.id, time: param.timeout, max: 1 })).first()?.content;
                 if (!input)
@@ -125,7 +129,7 @@ class Client extends discord_js_1.Client {
                         input = new Argument_js_1.default(user, 'User', param);
                         break;
                     default:
-                        const type = this.commands.types.get(param.type);
+                        const type = this.manager.types.get(param.type);
                         if (type) {
                             if (!await type.predicate.bind(this)(input, message))
                                 return message.channel.send(`❌ Your input for \`${param.label}\` must conform to type \`${type.key}\``).catch(util.noop);
@@ -142,6 +146,7 @@ class Client extends discord_js_1.Client {
             command.callback(message, new js_augmentations_1.Index(args), this);
         }
         catch (err) {
+            console.log(err);
             message.channel.send(`❌ Command \`${command.name}\` failed to run due to an internal error`).catch(util.noop);
         }
     }

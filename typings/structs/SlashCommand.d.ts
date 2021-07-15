@@ -39,5 +39,5 @@ declare class SlashCommand implements Required<SlashCommandOptions> {
     addParameters(...parameters: SlashCommandParameterResolvable[]): this;
     get data(): SlashCommandData;
 }
-export { SlashCommandOptions, SlashCommandCallback, SlashCommandResolvable };
+export { SlashCommandData, SlashCommandOptions, SlashCommandCallback, SlashCommandResolvable };
 export default SlashCommand;

@@ -1,9 +1,10 @@
-import { GuildResolvable, Guild, GuildEmoji, GuildChannel, GuildMember, Invite, Role } from 'discord.js';
+import { GuildResolvable } from 'discord.js';
 import Client from '../client/Client.js';
 import { Index } from 'js-augmentations';
 import { Snowflake } from '../util/types';
 import SlashCommand, { SlashCommandResolvable, SlashCommandOptions } from './SlashCommand.js';
 import DiscordSlashCommand, { DiscordSlashCommandResolvable } from './DiscordSlashCommand.js';
+import { resolveGuild } from '../util/util.js';
 
 class SlashCommandManager {
     public cache: Index<Snowflake, DiscordSlashCommand>;
@@ -30,11 +31,11 @@ class SlashCommandManager {
         if (!(command instanceof SlashCommand))
             return this.create(new SlashCommand(command));
 
-        const guild = command.guild ? await resolveGuild(command.guild, this.client) : null;
+        const guild = command.guild ? await resolveGuild(this.client, command.guild) : null;
 
         const manager = guild ? guild.commands : this.client.application.commands;
 
-        const existing = (await manager.fetch()).find(({name}) => name === command.name);
+        const existing = (await manager.fetch()).find(({ name }) => name === command.name);
 
         if (existing)
             return this.edit(new DiscordSlashCommand(this.client, existing), command);
@@ -64,16 +65,13 @@ class SlashCommandManager {
         if (!this.client.application)
             throw new Error('The bot is not yet logged in: run this method in the client\'s \'ready\' event.');
 
-        if (!(command instanceof DiscordSlashCommand)) {
-            const fetched = await this.fetch(command, guild);
-
-            return fetched ? this.delete(fetched, guild) : null;
-        }
+        if (!(command instanceof DiscordSlashCommand))
+            return this.delete(await this.fetch(command, guild));
 
         if (command.guild)
             guild = command.guild;
         else if (guild)
-            guild = await resolveGuild(guild, this.client);
+            guild = await resolveGuild(this.client, guild);
 
         const manager = guild ? guild.commands : this.client.application.commands;
 
@@ -92,7 +90,7 @@ class SlashCommandManager {
         if (command instanceof DiscordSlashCommand && command.guild)
             guild = command.guild;
         else if (guild)
-            guild = await resolveGuild(guild, this.client);
+            guild = await resolveGuild(this.client, guild);
 
         const manager = guild ? guild.commands : this.client.application.commands;
 
@@ -104,23 +102,3 @@ class SlashCommandManager {
 }
 
 export default SlashCommandManager;
-
-function resolveGuild(guild: Guild | GuildEmoji | GuildMember | GuildChannel | Role, client: Client): Guild;
-function resolveGuild(guild: Snowflake | Invite, client: Client): Promise<Guild | undefined>;
-function resolveGuild(guild: GuildResolvable, client: Client): Guild | undefined | Promise<Guild | undefined>;
-function resolveGuild(guild: GuildResolvable, client: Client): Guild | undefined | Promise<Guild | undefined> {
-    if (guild instanceof Guild)
-        return guild;
-
-    if (guild instanceof GuildEmoji || guild instanceof GuildMember || guild instanceof GuildChannel || guild instanceof Role)
-        return guild.guild;
-
-    if (guild instanceof Invite) {
-        if (guild.guild)
-            return guild.guild.fetch();
-        else
-            return;
-    }
-
-    return client.guilds.fetch(guild);
-}

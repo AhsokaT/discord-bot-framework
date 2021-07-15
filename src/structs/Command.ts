@@ -1,8 +1,8 @@
 import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
-import { Resolvable } from '../util/types.js';
-import { isIterable } from '../util/util.js';
+import { Resolvable, Snowflake } from '../util/types.js';
+import { isIterable, noop } from '../util/util.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
 
@@ -35,16 +35,33 @@ class Command implements Required<CommandOptions> {
     public callback: CommandCallback;
     public permissions: Collection<PermissionResolvable>;
     public type: CommandType;
+    public allowedUsers: Collection<Snowflake>;
+    public allowedGuilds: Collection<Snowflake>;
 
     constructor(properties?: Partial<CommandOptions>) {
         this.aliases = new Collection();
         this.parameters = new Collection();
         this.permissions = new Collection();
+        this.allowedUsers = new Collection();
+        this.allowedGuilds = new Collection();
+
         this.setType('Universal');
-        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(console.error));
+        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(noop));
 
         if (properties)
-            this.edit(properties);
+            this.repair(properties);
+    }
+
+    public setAllowedUsers(...userIDs: Resolvable<Snowflake>[]): this {
+        userIDs.map(i => typeof i !== 'string' && isIterable(i) ? [...i] : i).flat().forEach(id => this.allowedUsers.add(id));
+
+        return this;
+    }
+
+    public setAllowedGuilds(...guildIDs: Resolvable<Snowflake>[]): this {
+        guildIDs.map(i => typeof i !== 'string' && isIterable(i) ? [...i] : i).flat().forEach(id => this.allowedGuilds.add(id));
+
+        return this;
     }
 
     /**
@@ -188,7 +205,7 @@ class Command implements Required<CommandOptions> {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    public edit(properties: Partial<CommandOptions>): this {
+    public repair(properties: Partial<CommandOptions>): this {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'CommandOptions'.`);
 

@@ -14,14 +14,26 @@ class Command {
     callback;
     permissions;
     type;
+    allowedUsers;
+    allowedGuilds;
     constructor(properties) {
         this.aliases = new js_augmentations_1.Collection();
         this.parameters = new js_augmentations_1.Collection();
         this.permissions = new js_augmentations_1.Collection();
+        this.allowedUsers = new js_augmentations_1.Collection();
+        this.allowedGuilds = new js_augmentations_1.Collection();
         this.setType('Universal');
-        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(console.error));
+        this.setCallback((message) => message.channel.send('🛠️ This command is **under construction** 🏗️').catch(util_js_1.noop));
         if (properties)
-            this.edit(properties);
+            this.repair(properties);
+    }
+    setAllowedUsers(...userIDs) {
+        userIDs.map(i => typeof i !== 'string' && util_js_1.isIterable(i) ? [...i] : i).flat().forEach(id => this.allowedUsers.add(id));
+        return this;
+    }
+    setAllowedGuilds(...guildIDs) {
+        guildIDs.map(i => typeof i !== 'string' && util_js_1.isIterable(i) ? [...i] : i).flat().forEach(id => this.allowedGuilds.add(id));
+        return this;
     }
     /**
      * @param name The name of your command
@@ -135,7 +147,7 @@ class Command {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    edit(properties) {
+    repair(properties) {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'CommandOptions'.`);
         const { name, nsfw, description, parameters, group, aliases, callback, type } = properties;

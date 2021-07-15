@@ -26,9 +26,9 @@ class SlashCommandParameter {
         this.choices = new js_augmentations_1.Collection();
         this.setRequired(false);
         if (options)
-            this.edit(options);
+            this.repair(options);
     }
-    edit(properties) {
+    repair(properties) {
         if (typeof properties !== 'object')
             throw new TypeError(`Type '${typeof properties}' does not conform to type 'ApplicationCommandOptionDetails'.`);
         const { name, description, type, required, choices } = properties;

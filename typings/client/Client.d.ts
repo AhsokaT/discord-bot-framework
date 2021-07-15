@@ -5,8 +5,8 @@ export interface ClientOptions extends DJSClientOptions, CommandManagerOptions {
     token?: string;
 }
 export default class Client extends DJSClient {
-    commands: CommandManager;
-    slashCommands: SlashCommandManager;
+    readonly manager: CommandManager;
+    readonly slashCommands: SlashCommandManager;
     constructor(options: ClientOptions);
     /**
      * Reads a message from Discord and executes a command if called

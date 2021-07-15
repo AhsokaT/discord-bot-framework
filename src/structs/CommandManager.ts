@@ -6,6 +6,7 @@ import Command, { CommandOptions } from './Command.js';
 import { isIterable } from '../util/util.js';
 import { Resolvable } from '../util/types.js';
 import ParameterType, { ParameterTypeResolvable } from './ParameterType.js';
+import CommandGroup from './CommandGroup.js';
 
 interface CommandManagerOptions {
     prefix?: string;
@@ -122,9 +123,9 @@ class CommandManager {
                 throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
 
             command.aliases.forEach(alias => {
-                this.index.forEach(existing => {
-                    if (existing.aliases.has(alias))
-                        throw new Error(`Alias '${alias}' already exists on command '${existing.name}'`);
+                this.index.forEach(({ aliases, name }) => {
+                    if (aliases.has(alias))
+                        throw new Error(`Alias '${alias}' already exists on command '${name}'`);
                 });
             });
 
@@ -145,14 +146,12 @@ class CommandManager {
         return this;
     }
 
-    public indexGroup(name: string): this {
-        return this.indexGroups(name);
-    }
+    // public indexGroup(group: CommandGroup): this {
+    //     return this.indexGroups(group);
+    // }
 
     public indexGroups(...groups: Resolvable<string>[]): this {
-        const entries = groups.flat().map(item => typeof item !== 'string' && isIterable(item) ? [ ...item ] : item).flat().filter(group => typeof group === 'string');
-
-        entries.forEach(group => this.groups.add(group));
+        groups.flat().map(item => typeof item !== 'string' && isIterable(item) ? [ ...item ] : item).flat().forEach(group => this.groups.add(group));
 
         return this;
     }

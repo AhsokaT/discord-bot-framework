@@ -58,7 +58,6 @@ declare class CommandManager {
      */
     indexCommands(...commands: CommandResolvable[]): this;
     indexDefaults(): this;
-    indexGroup(name: string): this;
     indexGroups(...groups: Resolvable<string>[]): this;
     deleteCommands(...commands: CommandResolvable[] | Resolvable<string>[]): this;
     deleteGroup(group: string): this;

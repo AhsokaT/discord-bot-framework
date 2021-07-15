@@ -1,7 +1,7 @@
 import { Message, PermissionResolvable } from 'discord.js';
 import { Collection, Index } from 'js-augmentations';
 import Client from '../client/Client.js';
-import { Resolvable } from '../util/types.js';
+import { Resolvable, Snowflake } from '../util/types.js';
 import Argument from './Argument.js';
 import { Parameter, ParameterResolvable } from './Parameter.js';
 declare type CommandCallback = (this: Command, message: Message, args: Index<string, Argument>, client: Client) => void;
@@ -27,7 +27,11 @@ declare class Command implements Required<CommandOptions> {
     callback: CommandCallback;
     permissions: Collection<PermissionResolvable>;
     type: CommandType;
+    allowedUsers: Collection<Snowflake>;
+    allowedGuilds: Collection<Snowflake>;
     constructor(properties?: Partial<CommandOptions>);
+    setAllowedUsers(...userIDs: Resolvable<Snowflake>[]): this;
+    setAllowedGuilds(...guildIDs: Resolvable<Snowflake>[]): this;
     /**
      * @param name The name of your command
      */
@@ -90,7 +94,7 @@ declare class Command implements Required<CommandOptions> {
      * @example
      * edit({ name: 'purge', description: 'Delete messages' });
      */
-    edit(properties: Partial<CommandOptions>): this;
+    repair(properties: Partial<CommandOptions>): this;
 }
 export { Command, CommandOptions, CommandCallback, CommandType };
 export default Command;

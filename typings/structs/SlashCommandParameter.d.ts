@@ -28,7 +28,7 @@ declare class SlashCommandParameter {
     required: boolean;
     choices: Collection<SlashCommandParameterChoice>;
     constructor(options?: Partial<SlashCommandParameterOptions>);
-    edit(properties: Partial<SlashCommandParameterOptions>): this;
+    repair(properties: Partial<SlashCommandParameterOptions>): this;
     addChoices(...choices: Resolvable<SlashCommandParameterChoice>[]): this;
     setType(type: SlashCommandParameterType): this;
     /**

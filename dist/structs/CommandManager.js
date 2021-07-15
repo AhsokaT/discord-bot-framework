@@ -93,9 +93,9 @@ class CommandManager {
             if (command.group && !this.groups.has(command.group))
                 throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
             command.aliases.forEach(alias => {
-                this.index.forEach(existing => {
-                    if (existing.aliases.has(alias))
-                        throw new Error(`Alias '${alias}' already exists on command '${existing.name}'`);
+                this.index.forEach(({ aliases, name }) => {
+                    if (aliases.has(alias))
+                        throw new Error(`Alias '${alias}' already exists on command '${name}'`);
                 });
             });
             command.parameters.forEach(({ type }) => {
@@ -110,12 +110,11 @@ class CommandManager {
         this.indexCommands(helpCommand_js_1.default);
         return this;
     }
-    indexGroup(name) {
-        return this.indexGroups(name);
-    }
+    // public indexGroup(group: CommandGroup): this {
+    //     return this.indexGroups(group);
+    // }
     indexGroups(...groups) {
-        const entries = groups.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().filter(group => typeof group === 'string');
-        entries.forEach(group => this.groups.add(group));
+        groups.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().forEach(group => this.groups.add(group));
         return this;
     }
     deleteCommands(...commands) {

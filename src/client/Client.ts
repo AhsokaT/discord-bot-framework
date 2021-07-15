@@ -10,8 +10,8 @@ export interface ClientOptions extends DJSClientOptions, CommandManagerOptions {
 }
 
 export default class Client extends DJSClient {
-    public commands: CommandManager;
-    public slashCommands: SlashCommandManager;
+    public readonly manager: CommandManager;
+    public readonly slashCommands: SlashCommandManager;
 
     constructor(options: ClientOptions) {
         super(options);
@@ -19,7 +19,7 @@ export default class Client extends DJSClient {
         if (options.token)
             super.token = options.token;
 
-        this.commands = new CommandManager(this, options);
+        this.manager = new CommandManager(this, options);
         this.slashCommands = new SlashCommandManager(this);
     }
 
@@ -28,21 +28,27 @@ export default class Client extends DJSClient {
      * @param message A Discord message
      */
     public async parseMessage(message: Message): Promise<any> {
-        if (message.author.bot && !this.commands.allowBots)
+        if (message.author.bot && !this.manager.allowBots)
             return;
 
-        if (!message.content.toLowerCase().startsWith(this.commands.prefix.toLowerCase()))
+        if (!message.content.toLowerCase().startsWith(this.manager.prefix.toLowerCase()))
             return;
 
         const messageSegments = message.content.split(' ');
-        const commandName = messageSegments.shift()?.slice(this.commands.prefix.length).toLowerCase();
+        const commandName = messageSegments.shift()?.slice(this.manager.prefix.length).toLowerCase();
 
         if (!commandName)
             return;
 
-        const command = this.commands.index.get(commandName) || this.commands.index.find(({name, aliases}) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
+        const command = this.manager.index.get(commandName) || this.manager.index.find(({name, aliases}) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
 
         if (!command)
+            return;
+
+        if (command.allowedUsers.size > 0 && !command.allowedUsers.has(message.author.id))
+            return;
+
+        if (message.guild && command.allowedGuilds.size > 0 && !command.allowedGuilds.has(message.guild.id))
             return;
 
         if (command.type === 'DM' && message.channel.type !== 'dm')
@@ -106,7 +112,7 @@ export default class Client extends DJSClient {
         for (const param of parameters) {
             let input: any = messageSegments.splice(0, param.wordCount === 'unlimited' ? messageSegments.length : param.wordCount ?? 1).join(' ');
 
-            if (!input && param.required && this.commands.promptUserForInput) {
+            if (!input && param.required && this.manager.promptUserForInput) {
                 message.channel.send(`Please type your input for \`${param.label}\`\n\n**Type** \`${param.type}\`\n${param.description ? `**Description** ${param.description}\n` : ''}${param.choices.size > 0 ? `**Choices** ${util.toList(param.choices?.map(i => `\`${i}\``).array() ?? [], 'or')}` : ''}`);
 
                 input = (await message.channel.awaitMessages({ filter: res => res.author.id === message.author.id, time: param.timeout, max: 1 })).first()?.content;
@@ -180,7 +186,7 @@ export default class Client extends DJSClient {
                         break;
 
                     default:
-                        const type = this.commands.types.get(param.type);
+                        const type = this.manager.types.get(param.type);
 
                         if (type) {
                             if (!await type.predicate.bind(this)(input, message))
@@ -202,6 +208,7 @@ export default class Client extends DJSClient {
         try {
             command.callback(message, new Index(args), this);
         } catch (err) {
+            console.log(err);
             message.channel.send(`❌ Command \`${command.name}\` failed to run due to an internal error`).catch(util.noop);
         }
     }

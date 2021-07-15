@@ -149,6 +149,7 @@ class SlashCommand implements Required<SlashCommandOptions> {
 }
 
 export {
+    SlashCommandData,
     SlashCommandOptions,
     SlashCommandCallback,
     SlashCommandResolvable
