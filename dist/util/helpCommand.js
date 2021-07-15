@@ -6,7 +6,58 @@ const Parameter_js_1 = require("../structs/Parameter.js");
 const util_js_1 = require("./util.js");
 class DefaultCommands {
     static get help() {
-        function parseCommandGroup() {
+        function parseCommandGroup(message, { user, manager }, group) {
+            const embed = new discord_js_1.MessageEmbed()
+                .setColor('#2F3136')
+                .setAuthor(user?.username ?? '', user?.displayAvatarURL({ size: 4096, dynamic: true }))
+                .setTitle(group);
+            manager.commands.filter(({ group: commandGroup }) => commandGroup === group).forEach(function ({ name, parameters, description }) {
+                embed.addField(name + ' ' + parameters.map(({ label, required }) => `\`${label}${!required ? '?' : ''}\``).join(' '), description ?? 'No description');
+            });
+            message.channel.send({ embeds: [embed] }).catch(util_js_1.noop);
+        }
+        function parseCommand(message, { user }, { name, description, group, parameters, type, permissions, nsfw, aliases }) {
+            let embed = new discord_js_1.MessageEmbed()
+                .setColor('#2F3136')
+                .setAuthor(group ?? user?.username ?? '', user?.displayAvatarURL({ size: 4096, dynamic: true }))
+                .setTitle(name);
+            if (description)
+                embed.addField('Description', description, false);
+            if (parameters.size > 0)
+                embed.addField('Parameters', parameters.array().map(({ label, required, description: parameterDescription }) => `\`${label}${!required ? '?' : ''}\` ${parameterDescription ?? ''}`).join('\n'), false);
+            if (type === 'Guild' && permissions.size > 0)
+                embed.addField('Permissions', permissions.map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
+            if (aliases.size > 0)
+                embed.addField('Aliases', aliases.map(i => `\`${i}\``).join(' '), false);
+            if (nsfw)
+                embed.setFooter('NSFW');
+            message.channel.send({ embeds: [embed] }).catch(util_js_1.noop);
+        }
+        function parseAllCommands(message, client) {
+            const invite = client.generateInvite({ scopes: ['bot', 'applications.commands'], permissions: client.manager.permissions.array() });
+            const embed = new discord_js_1.MessageEmbed()
+                .setColor('#2F3136')
+                .setAuthor(client.user?.username ?? '', client.user?.displayAvatarURL({ size: 4096, dynamic: true }))
+                .setDescription(`🔗 **[Invite ${client.user?.username ?? ''}](${invite})**`);
+            client.manager.commands.array().filter(({ group }) => !group).forEach(function ({ name, description, parameters }) {
+                embed.addField(name + ' ' + parameters, description ?? 'No description');
+            });
+            client.manager.groups.forEach(function (group) {
+                const commands = client.manager.commands.array().filter(({ group: commandGroup }) => commandGroup === group);
+                const formatted = commands.map(({ name, parameters }) => `${name} ` + parameters.map(({ label, required }) => `**\`${label}${!required ? '?' : ''}\`**`).join(' ')).join('\n');
+                embed.addField(group, formatted ? formatted : '**No commands**', true);
+            });
+            while (embed.fields.length % 3 !== 0)
+                embed.addField('\u200B', '\u200B', true);
+            message.channel.send({ embeds: [embed] }).catch(util_js_1.noop);
+        }
+        function parseType(message, client, { key, description }) {
+            const embed = new discord_js_1.MessageEmbed()
+                .setColor('#2F3136')
+                .setAuthor(client.user?.username ?? '', client.user?.displayAvatarURL({ size: 4096, dynamic: true }))
+                .setTitle(key)
+                .setDescription(description ?? 'No description');
+            message.channel.send({ embeds: [embed] }).catch(util_js_1.noop);
         }
         return new Command_js_1.default()
             .setName('help')
@@ -17,79 +68,19 @@ class DefaultCommands {
             .setRequired(false)
             .setWordCount('unlimited'))
             .setCallback(function (message, args, client) {
-            const input = util_js_1.toString(args.first()?.value).toLowerCase();
-            const group = client.manager.groups.find(i => i.toLowerCase() === input);
-            const command = client.manager.index.get(input) ?? client.manager.index.find(cmd => cmd.name.toLowerCase() === input) ?? client.manager.index.find(cmd => cmd.aliases.map(alias => alias.toLowerCase()).has(input));
-            const type = client.manager.types.find((v, k) => k.toLowerCase() === input.toLowerCase());
-            if (group) {
-                const commands = client.manager.index.array().filter(command => command.group === group).map(command => {
-                    const field = { name: `${client.manager.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.label}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
-                    return field;
-                });
-                const embed = new discord_js_1.MessageEmbed({
-                    color: '#2F3136',
-                    author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                    title: group.slice(0, 1).toUpperCase() + group.slice(1, group.length).toLowerCase(),
-                    description: commands.length === 0 ? 'There are currently no commands set for this category' : '',
-                    fields: commands
-                });
-                message.channel.send({ embeds: [embed] }).catch(console.error);
-                return;
-            }
-            if (command) {
-                let embed = new discord_js_1.MessageEmbed({
-                    color: '#2F3136',
-                    author: { name: command.group ? command.group.slice(0, 1).toUpperCase() + command.group.slice(1, command.group.length).toLowerCase() : client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                    title: client.manager.prefix + command.name
-                });
-                if (command.description)
-                    embed.addField('Description', command.description, false);
-                if (command.parameters.array().length > 0)
-                    embed.addField('Parameters', command.parameters.array().sort((a, b) => a.required && !b.required ? -1 : 0).map(i => `\`${i.label}${i.required === false ? '?' : ''}\` ${i.description ?? ''}`).join('\n'), false);
-                if (command.type === 'Guild' && command.permissions.array().length > 0)
-                    embed.addField('Permissions', command.permissions.array().map(i => `\`${i.toString().replace(/_/g, ' ').toLowerCase()}\``).join(' '), false);
-                if (command.aliases.array().length > 0)
-                    embed.addField('Aliases', command.aliases.array().map(i => `\`${i}\``).join(' '), false);
-                if (command.nsfw)
-                    embed.setFooter('NSFW');
-                message.channel.send({ embeds: [embed] }).catch(console.error);
-                return;
-            }
-            if (type) {
-                message.channel.send({ embeds: [
-                        new discord_js_1.MessageEmbed({
-                            color: '#2F3136',
-                            author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                            title: type.key,
-                            description: type.description || 'This type has no description'
-                        })
-                    ] }).catch(util_js_1.noop);
-                return;
-            }
-            const ungrouped = client.manager.index.array().filter(i => !i.group).map(command => {
-                const field = { name: `${client.manager.prefix}${command.name} ${command.parameters.array().length > 0 ? command.parameters.array().map(i => `\`${i.label}${!i.required ? '?' : ''}\``).join(' ') : ''}`, value: command.description || 'No description', inline: false };
-                return field;
-            });
-            const groups = client.manager.groups.array().map(group => {
-                const commands = client.manager.index.array().filter(({ group: cmdGroup }) => cmdGroup === group);
-                const formatted = commands.length > 0 ? commands.splice(0, 2).map(({ name, parameters }) => `**${client.manager.prefix}${name} ${parameters.map(({ label, required }) => `\`${label}${!required ? '?' : ''}\`**`).join(' ')}`).join('\n') : '';
-                const field = {
-                    name: group,
-                    value: formatted ? `${formatted}${commands.length > 0 ? `\n**... ${commands.length} more**` : ''}` : '**No commands**',
-                    inline: true
-                };
-                return field ?? {};
-            });
-            const invite = client.generateInvite({ scopes: ['bot', 'applications.commands'], permissions: client.manager.permissions.array() });
-            const embed = new discord_js_1.MessageEmbed({
-                color: '#2F3136',
-                author: { name: client.user?.username, iconURL: client.user?.displayAvatarURL({ size: 4096, dynamic: true }) },
-                description: `🔗 **[Invite ${client.user?.username ?? ''}](${invite})**`,
-                fields: [...ungrouped, ...groups]
-            });
-            while (embed.fields.length % 3 !== 0)
-                embed.addField('\u200B', '\u200B', true);
-            message.channel.send({ embeds: [embed] }).catch(console.error);
+            const input = args.first();
+            const query = input?.isString() ? input.value.toLowerCase() : null;
+            if (!query)
+                return parseAllCommands(message, client);
+            const group = client.manager.groups.find(item => item.toLowerCase() === query) ?? null;
+            const command = client.manager.commands.get(query) ?? client.manager.commands.find(({ name }) => name.toLowerCase() === query) ?? null;
+            const type = client.manager.types.get(query) ?? client.manager.types.find(({ key }) => key.toLowerCase() === query) ?? null;
+            if (command)
+                return parseCommand(message, client, command);
+            if (group)
+                return parseCommandGroup(message, client, group);
+            if (type)
+                return parseType(message, client, type);
         });
     }
 }

@@ -11,7 +11,7 @@ class CommandManager {
     prefix;
     allowBots;
     groups;
-    index;
+    commands;
     types;
     permissions;
     promptUserForInput;
@@ -19,7 +19,7 @@ class CommandManager {
         this.client = client;
         this.client = client;
         const { prefix, permissions, allowBots, automaticMessageParsing, promptUserForInput } = options;
-        this.index = new js_augmentations_1.Index();
+        this.commands = new js_augmentations_1.Index();
         this.types = new js_augmentations_1.Index();
         this.groups = new js_augmentations_1.Collection();
         this.permissions = new js_augmentations_1.Collection();
@@ -32,7 +32,7 @@ class CommandManager {
             this.client.on('messageCreate', this.client.parseMessage);
     }
     *[Symbol.iterator]() {
-        yield* this.index.array();
+        yield* this.commands.array();
     }
     /**
      * @param prefix A command prefix the bot should discriminate messages with
@@ -93,7 +93,7 @@ class CommandManager {
             if (command.group && !this.groups.has(command.group))
                 throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
             command.aliases.forEach(alias => {
-                this.index.forEach(({ aliases, name }) => {
+                this.commands.forEach(({ aliases, name }) => {
                     if (aliases.has(alias))
                         throw new Error(`Alias '${alias}' already exists on command '${name}'`);
                 });
@@ -102,7 +102,7 @@ class CommandManager {
                 if (type && !this.types.get(type) && !['String', 'Number', 'Boolean', 'User', 'Member', 'Channel', 'Role'].includes(type))
                     throw new Error(`There is no ParameterType with key '${type}'`);
             });
-            this.index.set(command.name, command);
+            this.commands.set(command.name, command);
         });
         return this;
     }
@@ -111,7 +111,7 @@ class CommandManager {
         return this;
     }
     // public indexGroup(group: CommandGroup): this {
-    //     return this.indexGroups(group);
+    //     return this.commandsGroups(group);
     // }
     indexGroups(...groups) {
         groups.flat().map(item => typeof item !== 'string' && util_js_1.isIterable(item) ? [...item] : item).flat().forEach(group => this.groups.add(group));
@@ -123,9 +123,9 @@ class CommandManager {
             if (command instanceof Command_js_1.default)
                 toDelete = command;
             else
-                toDelete = this.index.get(typeof command === 'string' ? command : command.name);
+                toDelete = this.commands.get(typeof command === 'string' ? command : command.name);
             if (toDelete)
-                this.index.delete(toDelete.name);
+                this.commands.delete(toDelete.name);
         });
         return this;
     }

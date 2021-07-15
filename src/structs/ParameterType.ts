@@ -1,5 +1,6 @@
 import { Message } from 'discord.js';
 import Client from '../client/Client.js';
+import { Awaited } from '../util/types.js';
 
 type ParameterTypeKey =
     | 'String'

@@ -29,7 +29,7 @@ class Client extends discord_js_1.Client {
         const commandName = messageSegments.shift()?.slice(this.manager.prefix.length).toLowerCase();
         if (!commandName)
             return;
-        const command = this.manager.index.get(commandName) || this.manager.index.find(({ name, aliases }) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
+        const command = this.manager.commands.get(commandName) || this.manager.commands.find(({ name, aliases }) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
         if (!command)
             return;
         if (command.allowedUsers.size > 0 && !command.allowedUsers.has(message.author.id))

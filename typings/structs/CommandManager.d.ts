@@ -17,7 +17,7 @@ declare class CommandManager {
     prefix: string;
     allowBots: boolean;
     groups: Collection<string>;
-    index: Index<string, Command>;
+    commands: Index<string, Command>;
     types: Index<string, ParameterType>;
     permissions: Collection<PermissionResolvable>;
     promptUserForInput: boolean;

@@ -24,7 +24,7 @@ class CommandManager {
     public prefix: string;
     public allowBots: boolean;
     public groups: Collection<string>;
-    public index: Index<string, Command>;
+    public commands: Index<string, Command>;
     public types: Index<string, ParameterType>;
     public permissions: Collection<PermissionResolvable>;
     public promptUserForInput: boolean;
@@ -34,7 +34,7 @@ class CommandManager {
 
         const { prefix, permissions, allowBots, automaticMessageParsing, promptUserForInput } = options;
 
-        this.index = new Index();
+        this.commands = new Index();
         this.types = new Index();
         this.groups = new Collection();
         this.permissions = new Collection();
@@ -50,7 +50,7 @@ class CommandManager {
     }
 
     *[Symbol.iterator]() {
-        yield* this.index.array();
+        yield* this.commands.array();
     }
 
     /**
@@ -123,7 +123,7 @@ class CommandManager {
                 throw new Error(`There is not existing command group named \'${command.group}\'; use .indexGroups(\'${command.group}\')`);
 
             command.aliases.forEach(alias => {
-                this.index.forEach(({ aliases, name }) => {
+                this.commands.forEach(({ aliases, name }) => {
                     if (aliases.has(alias))
                         throw new Error(`Alias '${alias}' already exists on command '${name}'`);
                 });
@@ -134,7 +134,7 @@ class CommandManager {
                     throw new Error(`There is no ParameterType with key '${type}'`);
             });
 
-            this.index.set(command.name, command);
+            this.commands.set(command.name, command);
         });
 
         return this;
@@ -147,7 +147,7 @@ class CommandManager {
     }
 
     // public indexGroup(group: CommandGroup): this {
-    //     return this.indexGroups(group);
+    //     return this.commandsGroups(group);
     // }
 
     public indexGroups(...groups: Resolvable<string>[]): this {
@@ -163,10 +163,10 @@ class CommandManager {
             if (command instanceof Command)
                 toDelete = command;
             else
-                toDelete = this.index.get(typeof command === 'string' ? command : command.name);
+                toDelete = this.commands.get(typeof command === 'string' ? command : command.name);
 
             if (toDelete)
-                this.index.delete(toDelete.name);
+                this.commands.delete(toDelete.name);
         });
 
         return this;

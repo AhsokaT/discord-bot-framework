@@ -1,5 +1,6 @@
 import { Message } from 'discord.js';
 import Client from '../client/Client.js';
+import { Awaited } from '../util/types.js';
 declare type ParameterTypeKey = 'String' | 'Number' | 'Boolean' | 'User' | 'Member' | 'Channel' | 'Role';
 declare type ParameterTypeResolvable = ParameterTypeOptions | ParameterType;
 declare type ParameterTypePredicate = (this: Client, arg: string, message: Message) => Awaited<boolean>;

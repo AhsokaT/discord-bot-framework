@@ -40,7 +40,7 @@ export default class Client extends DJSClient {
         if (!commandName)
             return;
 
-        const command = this.manager.index.get(commandName) || this.manager.index.find(({name, aliases}) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
+        const command = this.manager.commands.get(commandName) || this.manager.commands.find(({name, aliases}) => name.toLowerCase() === name || aliases.map(alias => alias.toLowerCase()).has(name));
 
         if (!command)
             return;
@@ -210,6 +210,7 @@ export default class Client extends DJSClient {
             command.callback(message, new Index(args), this);
         } catch (err) {
             console.log(err);
+
             message.channel.send(`❌ Command \`${command.name}\` failed to run due to an internal error`).catch(util.noop);
         }
     }
